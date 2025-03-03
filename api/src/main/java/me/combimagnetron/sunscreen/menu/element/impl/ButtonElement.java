@@ -1,55 +1,96 @@
 package me.combimagnetron.sunscreen.menu.element.impl;
 
+import me.combimagnetron.passport.event.Event;
+import me.combimagnetron.sunscreen.event.ClickElementEvent;
+import me.combimagnetron.sunscreen.event.HoverElementEvent;
+import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.menu.element.Element;
+import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.event.UserClickElementEvent;
-import me.combimagnetron.sunscreen.event.UserHoverElementEvent;
-import me.combimagnetron.sunscreen.util.Pos2D;
+import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.menu.element.Interactable;
 import me.combimagnetron.sunscreen.menu.element.Position;
 import me.combimagnetron.sunscreen.menu.element.SimpleBufferedElement;
-import me.combimagnetron.sunscreen.user.User;
 
-import java.awt.image.BufferedImage;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.Consumer;
 
-public class ButtonElement extends SimpleBufferedElement implements Interactable {
-    private BufferedImage icon;
+public class ButtonElement extends SimpleBufferedElement {
+    private final Map<State, Canvas> icons = new HashMap<>();
+    private Canvas selected;
 
-    private Consumer<UserHoverElementEvent> hoverElementEventConsumer = (x) -> {};
-    private Consumer<UserClickElementEvent> clickElementEventConsumer = (x) -> {};
-
-    public ButtonElement(int width, Position position, Identifier identifier) {
-        super(Pos2D.of(width, 10), identifier, position);
+    protected ButtonElement(Vec2d size, Position position, Identifier identifier, Map<State, Canvas> icon) {
+        super(size, identifier, position);
+        icons.putAll(icon);
     }
 
-    public void icon(BufferedImage icon) {
-        this.icon = icon;
-    }
-
-    public void click(User<?> user) {
-        this.clickElementEventConsumer.accept(UserClickElementEvent.of(user, this));
-    }
-
-    public void hover(User<?> user) {
-        this.hoverElementEventConsumer.accept(UserHoverElementEvent.of(user, this));
+    public static Builder buttonElement(Vec2d size, Identifier identifier, Position position) {
+        return new Builder(size, identifier, position);
     }
 
     @Override
-    public void hover(Consumer<UserHoverElementEvent> consumer) {
-        this.hoverElementEventConsumer = consumer;
-    }
-
-    @Override
-    public void click(Consumer<UserClickElementEvent> consumer) {
-        this.clickElementEventConsumer = consumer;
-    }
-
-    @Override
-    protected BufferedImage render(BufferedImage image) {
-        if (icon != null) {
-            image.getGraphics().drawImage(icon, 0, 0, null);
-        }
-
+    public Element position(Position pos) {
         return null;
     }
+
+    @Override
+    public <T> Element style(Style<T> style, Position pos2D, T t) {
+        return null;
+    }
+
+    @Override
+    public <T> Element style(Style<T> style, T t) {
+        return null;
+    }
+
+    @Override
+    public Canvas canvas() {
+        return selected;
+    }
+
+    public Map<State, Canvas> icons() {
+        return icons;
+    }
+
+    public static class Builder {
+        private final Vec2d size;
+        private final Identifier identifier;
+        private final Position position;
+        private final HashMap<State, Canvas> icons = new HashMap<>();
+
+        public Builder(Vec2d size, Identifier identifier, Position position) {
+            this.size = size;
+            this.identifier = identifier;
+            this.position = position;
+        }
+
+        public Builder icon(State state, Canvas icon) {
+            icons.put(state, icon);
+            return this;
+        }
+
+        public Builder standard(Canvas icon) {
+            return icon(State.DEFAULT, icon);
+        }
+
+        public Builder hover(Canvas icon) {
+            return icon(State.HOVER, icon);
+        }
+
+        public Builder click(Canvas icon) {
+            return icon(State.CLICK, icon);
+        }
+
+        public ButtonElement build() {
+            return new ButtonElement(size, position, identifier, icons);
+        }
+    }
+
+    public enum State {
+        DEFAULT,
+        HOVER,
+        CLICK
+    }
+
 }

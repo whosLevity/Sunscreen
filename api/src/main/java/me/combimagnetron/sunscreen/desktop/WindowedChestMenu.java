@@ -2,16 +2,18 @@ package me.combimagnetron.sunscreen.desktop;
 
 import me.combimagnetron.sunscreen.menu.Menu;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
+import me.combimagnetron.sunscreen.menu.element.div.Div;
 import me.combimagnetron.sunscreen.menu.input.Input;
-import me.combimagnetron.sunscreen.user.User;
-import me.combimagnetron.sunscreen.util.Pos2D;
+import me.combimagnetron.passport.user.User;
+import me.combimagnetron.sunscreen.user.SunscreenUser;
+import me.combimagnetron.sunscreen.util.Vec2d;
 
 public final class WindowedChestMenu implements Menu {
     private final Menu menu;
-    private final Pos2D position;
-    private final Pos2D size;
+    private final Vec2d position;
+    private final Vec2d size;
 
-    public WindowedChestMenu(Menu menu, Pos2D position, Pos2D size) {
+    public WindowedChestMenu(Menu menu, Vec2d position, Vec2d size) {
         this.menu = menu;
         this.position = position;
         this.size = size;
@@ -25,11 +27,11 @@ public final class WindowedChestMenu implements Menu {
         return menu;
     }
 
-    public Pos2D position() {
+    public Vec2d position() {
         return position;
     }
 
-    public Pos2D size() {
+    public Vec2d size() {
         return size;
     }
 
@@ -43,11 +45,25 @@ public final class WindowedChestMenu implements Menu {
 
 
     @Override
-    public void apply(Draft draft) {
+    public Menu apply(Draft draft) {
+        return this;
+    }
+
+    @Override
+    public void open(SunscreenUser<?> user) {
 
     }
 
     @Override
+    public Menu div(Div div) {
+        return null;
+    }
+
+    @Override
+    public boolean close() {
+        return false;
+    }
+
     public User<?> user() {
         return null;
     }

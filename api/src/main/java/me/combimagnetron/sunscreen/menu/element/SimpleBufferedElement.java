@@ -1,25 +1,21 @@
 package me.combimagnetron.sunscreen.menu.element;
 
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.graphic.Canvas;
-import me.combimagnetron.sunscreen.util.Pos2D;
-
-import java.awt.image.BufferedImage;
+import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.util.Vec2d;
 
 public abstract class SimpleBufferedElement implements Element {
-    private final BufferedImage image;
-    private final Pos2D size;
-    private final Identifier identifier;
-    private final Position position;
+    private Vec2d size;
+    protected final Identifier identifier;
+    protected Position position;
+    protected Canvas canvas;
 
-    public SimpleBufferedElement(Pos2D size, Identifier identifier, Position position) {
+    public SimpleBufferedElement(Vec2d size, Identifier identifier, Position position) {
         this.size = size;
-        this.image = new BufferedImage(size.xi(), size.yi(), 2);
+        this.canvas = Canvas.image(size);
         this.identifier = identifier;
         this.position = position;
     }
-
-    protected abstract BufferedImage render(BufferedImage image);
 
     @Override
     public Identifier identifier() {
@@ -27,21 +23,20 @@ public abstract class SimpleBufferedElement implements Element {
     }
 
     @Override
-    public Canvas canvas() {
-        return Canvas.image(render(image));
-    }
+    public abstract Canvas canvas();
 
     @Override
     public Position position() {
         return position;
     }
 
-    public Pos2D size() {
+    public Vec2d size() {
         return size;
     }
 
-    protected BufferedImage image() {
-        return image;
+    public Element size(Vec2d size) {
+        this.size = size;
+        return this;
     }
 
 }

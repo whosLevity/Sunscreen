@@ -1,34 +1,98 @@
 package me.combimagnetron.sunscreen;
 
-import me.combimagnetron.sunscreen.graphic.Canvas;
-import me.combimagnetron.sunscreen.game.ChestMenu;
-import me.combimagnetron.sunscreen.game.Title;
-import me.combimagnetron.sunscreen.user.User;
+
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.event.PacketListener;
+import com.github.retrooper.packetevents.event.PacketListenerPriority;
+import com.github.retrooper.packetevents.event.PacketReceiveEvent;
+import com.github.retrooper.packetevents.event.PacketSendEvent;
+import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
+import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import me.combimagnetron.passport.internal.entity.impl.display.TextDisplay;
+import me.combimagnetron.sunscreen.image.CanvasRenderer;
+import me.combimagnetron.sunscreen.image.Color;
+import me.combimagnetron.sunscreen.menu.builtin.AspectRatioMenu;
+import me.combimagnetron.sunscreen.menu.element.Position;
+import me.combimagnetron.sunscreen.menu.element.div.Div;
+import me.combimagnetron.sunscreen.menu.element.impl.TextElement;
+import me.combimagnetron.sunscreen.menu.listener.MenuListener;
+import me.combimagnetron.sunscreen.style.Style;
+import me.combimagnetron.sunscreen.style.Text;
+import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.user.UserManager;
+import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.Scheduler;
+import me.combimagnetron.sunscreen.util.Vec2d;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.concurrent.TimeUnit;
+
 public class SunscreenPlugin extends JavaPlugin implements Listener {
-    private SunscreenLibrary<JavaPlugin> library;
+    private SunscreenLibrary<SunscreenPlugin, Player> library;
     private UserManager userManager;
 
     @Override
+    public void onLoad() {
+        PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
+        PacketEvents.getAPI().load();
+        PacketEvents.getAPI().getEventManager().registerListener(new MenuListener(), PacketListenerPriority.LOWEST);
+    }
+
+    @Override
     public void onEnable() {
+        PacketEvents.getAPI().init();
         this.library = new SunscreenLibrarySpigot(this);
-        this.userManager = new UserManager(library);
+        SunscreenLibrary.Holder.INSTANCE = library;
         getServer().getPluginManager().registerEvents(this, this);
+        this.userManager = new UserManager(this);
+        this.getDataFolder().mkdirs();
+    }
+
+    @Override
+    public void onDisable() {
+        PacketEvents.getAPI().terminate();
+    }
+
+    public static int combine(int a, int b) {
+        return (a << 16) | (b & 0xFFFF);
     }
 
     @EventHandler
-    public void onSwap(PlayerSwapHandItemsEvent event) {
-        final User<Player> user = userManager.user(event.getPlayer());
-        final Canvas canvas = Canvas.url("https://i.imgur.com/IBpr6QO.jpg");
-        ChestMenu chestMenu = ChestMenu.menu(user);
-        chestMenu.title(Title.fixed(canvas.renderAsync()));
-        //chestMenu.contents().set(Pos2D.of(3, 3), Item.item(Material.STONE));
+    public void onSwapHandItems(PlayerSwapHandItemsEvent event) {
+        Player player = event.getPlayer();
+        //new Test(userManager.user(player));
+        SunscreenUser<Player> user = userManager.user(player);
+        //new AspectRatioMenu(userManager.user(player));
+        /*PacketEvents.getAPI().getEventManager().registerListener(new PacketListener() {
+            @Override
+            public void onPacketSend(PacketSendEvent event) {
+                if (event.getPacketType() == PacketType.Play.Server.TIME_UPDATE) {
+                    WrapperPlayServerTimeUpdate wrapper = new WrapperPlayServerTimeUpdate(event);
+                    int combined = -combine(2, 2);
+                    System.out.println("combined: " + combined);
+                    wrapper.setWorldAge((long) Math.floor((user.fov() + 0.5F) / 180.0F * 24000.0F));
+                }
+            }
+        }, PacketListenerPriority.LOWEST);*/
+        //userManager.user(player).connection().send(ClientUpdateTime.updateTime(0, 0));
+        Div div = Div.div(Identifier.of("test"))
+                .size(Vec2d.of(256, 256))
+                .add(TextElement.textElement(Identifier.of("test", "label"), Position.pixel(0, 0), Text.text("Test"))
+                        .style(Style.color(), Color.of(255, 255, 255))
+                );
+        TextDisplay display = TextDisplay.textDisplay(user.position());
+        display.text(CanvasRenderer.optimized().render(div.render()).component());
+        user.show(display);
+        System.out.println("x");
+    }
+
+    public UserManager userManager() {
+        return userManager;
     }
 
 

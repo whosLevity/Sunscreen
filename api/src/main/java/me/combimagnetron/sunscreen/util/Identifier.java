@@ -19,6 +19,11 @@ public record Identifier(Namespace namespace, Key key) {
         return new Identifier(Namespace.of(namespace), Key.of(key));
     }
 
+    public static Identifier split(String string) {
+        String[] split = string.split(":");
+        return new Identifier(Namespace.of(split[0]), Key.of(split[1]));
+    }
+
     public String string() {
         return namespace.string() + ":" + key.string();
     }

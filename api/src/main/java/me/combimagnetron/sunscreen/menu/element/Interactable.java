@@ -1,14 +1,17 @@
 package me.combimagnetron.sunscreen.menu.element;
 
-import me.combimagnetron.sunscreen.event.UserClickElementEvent;
-import me.combimagnetron.sunscreen.event.UserHoverElementEvent;
+import me.combimagnetron.sunscreen.util.Vec2d;
 
 import java.util.function.Consumer;
 
 public interface Interactable {
 
-    void hover(Consumer<UserHoverElementEvent> consumer);
+    boolean reactiveToHover();
 
-    void click(Consumer<UserClickElementEvent> consumer);
+    boolean reactiveToClick();
+
+    void hover(Vec2d pos);
+
+    void click(Vec2d pos);
 
 }

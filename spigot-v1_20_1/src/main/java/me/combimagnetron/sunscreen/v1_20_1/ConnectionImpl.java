@@ -105,7 +105,7 @@ public class ConnectionImpl implements me.combimagnetron.sunscreen.game.network.
     }
 
     private interface Transformer<T extends Packet> {
-        Transformer<ClientOpenScreen> CLIENT_OPEN_SCREEN = Transformer.of(ClientOpenScreen.class, container -> new ClientboundOpenScreenPacket(container.windowId(), TypeTransformer.INTEGER_MENU_TYPE.transform(container.windowType()), TypeTransformer.COMPONENT_COMPONENT.transform(container.title())));
+        //Transformer<ClientOpenScreen> CLIENT_OPEN_SCREEN = Transformer.of(ClientOpenScreen.class, container -> new ClientboundOpenScreenPacket(container.windowId(), TypeTransformer.INTEGER_MENU_TYPE.transform(container.windowType()), TypeTransformer.COMPONENT_COMPONENT.transform(container.title())));
         Transformer<ClientSetScreenContent> CLIENT_SET_SCREEN_CONTENT = Transformer.of(ClientSetScreenContent.class, container -> new ClientboundContainerSetContentPacket(container.windowId(), container.stateId(), NonNullList.of(TypeTransformer.ITEM_ITEM_STACK.transform(Item.empty()), container.items().stream().map(TypeTransformer.ITEM_ITEM_STACK::transform).toList().toArray(new ItemStack[0])), TypeTransformer.ITEM_ITEM_STACK.transform(container.carried())));
         //Transformer<ClientBundleDelimiter> CLIENT_BUNDLE_DELIMITER = Transformer.of(ClientBundleDelimiter.class, container -> new ClientboundBundlePacket(container.containers().stream().map(Transformer::findAndTransform).toList()));
         Transformer<ClientSetScreenSlot> CLIENT_SET_SCREEN_SLOT = Transformer.of(ClientSetScreenSlot.class, container -> new ClientboundContainerSetSlotPacket(container.windowId(), container.stateId(), container.slot(), TypeTransformer.ITEM_ITEM_STACK.transform(container.item())));
@@ -130,7 +130,7 @@ public class ConnectionImpl implements me.combimagnetron.sunscreen.game.network.
             }
         });
 
-        Values<Transformer> VALUES = Values.of(CLIENT_OPEN_SCREEN, CLIENT_SET_SCREEN_CONTENT /*,CLIENT_BUNDLE_DELIMITER*/, CLIENT_SET_SCREEN_SLOT, CLIENT_SPAWN_ENTITY, CLIENT_ENTITY_METADATA);
+        Values<Transformer> VALUES = Values.of(/*CLIENT_OPEN_SCREEN,*/ CLIENT_SET_SCREEN_CONTENT /*,CLIENT_BUNDLE_DELIMITER*/, CLIENT_SET_SCREEN_SLOT, CLIENT_SPAWN_ENTITY, CLIENT_ENTITY_METADATA);
 
         Function<T, net.minecraft.network.protocol.Packet<ClientGamePacketListener>> transformer();
 

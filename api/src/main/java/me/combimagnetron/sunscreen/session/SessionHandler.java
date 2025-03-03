@@ -1,29 +1,21 @@
 package me.combimagnetron.sunscreen.session;
 
-import me.combimagnetron.sunscreen.user.User;
+import me.combimagnetron.passport.user.User;
+import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
 public class SessionHandler {
-    private final Collection<Session> activeSessions = new HashSet<>();
-    private final Function<Identifier, Session> sessionProvider;
+    private final Map<UUID, Session> sessions = new HashMap<>();
 
-    public SessionHandler(Function<Identifier, Session> sessionProvider) {
-        this.sessionProvider = sessionProvider;
+    public Session session(SunscreenUser<?> user) {
+        return sessions.get(user.uniqueIdentifier());
     }
 
-    public Session session(Identifier identifier) {
-        return sessionProvider.apply(identifier);
+    public void session(Session session) {
+        sessions.put(session.user().uniqueIdentifier(), session);
     }
-
-    public Collection<Session> activeSessions() {
-        return activeSessions;
-    }
-
 
 }

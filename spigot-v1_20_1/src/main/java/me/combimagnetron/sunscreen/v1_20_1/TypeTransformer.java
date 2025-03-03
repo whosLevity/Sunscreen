@@ -18,7 +18,7 @@ import java.util.stream.Stream;
 
 public interface TypeTransformer<T, V> {
     TypeTransformer<Component, net.minecraft.network.chat.Component> COMPONENT_COMPONENT = TypeTransformer.of(component -> net.minecraft.network.chat.Component.Serializer.fromJson(GsonComponentSerializer.gson().serialize(component), HolderLookup.Provider.create(Stream.of())));
-    TypeTransformer<Integer, MenuType<?>> INTEGER_MENU_TYPE = TypeTransformer.of(integer -> BuiltInRegistries.MENU.get(ResourceLocation.of(Mapping.MENU_TYPE.convert(integer), ':')));
+    //TypeTransformer<Integer, MenuType<?>> INTEGER_MENU_TYPE = TypeTransformer.of(integer -> BuiltInRegistries.MENU.get(ResourceLocation.of(Mapping.MENU_TYPE.convert(integer), ':')));
     TypeTransformer<Item<?>, ItemStack> ITEM_ITEM_STACK = TypeTransformer.of(item -> {
         Material material = null;
         if (item.material() instanceof Material material1) {

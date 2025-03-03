@@ -12,9 +12,9 @@ menus:
              y: "4%"
             pos: "(50%, 50%)"
             canvas:
-              font: "test:test"
-              icon: "a"
+              file: "textures/items/diamond.png"
             event:
+              type: "hover"
               condition: "player.name != herobrine & player.health < 10"
               do:
                 - "@self.tooltip = list(hello, world)"

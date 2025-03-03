@@ -59,14 +59,17 @@ public class AspectRatioMenu implements Menu {
     private final HashMap<Identifier, TextDisplay> divEntityIdHashMap = new HashMap<>();
     private final TextDisplay cursorDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
     private final TextDisplay instructionDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
+    private final TextDisplay temp = TextDisplay.textDisplay(Vector3d.vec3(0));
     private boolean cursorLocked = false;
     private boolean hover = false;
     private int stage = 0;
+    private int gameMode = 0;
     private Vec2d lastInput = Vec2d.of(0, 0);
     private PacketListenerCommon listener;
 
     public AspectRatioMenu(SunscreenUser<?> viewer) {
         this.viewer = viewer;
+        this.gameMode = viewer.gameMode();
         build();
         hideCursor();
         open(viewer);
@@ -112,9 +115,10 @@ public class AspectRatioMenu implements Menu {
     }
 
     private void leave() {
-        viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 0));
+        viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, gameMode));
         viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
-        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue()));
+        viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
+        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue()));
         divEntityIdHashMap.forEach((_, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
     }
@@ -139,7 +143,7 @@ public class AspectRatioMenu implements Menu {
                         Vec2d screenSize = Vec2d.of((end.x() - begin.x())/PixelFactor, (begin.y() - end.y())/PixelFactor);
                         viewer.screenSize(ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y()))));
                         leave();
-                        new SetupMenu(viewer);
+                        //new SetupMenu(viewer);
                         //new EditorMenu(viewer);
                     }
 
@@ -204,12 +208,10 @@ public class AspectRatioMenu implements Menu {
             user.fov(70);
         }
         user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
-        user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.SPECTATOR, Component.empty(), null)));
         user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
         for (Div div : divHashMap.values()) {
             divEntityIdHashMap.put(div.identifier(), spawn(div, user));
         }
-        TextDisplay temp = TextDisplay.textDisplay(Vector3d.vec3(user.position().x(), user.position().y() + 1.6, user.position().z()));
         temp.backgroundColor(-16184812);
         temp.text(Component.text(" "));
         temp.billboard(Display.Billboard.CENTER);

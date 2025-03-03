@@ -62,32 +62,14 @@ public class SunscreenPlugin extends JavaPlugin implements Listener {
         return (a << 16) | (b & 0xFFFF);
     }
 
+
+    //TEST
     @EventHandler
     public void onSwapHandItems(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
         //new Test(userManager.user(player));
         SunscreenUser<Player> user = userManager.user(player);
-        //new AspectRatioMenu(userManager.user(player));
-        /*PacketEvents.getAPI().getEventManager().registerListener(new PacketListener() {
-            @Override
-            public void onPacketSend(PacketSendEvent event) {
-                if (event.getPacketType() == PacketType.Play.Server.TIME_UPDATE) {
-                    WrapperPlayServerTimeUpdate wrapper = new WrapperPlayServerTimeUpdate(event);
-                    int combined = -combine(2, 2);
-                    System.out.println("combined: " + combined);
-                    wrapper.setWorldAge((long) Math.floor((user.fov() + 0.5F) / 180.0F * 24000.0F));
-                }
-            }
-        }, PacketListenerPriority.LOWEST);*/
-        //userManager.user(player).connection().send(ClientUpdateTime.updateTime(0, 0));
-        Div div = Div.div(Identifier.of("test"))
-                .size(Vec2d.of(256, 256))
-                .add(TextElement.textElement(Identifier.of("test", "label"), Position.pixel(0, 0), Text.text("Test"))
-                        .style(Style.color(), Color.of(255, 255, 255))
-                );
-        TextDisplay display = TextDisplay.textDisplay(user.position());
-        display.text(CanvasRenderer.optimized().render(div.render()).component());
-        user.show(display);
+        new AspectRatioMenu(userManager.user(player));
         System.out.println("x");
     }
 

@@ -83,6 +83,11 @@ public class UserImpl implements SunscreenUser<Player> {
     }
 
     @Override
+    public int gameMode() {
+        return player.getGameMode().getValue();
+    }
+
+    @Override
     public ScreenSize screenSize() {
         return screenSize;
     }

@@ -190,7 +190,7 @@ public interface Menu {
         }
 
         private void leave() {
-            viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 0));
+            viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, viewer.gameMode()));
             viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
             viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
             viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), background.id().intValue()));
@@ -208,7 +208,6 @@ public interface Menu {
                 user.fov(70);
             }
             user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
-            user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.SPECTATOR, Component.empty(), null)));
             user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
             for (Div div : divHashMap.values()) {
                 divEntityIdHashMap.put(div.identifier(), spawn(div, user));

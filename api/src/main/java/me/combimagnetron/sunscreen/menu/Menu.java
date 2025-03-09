@@ -101,11 +101,16 @@ public interface Menu {
             SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
         }
 
+        /**
+         * Tick method for the menu, called every tick.
+         * @param tick Tick to calculate generation time.
+         */
         @Override
         public void tick(Tick tick) {
             if (damageTick > 0) {
                 damageTick--;
                 background.backgroundColor(Color.of(backgroundColor.red(), backgroundColor.green(), backgroundColor.blue(), 123).rgb());
+                MenuHelper.send(viewer, background);
             } else {
                 background(backgroundColor);
             }
@@ -122,6 +127,7 @@ public interface Menu {
             cursorDisplay.text(Component.text("e").font(Key.key("comet:arrow")));
             cursorDisplay.backgroundColor(0);
             cursorDisplay.billboard(Display.Billboard.CENTER);
+            cursorDisplay.brightness(15, 15);
             Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, 0, -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
             cursorDisplay.transformation(transformation);
             viewer.show(cursorDisplay);
@@ -155,8 +161,13 @@ public interface Menu {
             damageTick += 20;
         }
 
+        /**
+         * Takes Color argument and sets the background accordingly, defaults to black.
+         * @param color Color to set the background to, can be transparent.
+         */
         public void background(Color color) {
             background.backgroundColor(color.rgb());
+            background.text(Component.text(" "));
             this.backgroundColor = color;
             MenuHelper.send(viewer, background);
         }
@@ -164,18 +175,19 @@ public interface Menu {
         private void move() {
             Vec2d translation = lastInput.mul(1);
             translation = translation.add(0.003, -0.010);
+            viewer.message(Component.text("a"));
             Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
             cursorDisplay.transformation(transformation);
             MenuHelper.send(viewer, cursorDisplay);
             for (Map.Entry<Identifier, TextDisplay> entry: divEntityIdHashMap.entrySet()) {
                 Div div = divHashMap.get(entry.getKey());
                 if (div instanceof Div.NonRenderDiv) continue;
-                Vector3d divTranslation = entry.getValue().transformation().translation();
-                Vec2d divPos = ViewportHelper.toScreen(divTranslation, viewer.screenSize()).sub(Vec2d.of(div.size().x() * 0.5, div.size().y()));
+                Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
                 Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, 10);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos, div.size())) {
+                    //System.out.println("Hovered " + cursorPos + " " + cursorTranslation + " " + viewer.screenSize());
                     ((Div.Impl)div).handleHover(cursorPos.sub(divPos));
                     entry.getValue().text(CanvasRenderer.optimized().render(div.render()).component());
                     MenuHelper.send(viewer, entry.getValue());
@@ -183,6 +195,10 @@ public interface Menu {
             }
         }
 
+        /**
+         * Closes the menu and sends the necessary packets to the viewer.
+         * @return True if the menu was closed successfully.
+         */
         @Override
         public boolean close() {
             leave();
@@ -192,11 +208,16 @@ public interface Menu {
         private void leave() {
             viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, viewer.gameMode()));
             viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
+            viewer.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(viewer.uniqueIdentifier(), viewer.name()), true, 0, GameMode.getById(viewer.gameMode()), Component.empty(), null)));
             viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
             viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), background.id().intValue()));
-            divEntityIdHashMap.forEach((_, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
+            divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         }
 
+        /**
+         * Opens the menu and sends the necessary packets to the viewer.
+         * @param user User to open the menu for.
+         */
         @Override
         public void open(SunscreenUser<?> user) {
             user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
@@ -208,6 +229,7 @@ public interface Menu {
                 user.fov(70);
             }
             user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
+            user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.SPECTATOR, Component.empty(), null)));
             user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
             for (Div div : divHashMap.values()) {
                 divEntityIdHashMap.put(div.identifier(), spawn(div, user));
@@ -218,7 +240,10 @@ public interface Menu {
             entityIds.add(cursorDisplay.id().intValue());
             background.billboard(Display.Billboard.CENTER);
             Display.Transformation tempTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -60, -0.27)).scale(Vector3d.vec3(500, 500, (double) 1/24));
+            background.text(Component.text(" "));
             background.transformation(tempTransformation);
+            background.brightness(15, 15);
+            background.backgroundColor(backgroundColor.rgb());
             user.show(background);
             entityIds.add(background.id().intValue());
             user.show(cursorDisplay);
@@ -233,10 +258,12 @@ public interface Menu {
             TextDisplay display = TextDisplay.textDisplay(user.position());
             display.billboard(Display.Billboard.CENTER);
             Vector3d scale = div.scale();
-            Vector3d translation = ViewportHelper.toTranslation(Vec2d.of(div.position().x().pixel() + div.size().x() * 0.5, div.position().y().pixel() /*- div.size().y() * 0.5*/), viewer.screenSize());
+            System.out.println(viewer.screenSize());
+            Vector3d translation = ViewportHelper.toTranslation(Vec2d.of(div.position().x().pixel() + div.size().x() * 0.5, div.position().y().pixel() + div.size().y()), viewer.screenSize());
             Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.25)).scale(Vector3d.vec3((double) 1/(24/scale.x()), (double) 1/(24/scale.y()), (double) 1/(24/scale.z())));
             display.transformation(transformation);
             Component component = CanvasRenderer.optimized().render(div.render()).component();
+            display.brightness(15, 15);
             display.backgroundColor(0x00000000);
             display.text(component);
             display.lineWidth(200000);

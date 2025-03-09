@@ -95,7 +95,7 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
 
     @Override
     public void hover(Vec2d pos) {
-        System.out.println(pos);
+        //System.out.println(pos);
         for (Map.Entry<ButtonElement, ButtonElement.State> button : buttons.entrySet()) {
             buttons.replace(button.getKey(), ButtonElement.State.DEFAULT);
         }

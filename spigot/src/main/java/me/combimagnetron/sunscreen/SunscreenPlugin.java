@@ -24,6 +24,8 @@ import me.combimagnetron.sunscreen.user.UserManager;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Scheduler;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

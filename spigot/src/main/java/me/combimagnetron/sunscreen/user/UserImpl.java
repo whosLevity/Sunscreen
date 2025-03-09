@@ -10,13 +10,9 @@ import me.combimagnetron.passport.PacketEventsConnectionImpl;
 import me.combimagnetron.passport.internal.entity.Entity;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.internal.network.Connection;
-import me.combimagnetron.passport.user.User;
-import me.combimagnetron.passport.util.Pos2D;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
 import me.combimagnetron.sunscreen.session.Session;
-import me.combimagnetron.sunscreen.session.SessionHandler;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import org.bukkit.entity.Player;
 
 import java.util.List;

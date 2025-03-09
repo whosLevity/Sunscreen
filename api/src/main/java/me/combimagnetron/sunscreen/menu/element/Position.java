@@ -69,16 +69,17 @@ public interface Position {
         }
 
         public Position finish() {
-            return new Impl(finalise(x.coords), finalise(y.coords));
+            return new Impl(finalise(x.coords, true), finalise(y.coords, false));
         }
 
-        private CoordType finalise(List<CoordType> coords) {
+        private CoordType finalise(List<CoordType> coords, boolean x) {
             CoordType finalCoord = CoordType.pixel(0);
             for (CoordType coord : coords) {
                 if (coord instanceof CoordType.PixelCoordType) {
                     finalCoord = CoordType.pixel(finalCoord.pixel() + coord.pixel());
                 } else if (coord instanceof CoordType.PercentageCoordType) {
-                    finalCoord = CoordType.pixel(finalCoord.pixel() + (coord.pixel() / 100 * user.screenSize().pixel().x()));
+                    double size = x ? user.screenSize().pixel().x() : user.screenSize().pixel().y();
+                    finalCoord = CoordType.pixel(finalCoord.pixel() + (coord.pixel() / 100 * size));
                 }
             }
             return finalCoord;

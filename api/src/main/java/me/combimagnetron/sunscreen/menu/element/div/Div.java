@@ -87,16 +87,14 @@ public interface Div extends Editable {
         public void handleHover(Vec2d pos) {
             for (Element element : elements.values()) {
                 if (element instanceof Interactable interactable && interactable.reactiveToHover()) {
-                    System.out.println(pos);
-                    System.out.println(element.position() + " " + element.size());
+                    //System.out.println(pos);
+                    //System.out.println(element.position() + " " + element.size());
                     if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()), element.size())) {
                         //interactable.hover(null);
                         continue;
                     }
                     //Dispatcher.dispatcher().post(ClickElementEvent.class, ClickElementEvent.create());
-                    System.out.println("sec");
                     interactable.hover(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
-                    System.out.println("thir");
                 }
             }
         }

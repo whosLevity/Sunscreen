@@ -119,7 +119,7 @@ public class AspectRatioMenu implements Menu {
         viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
         viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
         viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue()));
-        divEntityIdHashMap.forEach((_, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
+        divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
     }
 
@@ -131,19 +131,19 @@ public class AspectRatioMenu implements Menu {
                     WrapperPlayClientPlayerRotation packet = new WrapperPlayClientPlayerRotation(event);
                     float yaw = packet.getYaw();
                     float pitch = -packet.getPitch();
-                    Vec2d input = Vec2d.of(yaw, pitch).sub(lastInput).div(500);
-                    lastInput = input;
+                    lastInput = Vec2d.of(yaw, pitch).sub(lastInput).div(500);
                     move();
                 } else if (event.getPacketType() == PacketType.Play.Client.ENTITY_ACTION) {
                     WrapperPlayClientEntityAction packet = new WrapperPlayClientEntityAction(event);
                     if (packet.getAction() == WrapperPlayClientEntityAction.Action.STOP_SNEAKING) {
                         Vector3d begin = divEntityIdHashMap.get(Identifier.of("lower_left")).transformation().translation();
                         Vector3d end = divEntityIdHashMap.get(Identifier.of("upper_right")).transformation().translation();
-                        System.out.println(begin + " " + end);
-                        Vec2d screenSize = Vec2d.of((end.x() - begin.x())/PixelFactor, (begin.y() - end.y())/PixelFactor);
+                        begin = begin.add(Vector3d.vec3(-9 * PixelFactor, 12.75 * PixelFactor, 0));
+                        end = end.add(Vector3d.vec3(9 * PixelFactor, -12.75 * PixelFactor, 0));
+                        Vec2d screenSize = Vec2d.of((end.x() - begin.x())/PixelFactor, (end.y() - begin.y())/PixelFactor);
                         viewer.screenSize(ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y()))));
                         leave();
-                        //new SetupMenu(viewer);
+                        new SetupMenu(viewer);
                         //new EditorMenu(viewer);
                     }
 
@@ -180,6 +180,8 @@ public class AspectRatioMenu implements Menu {
                     Identifier.of("lower_right"), "2d");
             //display.text(CanvasRenderer.optimized().render(canvas).component().append(Component.text("a")));
             if (!charMap.containsKey(identifier)) return;
+            display.brightness(15, 15);
+            display.onFire(true);
             display.text(Component.text(charMap.get(identifier)).font(Key.key("comet:arrow")));
             double xMov = translation.x();
             double yMov = translation.y();
@@ -214,6 +216,7 @@ public class AspectRatioMenu implements Menu {
         }
         temp.backgroundColor(-16184812);
         temp.text(Component.text(" "));
+        temp.brightness(15, 15);
         temp.billboard(Display.Billboard.CENTER);
         Display.Transformation tempTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -60, -0.27)).scale(Vector3d.vec3(500, 500, (double) 1/24));
         temp.transformation(tempTransformation);
@@ -222,7 +225,7 @@ public class AspectRatioMenu implements Menu {
         entityIds.add(user.entityId());
         //entityIds.add(instructionDisplay.id().intValue());
         entityIds.add(temp.id().intValue());
-        showCursor();
+        //showCursor();
         entityIds.add(cursorDisplay.id().intValue());
         Scheduler.async(() -> {
             entityIds.addAll(divEntityIdHashMap.values().stream().map(entity -> entity.id().intValue()).toList());
@@ -243,7 +246,9 @@ public class AspectRatioMenu implements Menu {
         if (!(div instanceof Div.NonRenderDiv)) {
             component = CanvasRenderer.optimized().render(div.render()).component();
         }
+        display.onFire(true);
         display.backgroundColor(0);
+        display.brightness(15, 15);
         display.text(component);
         display.lineWidth(200000);
         user.show(display);

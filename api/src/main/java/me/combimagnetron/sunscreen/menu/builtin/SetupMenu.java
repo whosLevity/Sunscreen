@@ -27,7 +27,8 @@ public class SetupMenu extends Menu.Float {
     }
 
     private void build() {
-        Div test = Div.div(Identifier.of("test")).size(Vec2d.of(50, 50)).position(Position.position(viewer).x().percentage(0).back().y().percentage(0).pixel(50).back().finish())
+        background(Color.of(62, 53, 70));
+        Div test = Div.div(Identifier.of("test")).size(Vec2d.of(76, 76)).position(Position.position(viewer).x().pixel(0).back().y().pixel(0).back().finish())
                 .add(TextElement.textElement(Identifier.of("test", "label"), Position.pixel(0, 0), Text.text("Test"))
                         .style(Style.color(), Color.of(255, 255, 255))
                 );
@@ -71,7 +72,8 @@ public class SetupMenu extends Menu.Float {
                                 ButtonElement.buttonElement(Vec2d.of(115, 12), Identifier.of("selector", "dutch"), Position.pixel(0, 42)).hover(spriteSheet.sub(Vec2d.of(115, 12), Vec2d.of(115, 182))).standard(spriteSheet.sub(Vec2d.of(115, 12), Vec2d.of(0, 182))).build()
                         ).build()
                 );
-        main.position(Position.position(viewer).x().percentage(50).pixel(-main.size().x() * 0.5).back().y().percentage(50).pixel(-main.size().y() * 0.5).back().finish());
+        Position position = Position.position(viewer).x().percentage(50).pixel(-main.size().x() * 0.5).back().y().percentage(50).pixel(-main.size().y() * 0.5).back().finish();
+        main.position(position);
         div(main);
     }
 

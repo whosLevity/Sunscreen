@@ -13,20 +13,19 @@ import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.menu.Menu;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
+import net.kyori.adventure.audience.Audience;
+
+import java.util.Optional;
 
 public class MenuListener implements PacketListener {
 
     @Override
     public void onPacketReceive(PacketReceiveEvent event) {
-        SunscreenUser<?> user;
-        try {
-            user = SunscreenLibrary.library().users().user(event.getUser().getUUID()).orElse(null);
-        } catch (NullPointerException e) {
+        Optional<SunscreenUser<Audience>> userOptional = SunscreenLibrary.library().users().user(event.getUser().getUUID());
+        if (userOptional.isEmpty()) {
             return;
         }
-        if (user == null) {
-            return;
-        }
+        SunscreenUser<?> user = userOptional.get();
         if (user.session() == null) {
             return;
         }
@@ -81,6 +80,13 @@ public class MenuListener implements PacketListener {
     }
 
     private void handleAnimation(WrapperPlayClientAnimation packet, SunscreenUser<?> user) {
+        Menu menu = menu(user);
+        if (menu == null) {
+            return;
+        }
+        if (menu instanceof Menu.Base base) {
+            base.handleClick();
+        }
     }
 
     private void handleChatMessage(WrapperPlayClientChatMessage packet, SunscreenUser<?> user) {
@@ -88,7 +94,11 @@ public class MenuListener implements PacketListener {
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
-        SunscreenUser<?> user = SunscreenLibrary.library().users().user(event.getUser().getUUID()).get();
+        Optional<SunscreenUser<Audience>> userOptional = SunscreenLibrary.library().users().user(event.getUser().getUUID());
+        if (userOptional.isEmpty()) {
+            return;
+        }
+        SunscreenUser<?> user = userOptional.get();
         if (user.session() == null) {
             return;
         }

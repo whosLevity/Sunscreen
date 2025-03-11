@@ -1,6 +1,7 @@
 package me.combimagnetron.sunscreen.menu.builtin.editor;
 
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
+import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.Menu;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.ColorPickerElement;
@@ -38,8 +39,8 @@ public class EditorMenu extends Menu.FloatImpl {
                 .position(
                 Position.position(viewer)
                         .x()
-                        .percentage(100 - 78.06122449)
-                            .pixel(-2)
+                        .percentage(100 - 22.04081633)
+                            .pixel(-2 - previewSize.x() * 0.5)
                         .back()
                         .y()
                             .pixel(2)
@@ -47,13 +48,28 @@ public class EditorMenu extends Menu.FloatImpl {
                         .finish());
         div(editor);
         Vec2d sizeBarSize = Vec2d.of(viewer.screenSize().pixel().mul(1 - PreviewScale).sub(6, 0).x(), previewSize.y());
+        Div test = Div.div(Identifier.of("test"))
+                .size(Vec2d.of(76, 76))
+                .position(
+                Position.position(viewer)
+                        .x()
+                            .percentage(0)
+                        .back()
+                        .y()
+                            .percentage(0)
+                        .back()
+                        .finish())
+                .add(
+                        TextElement.textElement(Identifier.of("test", "label"), Position.pixel(0, 0), Text.text("Test"))
+                                .style(Style.color(), Color.of(255, 255, 255))
+                );
+        div(test);
         Div sidebar = Div.div(Identifier.of("editor", "sidebar"))
                 .size(sizeBarSize)
                 .position(
                 Position.position(viewer)
                         .x()
-                        .percentage(100 - 22.04081633)
-                            .pixel(-2)
+                            .pixel(2)
                         .back()
                         .y()
                             .pixel(2)

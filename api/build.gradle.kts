@@ -1,5 +1,6 @@
 plugins {
     java
+    `maven-publish`
 }
 
 group = "me.combimagnetron"
@@ -34,4 +35,26 @@ dependencies {
     compileOnly("org.jetbrains.kotlin:kotlin-reflect:1.7.22")
     compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.22")
     compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
+}
+
+publishing {
+    repositories {
+        maven {
+            name = "combimagnetron"
+            url = uri("http://repo.combimagnetron.xyz/releases/")
+            credentials(PasswordCredentials::class)
+            authentication {
+                create<BasicAuthentication>("basic")
+            }
+            isAllowInsecureProtocol = true
+        }
+    }
+    publications {
+        create<MavenPublication>("maven") {
+            groupId = project.group.toString()
+            artifactId = "Sunscreen"
+            version = project.version.toString()
+            from(components["java"])
+        }
+    }
 }

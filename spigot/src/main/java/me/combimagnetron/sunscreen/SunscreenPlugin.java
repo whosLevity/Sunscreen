@@ -9,7 +9,9 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
+import me.combimagnetron.passport.event.EventBus;
 import me.combimagnetron.passport.internal.entity.impl.display.TextDisplay;
+import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.builtin.AspectRatioMenu;
@@ -24,6 +26,7 @@ import me.combimagnetron.sunscreen.user.UserManager;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Scheduler;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.v1_21_4.resolution.ResolutionFinderImpl;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -69,10 +72,11 @@ public class SunscreenPlugin extends JavaPlugin implements Listener {
     @EventHandler
     public void onSwapHandItems(PlayerSwapHandItemsEvent event) {
         Player player = event.getPlayer();
-        //new Test(userManager.user(player));
-        SunscreenUser<Player> user = userManager.user(player);
-        new AspectRatioMenu(userManager.user(player));
-        System.out.println("x");
+        //new AspectRatioMenu(userManager.user(player));
+        new ResolutionFinderImpl().find(userManager.user(player));
+        EventBus.subscribe(ClickElementEvent.class, event1 -> {
+            System.out.println("Clicked");
+        });
     }
 
     public UserManager userManager() {

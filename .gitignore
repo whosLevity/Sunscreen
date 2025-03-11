@@ -15,6 +15,10 @@
 # AWS User-specific
 .idea/**/aws.xml
 
+# Publish stuff
+*.env
+gradle.properties
+
 # Run server task files
 spigot/run/
 
@@ -179,3 +183,4 @@ gradle-app.setting
 
 # .DS-STORE
 **/.DS_Store
+gradle.properties

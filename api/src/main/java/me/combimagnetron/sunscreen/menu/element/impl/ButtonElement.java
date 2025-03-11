@@ -5,6 +5,7 @@ import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.event.HoverElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.menu.element.Element;
+import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
@@ -16,8 +17,9 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
 
-public class ButtonElement extends SimpleBufferedElement {
+public class ButtonElement extends SimpleBufferedElement implements Interactable {
     private final Map<State, Canvas> icons = new HashMap<>();
+    private Consumer<ClickElementEvent<ButtonElement>> click;
     private Canvas selected;
 
     protected ButtonElement(Vec2d size, Position position, Identifier identifier, Map<State, Canvas> icon) {
@@ -51,6 +53,28 @@ public class ButtonElement extends SimpleBufferedElement {
 
     public Map<State, Canvas> icons() {
         return icons;
+    }
+
+    @Override
+    public boolean reactiveToHover() {
+        return true;
+    }
+
+    @Override
+    public boolean reactiveToClick() {
+        return true;
+    }
+
+    @Override
+    public void hover(Vec2d pos) {
+
+    }
+
+    @Override
+    public void click(Vec2d pos) {
+        if (click != null) {
+            click.accept(ClickElementEvent.create(this, pos, new Input.Type.MouseClick(false)));
+        }
     }
 
     public static class Builder {

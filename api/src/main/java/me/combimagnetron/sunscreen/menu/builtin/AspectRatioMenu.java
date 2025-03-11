@@ -143,8 +143,8 @@ public class AspectRatioMenu implements Menu {
                         Vec2d screenSize = Vec2d.of((end.x() - begin.x())/PixelFactor, (end.y() - begin.y())/PixelFactor);
                         viewer.screenSize(ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y()))));
                         leave();
-                        new SetupMenu(viewer);
-                        //new EditorMenu(viewer);
+                        //new SetupMenu(viewer);
+                        new EditorMenu(viewer);
                     }
 
                 }
@@ -178,7 +178,6 @@ public class AspectRatioMenu implements Menu {
                     Identifier.of("upper_right"), "2b",
                     Identifier.of("lower_left"), "1c",
                     Identifier.of("lower_right"), "2d");
-            //display.text(CanvasRenderer.optimized().render(canvas).component().append(Component.text("a")));
             if (!charMap.containsKey(identifier)) return;
             display.brightness(15, 15);
             display.onFire(true);
@@ -223,9 +222,7 @@ public class AspectRatioMenu implements Menu {
         viewer.show(temp);
         List<Integer> entityIds = new ArrayList<>();
         entityIds.add(user.entityId());
-        //entityIds.add(instructionDisplay.id().intValue());
         entityIds.add(temp.id().intValue());
-        //showCursor();
         entityIds.add(cursorDisplay.id().intValue());
         Scheduler.async(() -> {
             entityIds.addAll(divEntityIdHashMap.values().stream().map(entity -> entity.id().intValue()).toList());
@@ -235,14 +232,12 @@ public class AspectRatioMenu implements Menu {
     }
 
     private TextDisplay spawn(Div div, User<?> user) {
-        System.out.println(div.identifier().string());
         TextDisplay display = TextDisplay.textDisplay(user.position());
         display.billboard(Display.Billboard.CENTER);
         double yOffset = div.canvas().size().mul(PixelFactor).mul(0.5).y();
         Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -yOffset, -0.25)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
         display.transformation(transformation);
         Component component = Component.text(" ");
-        System.out.println(div.getClass().getName());
         if (!(div instanceof Div.NonRenderDiv)) {
             component = CanvasRenderer.optimized().render(div.render()).component();
         }

@@ -39,12 +39,12 @@ public class UserManager implements Listener, UserHandler<Player, SunscreenUser<
 
     @Override
     public Optional<SunscreenUser<Player>> user(UUID uuid) {
-        return Optional.of(userMap.get(uuid));
+        return Optional.ofNullable(userMap.get(uuid));
     }
 
     @Override
     public Optional<SunscreenUser<Player>> user(String s) {
-        return Optional.of(userMap.get(Bukkit.getPlayer(s).getUniqueId()));
+        return Optional.ofNullable(userMap.get(Bukkit.getPlayer(s).getUniqueId()));
     }
 
     @Override

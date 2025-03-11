@@ -78,10 +78,11 @@ tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
 
 dependencies {
     implementation(project(":api"))
+    implementation(project(":spigot-v1_21_4"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
     compileOnly("net.kyori:adventure-api:4.14.0")
     compileOnly("net.kyori:adventure-text-serializer-gson:4.14.0")
-    compileOnly("io.papermc.paper:paper-api:1.21.3-R0.1-SNAPSHOT")
+    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
 }
 

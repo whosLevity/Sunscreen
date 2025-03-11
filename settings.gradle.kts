@@ -2,6 +2,7 @@ pluginManagement {
     repositories {
         mavenCentral()
         gradlePluginPortal()
+        maven("https://repo.papermc.io/repository/maven-public/")
     }
 }
 
@@ -12,5 +13,4 @@ plugins {
 rootProject.name = "Sunscreen"
 include("api")
 include("spigot")
-//include("spigot-v1_20_1")
-include("R1_21_4")
+include("spigot-v1_21_4")

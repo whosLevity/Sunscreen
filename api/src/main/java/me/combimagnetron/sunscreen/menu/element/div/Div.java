@@ -9,6 +9,7 @@ import me.combimagnetron.sunscreen.menu.Editable;
 import me.combimagnetron.sunscreen.menu.element.Element;
 import me.combimagnetron.sunscreen.menu.element.Interactable;
 import me.combimagnetron.sunscreen.menu.element.Position;
+import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.util.*;
 
 import java.util.Collection;
@@ -82,6 +83,19 @@ public interface Div extends Editable {
                 }
             }
             return image;
+        }
+
+        public void handleClick(Vec2d pos, Input.Type.MouseClick click) {
+            for (Element element : elements.values()) {
+                if (element instanceof Interactable interactable && interactable.reactiveToClick()) {
+                    if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()), element.size())) {
+                        interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                        continue;
+                    }
+                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())), click));
+                    interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                }
+            }
         }
 
         public void handleHover(Vec2d pos) {

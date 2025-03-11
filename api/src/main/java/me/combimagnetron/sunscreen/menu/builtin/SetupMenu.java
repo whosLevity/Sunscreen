@@ -27,7 +27,7 @@ public class SetupMenu extends Menu.Float {
     }
 
     private void build() {
-        background(Color.of(62, 53, 70));
+        //background(Color.of(62, 53, 70, 255));
         Div test = Div.div(Identifier.of("test")).size(Vec2d.of(76, 76)).position(Position.position(viewer).x().pixel(0).back().y().pixel(0).back().finish())
                 .add(TextElement.textElement(Identifier.of("test", "label"), Position.pixel(0, 0), Text.text("Test"))
                         .style(Style.color(), Color.of(255, 255, 255))

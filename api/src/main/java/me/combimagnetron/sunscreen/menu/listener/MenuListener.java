@@ -4,13 +4,13 @@ import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientAnimation;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientChatMessage;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientEntityAction;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation;
+import com.github.retrooper.packetevents.wrapper.play.client.*;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDamageEvent;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.menu.Menu;
+import me.combimagnetron.sunscreen.menu.input.InputHandler;
+import me.combimagnetron.sunscreen.menu.input.TextInput;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import net.kyori.adventure.audience.Audience;
@@ -42,8 +42,36 @@ public class MenuListener implements PacketListener {
             case PacketType.Play.Client.CHAT_MESSAGE:
                 handleChatMessage(new WrapperPlayClientChatMessage(event), user);
                 break;
+            case PacketType.Play.Client.NAME_ITEM:
+                handleItemName(new WrapperPlayClientNameItem(event), user);
+                break;
+            case PacketType.Play.Client.CLICK_WINDOW:
+                handleClickWindow(new WrapperPlayClientClickWindow(event), user);
+                break;
             default:
                 break;
+        }
+    }
+
+    private void handleClickWindow(WrapperPlayClientClickWindow packet, SunscreenUser<?> user) {
+        Menu menu = menu(user);
+        if (menu == null) {
+            return;
+        }
+        if (menu instanceof Menu.Base base && base.inputHandler().active()) {
+            InputHandler inputHandler = base.inputHandler();
+            inputHandler.quit();
+        }
+    }
+
+    private void handleItemName(WrapperPlayClientNameItem packet, SunscreenUser<?> user) {
+        Menu menu = menu(user);
+        if (menu == null) {
+            return;
+        }
+        if (menu instanceof Menu.Base base && base.inputHandler().active()) {
+            InputHandler inputHandler = base.inputHandler();
+            inputHandler.textInput().handle(packet.getItemName());
         }
     }
 
@@ -114,6 +142,8 @@ public class MenuListener implements PacketListener {
                 break;
             case PacketType.Play.Server.DAMAGE_EVENT:
                 handleDamageEventSend(event, user);
+            case PacketType.Play.Server.TIME_UPDATE:
+                handleTimeUpdateSend(event, user);
             default:
                 break;
         }
@@ -125,6 +155,18 @@ public class MenuListener implements PacketListener {
             return;
         }
         event.setCancelled(true);
+    }
+
+    private void handleTimeUpdateSend(PacketSendEvent event, SunscreenUser<?> user) {
+        Menu menu = menu(user);
+        if (menu == null) {
+            return;
+        }
+        if (!event.getPacketType().equals(PacketType.Play.Server.TIME_UPDATE)) {
+            return;
+        }
+        WrapperPlayServerTimeUpdate packet = new WrapperPlayServerTimeUpdate(event);
+        packet.setWorldAge(-100);
     }
 
     private void handleBossBarSend(PacketSendEvent event, SunscreenUser<?> user) {

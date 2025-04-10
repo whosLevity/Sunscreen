@@ -19,11 +19,12 @@ import java.util.function.Consumer;
 
 public class ButtonElement extends SimpleBufferedElement implements Interactable {
     private final Map<State, Canvas> icons = new HashMap<>();
-    private Consumer<ClickElementEvent<ButtonElement>> click;
+    private final Consumer<ClickElementEvent<ButtonElement>> click;
     private Canvas selected;
 
-    protected ButtonElement(Vec2d size, Position position, Identifier identifier, Map<State, Canvas> icon) {
+    protected ButtonElement(Vec2d size, Position position, Identifier identifier, Map<State, Canvas> icon, Consumer<ClickElementEvent<ButtonElement>> click) {
         super(size, identifier, position);
+        this.click = click;
         icons.putAll(icon);
     }
 
@@ -48,7 +49,7 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
 
     @Override
     public Canvas canvas() {
-        return selected;
+        return selected != null ? selected : icons.get(State.DEFAULT);
     }
 
     public Map<State, Canvas> icons() {
@@ -66,15 +67,16 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
     }
 
     @Override
-    public void hover(Vec2d pos) {
-
+    public boolean hover(Vec2d pos) {
+        return false;
     }
 
     @Override
-    public void click(Vec2d pos) {
+    public boolean click(Vec2d pos) {
         if (click != null) {
             click.accept(ClickElementEvent.create(this, pos, new Input.Type.MouseClick(false)));
         }
+        return true;
     }
 
     public static class Builder {
@@ -82,6 +84,7 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
         private final Identifier identifier;
         private final Position position;
         private final HashMap<State, Canvas> icons = new HashMap<>();
+        private Consumer<ClickElementEvent<ButtonElement>> click = (t) -> {};
 
         public Builder(Vec2d size, Identifier identifier, Position position) {
             this.size = size;
@@ -98,6 +101,11 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
             return icon(State.DEFAULT, icon);
         }
 
+        public Builder click(Consumer<ClickElementEvent<ButtonElement>> click) {
+            this.click = click;
+            return this;
+        }
+
         public Builder hover(Canvas icon) {
             return icon(State.HOVER, icon);
         }
@@ -107,7 +115,7 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
         }
 
         public ButtonElement build() {
-            return new ButtonElement(size, position, identifier, icons);
+            return new ButtonElement(size, position, identifier, icons, click);
         }
     }
 

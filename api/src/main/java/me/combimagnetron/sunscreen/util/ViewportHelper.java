@@ -30,6 +30,11 @@ public class ViewportHelper {
                 0);
     }
 
+    /**
+     * Converts a Vector3d to a Vec2d by supplying a Vec2d with the x and y values.
+     * @param vector3d The Vector3d to convert.
+     * @return A Vec2d with the x and y values of the Vector3d.
+     */
     public static Vec2d fromVector3d(Vector3d vector3d) {
         return Vec2d.of(vector3d.x(), vector3d.y());
     }

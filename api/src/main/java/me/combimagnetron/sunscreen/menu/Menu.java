@@ -9,6 +9,8 @@ import me.combimagnetron.passport.internal.entity.Entity;
 import me.combimagnetron.passport.internal.entity.impl.display.Display;
 import me.combimagnetron.passport.internal.entity.impl.display.TextDisplay;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
+import me.combimagnetron.passport.util.condition.Condition;
+import me.combimagnetron.passport.util.condition.Supplier;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
@@ -16,10 +18,15 @@ import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.menu.element.Element;
+import me.combimagnetron.sunscreen.menu.element.Position;
 import me.combimagnetron.sunscreen.menu.element.div.Div;
 import me.combimagnetron.sunscreen.menu.element.div.Edit;
 import me.combimagnetron.sunscreen.menu.element.div.ScrollableDiv;
 import me.combimagnetron.sunscreen.menu.input.Input;
+import me.combimagnetron.sunscreen.menu.input.InputHandler;
+import me.combimagnetron.sunscreen.menu.renderer.div.DivRenderer;
+import me.combimagnetron.sunscreen.menu.renderer.div.Reference;
+import me.combimagnetron.sunscreen.menu.renderer.div.ReferenceHolder;
 import me.combimagnetron.sunscreen.menu.timing.Tick;
 import me.combimagnetron.sunscreen.menu.timing.Tickable;
 import me.combimagnetron.sunscreen.session.Session;
@@ -28,14 +35,12 @@ import me.combimagnetron.sunscreen.util.*;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.ArrayUtils;
+import org.jetbrains.annotations.NotNull;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
-public interface Menu {
+public sealed interface Menu permits Menu.Base, AspectRatioMenu {
 
     Menu apply(Draft draft);
 
@@ -45,8 +50,10 @@ public interface Menu {
 
     boolean close();
 
-    abstract class Base implements Menu {
-        protected final HashMap<Identifier, Div> divHashMap = new HashMap<>();
+    InputHandler inputHandler();
+
+    sealed abstract class Base implements Menu permits FloatImpl, SingleImpl {
+        protected final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
 
         @Override
         public Menu apply(Draft draft) {
@@ -60,9 +67,9 @@ public interface Menu {
                     }
                     divHashMap.put(edit.identifier(), div);
                 } else if (edit.type() == Element.class) {
-                    Edit<Element> elementEdit = (Edit<Element>) edit;
-                    Element element = divHashMap.get(edit.identifier()).elements().stream().filter(e -> e.identifier().equals(edit.identifier())).findFirst().orElse(null);
-                    for (Function<Element, Element> draftEdit : elementEdit.edits()) {
+                    Edit<Element<?>> elementEdit = (Edit<Element<?>>) edit;
+                    Element<?> element = divHashMap.get(edit.identifier()).elements().stream().filter(e -> e.identifier().equals(edit.identifier())).findFirst().orElse(null);
+                    for (Function<Element<?>, Element<?>> draftEdit : elementEdit.edits()) {
                         element = draftEdit.apply(element);
                     }
                     Div div = divHashMap.get(edit.identifier());
@@ -92,18 +99,35 @@ public interface Menu {
 
     }
 
-    abstract class FloatImpl extends Base implements Tickable {
+    non-sealed abstract class FloatImpl extends Base implements Tickable {
+        private final DivRenderer<TextDisplay> renderer = DivRenderer.font();
+        private final ReferenceHolder<TextDisplay> referenceHolder = renderer.referenceHolder();
         private final SunscreenUser<?> viewer;
-        private final HashMap<Identifier, TextDisplay> divEntityIdHashMap = new HashMap<>();
-        private final TextDisplay cursorDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
-        private final TextDisplay background = TextDisplay.textDisplay(Vector3d.vec3(0));
+        private final InputHandler inputHandler;
+        private final HashMap<Identifier, Boolean> lastPasses = new HashMap<>();
+        private final List<Integer> riding = new ArrayList<>();
+        private final TextDisplay cursorDisplay;
+        private final TextDisplay background;
+        private final Vector3d rotation;
+        private final Vector3d position;
+        private TextDisplay camera;
         private Color backgroundColor = Color.of(0, 0, 0, 255);
         private Vec2d lastInput = Vec2d.of(0, 0);
         private int damageTick = 0;
 
         public FloatImpl(SunscreenUser<?> viewer) {
+            this.rotation = viewer.rotation();
+            this.position = viewer.position();
             this.viewer = viewer;
             SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
+            this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
+            this.background = TextDisplay.textDisplay(viewer.position());
+            this.inputHandler = new InputHandler.Impl(viewer);
+        }
+
+        @Override
+        public InputHandler inputHandler() {
+            return inputHandler;
         }
 
         /**
@@ -111,7 +135,7 @@ public interface Menu {
          * @param tick Tick to calculate generation time.
          */
         @Override
-        public void tick(Tick tick) {
+        public boolean tick(@NotNull Tick tick) {
             if (damageTick > 0) {
                 damageTick--;
                 background.backgroundColor(Color.of(backgroundColor.red(), backgroundColor.green(), backgroundColor.blue(), 123).rgb());
@@ -119,6 +143,41 @@ public interface Menu {
             } else {
                 background(backgroundColor);
             }
+            for (Div<?> div : divHashMap.values()) {
+                boolean update = false;
+                if (div instanceof Tickable tickable) {
+                    update = tickable.tick(tick);
+                }
+                for (Element<?> element : div.elements()) {
+                    if (element instanceof Tickable tickable) {
+                        if (update) {
+                            tickable.tick(tick);
+                        } else {
+                            update = tickable.tick(tick);
+                        }
+                    }
+                }
+                if (update) {
+                    update(div);
+                }
+                if (div.condition() == null) {
+                    continue;
+                }
+                Condition.Result result = div.condition().eval(Supplier.of(viewer.platformSpecificPlayer(), viewer));
+                if (result == null) {
+                    continue;
+                }
+                if (lastPasses.get(div.identifier()) == result.value()) {
+                    continue;
+                }
+                if (!result.value()) {
+                    hide(div);
+                } else {
+                    show(div);
+                }
+                lastPasses.put(div.identifier(), result.value());
+            }
+            return true;
         }
 
         protected void hideCursor() {
@@ -146,36 +205,38 @@ public interface Menu {
 
         @Override
         public void handleSneak() {
-            leave();
+            close();
         }
 
         @Override
         public void handleClick() {
-            System.out.println("click");
             Dispatcher.dispatcher().post(ClickElementEvent.create(null, ViewportHelper.toScreen(cursorDisplay.transformation().translation(), viewer.screenSize()), new Input.Type.MouseClick(false)));
-            for (Map.Entry<Identifier, TextDisplay> entry: divEntityIdHashMap.entrySet()) {
-                Div div = divHashMap.get(entry.getKey());
+            for (Reference<TextDisplay> reference : referenceHolder.references()) {
+                Div div = reference.div();
                 if (div instanceof Div.NonRenderDiv) continue;
                 Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
                 Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, 10);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos, div.size())) {
-                    ((Div.Impl)div).handleClick(cursorPos.sub(divPos), new Input.Type.MouseClick(false));
-                    entry.getValue().text(CanvasRenderer.optimized().render(div.render()).component());
-                    MenuHelper.send(viewer, entry.getValue());
+                    boolean update = ((Div.Impl)div).handleClick(cursorPos.sub(divPos), new Input.Type.MouseClick(false));
+                    if (!update) {
+                        continue;
+                    }
+                    reference.t().text(CanvasRenderer.optimized().render(div.render()).component());
+                    MenuHelper.send(viewer, reference.t());
                 }
             }
         }
 
         @Override
         public void handleScroll(int slot) {
-            for (Map.Entry<Identifier, TextDisplay> entry : divEntityIdHashMap.entrySet()) {
-                Div div = divHashMap.get(entry.getKey());
+            for (Reference<TextDisplay> entry : referenceHolder.references()) {
+                Div div = entry.div();
                 if (div instanceof ScrollableDiv scrollableDiv) {
                     scrollableDiv.scroll(slot);
-                    entry.getValue().text(CanvasRenderer.optimized().render(div.render()).component());
-                    MenuHelper.send(viewer, entry.getValue());
+                    entry.t().text(CanvasRenderer.optimized().render(div.render()).component());
+                    MenuHelper.send(viewer, entry.t());
                 }
             }
         }
@@ -196,6 +257,54 @@ public interface Menu {
             MenuHelper.send(viewer, background);
         }
 
+        public void update(Div div) {
+            TextDisplay display = referenceHolder.reference(div.identifier()).t();
+            display.text(CanvasRenderer.optimized().render(div.render()).component());
+            MenuHelper.send(viewer, display);
+        }
+
+        public void hide(Div div) {
+            TextDisplay display = referenceHolder.reference(div.identifier()).t();
+            display.text(Component.empty());
+            MenuHelper.send(viewer, display);
+        }
+
+        public void hide(Identifier identifier) {
+            TextDisplay display = referenceHolder.reference(identifier).t();
+            display.text(Component.empty());
+            MenuHelper.send(viewer, display);
+        }
+
+        public void show(Identifier identifier) {
+            TextDisplay display = referenceHolder.reference(identifier).t();
+            display.text(CanvasRenderer.optimized().render(divHashMap.get(identifier).render()).component());
+            MenuHelper.send(viewer, display);
+        }
+
+        public void update(Identifier identifier) {
+            TextDisplay display = referenceHolder.reference(identifier).t();
+            display.text(CanvasRenderer.optimized().render(divHashMap.get(identifier).render()).component());
+            MenuHelper.send(viewer, display);
+        }
+
+        public void render(Div div) {
+            Reference<TextDisplay> reference = renderer.render(div, viewer);
+            TextDisplay display = reference.t();
+            display.text(CanvasRenderer.optimized().render(div.render()).component());
+            riding.add(display.id().intValue());
+            viewer.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(riding.toArray(new Integer[0]))));
+        }
+
+        public void show(Div div) {
+            TextDisplay display = referenceHolder.reference(div.identifier()).t();
+            display.text(CanvasRenderer.optimized().render(div.render()).component());
+            MenuHelper.send(viewer, display);
+        }
+
+        public DivRenderer<TextDisplay> renderer() {
+            return renderer;
+        }
+
         private void move() {
             Vec2d translation = lastInput.mul(1);
             translation = translation.add(0.003, -0.010);
@@ -203,17 +312,20 @@ public interface Menu {
             Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
             cursorDisplay.transformation(transformation);
             MenuHelper.send(viewer, cursorDisplay);
-            for (Map.Entry<Identifier, TextDisplay> entry: divEntityIdHashMap.entrySet()) {
-                Div div = divHashMap.get(entry.getKey());
+            for (Reference<TextDisplay> reference: referenceHolder.references()) {
+                Div div = reference.div();
                 if (div instanceof Div.NonRenderDiv) continue;
                 Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
                 Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, 10);
-                if (HoverHelper.isHovered(cursorTranslation, viewer, divPos, div.size())) {
-                    ((Div.Impl)div).handleHover(cursorPos.sub(divPos));
-                    entry.getValue().text(CanvasRenderer.optimized().render(div.render()).component());
-                    MenuHelper.send(viewer, entry.getValue());
+                if (HoverHelper.isHovered(cursorTranslation, viewer, divPos.mul(ViewportHelper.fromVector3d(div.scale())), div.size().mul(ViewportHelper.fromVector3d(div.scale())))) {
+                    boolean render = ((Div.Impl)div).handleHover(cursorPos.sub(divPos));
+                    if (!render) {
+                        continue;
+                    }
+                    reference.t().text(CanvasRenderer.optimized().render(div.render()).component());
+                    MenuHelper.send(viewer, reference.t());
                 }
             }
         }
@@ -225,6 +337,9 @@ public interface Menu {
         @Override
         public boolean close() {
             leave();
+            SunscreenLibrary.library().menuTicker().stop(this);
+            SunscreenLibrary.library().sessionHandler().session(Session.session(null, viewer));
+            viewer.resendInv();
             return true;
         }
 
@@ -233,8 +348,10 @@ public interface Menu {
             viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
             viewer.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(viewer.uniqueIdentifier(), viewer.name()), true, 0, GameMode.getById(viewer.gameMode()), Component.empty(), null)));
             viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
-            viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), background.id().intValue()));
-            divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
+            viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), background.id().intValue(), camera.id().intValue()));
+            viewer.connection().send(new WrapperPlayServerPlayerRotation((float) rotation.x(), (float) rotation.y()));
+            viewer.connection().send(new WrapperPlayServerPlayerPositionAndLook(viewer.position().x(), viewer.position().y(), viewer.position().z(), (float) rotation.x(), (float) rotation.y(), (byte)0, 0, false));
+            referenceHolder.references().forEach(reference -> viewer.connection().send(new WrapperPlayServerDestroyEntities(reference.t().id().intValue())));
         }
 
         /**
@@ -244,7 +361,7 @@ public interface Menu {
         @Override
         public void open(SunscreenUser<?> user) {
             user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
-            TextDisplay camera = TextDisplay.textDisplay(Vector3d.vec3(user.position().x(), user.position().y() + 1.6, user.position().z()));
+            camera = TextDisplay.textDisplay(Vector3d.vec3(user.position().x(), user.position().y() + 1.6, user.position().z()));
             Vector3d rotation = Vector3d.vec3(user.rotation().y(), user.rotation().x(), user.rotation().z());
             camera.rotation(rotation);
             user.show(camera);
@@ -254,43 +371,49 @@ public interface Menu {
             user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
             user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.SPECTATOR, Component.empty(), null)));
             user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
-            for (Div div : divHashMap.values()) {
-                divEntityIdHashMap.put(div.identifier(), spawn(div, user));
-            }
+            /*for (Div div : divHashMap.values()) {
+                divEntityIdHashMap.put(div.identifier(), spawn(div));
+            }*/
             List<Integer> entityIds = new ArrayList<>();
             entityIds.add(user.entityId());
             showCursor();
             entityIds.add(cursorDisplay.id().intValue());
+            initBackground();
+            entityIds.add(background.id().intValue());
+            user.show(cursorDisplay);
+            Scheduler.async(() -> {
+                divHashMap.values().forEach(d -> renderer.render((Div<TextDisplay>) d, user));
+                entityIds.addAll(referenceHolder.references().stream().map(Reference::t).map(TextDisplay::id).map(Entity.EntityId::intValue).toList());
+                riding.addAll(entityIds);
+                user.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
+                return null;
+            });
+        }
+
+        private void initBackground() {
             Display.Transformation tempTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -60, -0.27)).scale(Vector3d.vec3(500, 500, (double) 1/24));
             background.billboard(Display.Billboard.CENTER);
             background.text(Component.text(" "));
             background.transformation(tempTransformation);
             background.brightness(15, 15);
             background.backgroundColor(-16184812);
-            user.show(background);
-            entityIds.add(background.id().intValue());
-            user.show(cursorDisplay);
-            Scheduler.async(() -> {
-                entityIds.addAll(divEntityIdHashMap.values().stream().map(TextDisplay::id).map(Entity.EntityId::intValue).toList());
-                user.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
-                return null;
-            });
+            viewer.show(background);
         }
 
-        private TextDisplay spawn(Div div, SunscreenUser<?> user) {
-            TextDisplay display = TextDisplay.textDisplay(user.position());
+        protected TextDisplay spawn(Div div) {
+            TextDisplay display = TextDisplay.textDisplay(viewer.position());
             display.billboard(Display.Billboard.CENTER);
             Vector3d scale = div.scale();
-            System.out.println(viewer.screenSize());
-            Vector3d translation = ViewportHelper.toTranslation(Vec2d.of(div.position().x().pixel() + div.size().x() * 0.5, div.position().y().pixel() + div.size().y()), viewer.screenSize());
-            Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.25)).scale(Vector3d.vec3((double) 1/(24/scale.x()), (double) 1/(24/scale.y()), (double) 1/(24/scale.z())));
+            CanvasRenderer.Frame frame = CanvasRenderer.optimized().render(div.render());
+            Vector3d translation = ViewportHelper.toTranslation(Vec2d.of(div.position().x().pixel() / div.scale().x() + div.size().x() * 0.5 / div.scale().x(), (div.position().y().pixel() / div.scale().y() /*+ (((div.size().y() + 2) / 3) * 3) - div.size().y() + div.size().y()) / div.scale().y()*/)), viewer.screenSize());
+            //translation = translation.add(Vector3d.vec3(div.size().x() * 0.5 * PixelFactor/10, div.size().y() * 0.5 * PixelFactor/10, 0));
+            Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.25 + Integer.MIN_VALUE * div.order())).scale(Vector3d.vec3((double) 1/(24/scale.x()), (double) 1/(24/scale.y()), (double) 1/(24/scale.z())));
             display.transformation(transformation);
-            Component component = CanvasRenderer.optimized().render(div.render()).component();
             display.brightness(15, 15);
-            display.backgroundColor(0x00000000);
-            display.text(component);
+            display.backgroundColor(0);
+            display.text(frame.component());
             display.lineWidth(200000);
-            user.show(display);
+            viewer.show(display);
             return display;
         }
 
@@ -316,9 +439,14 @@ public interface Menu {
         public boolean close() {
             return false;
         }
+
+        @Override
+        public InputHandler inputHandler() {
+            return null;
+        }
     }
 
-    abstract class SingleImpl extends Base implements Tickable {
+    non-sealed abstract class SingleImpl extends Base implements Tickable {
         private final SunscreenUser<?> viewer;
         private final TextDisplay cursorDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
         private Vec2d lastInput = Vec2d.of(0, 0);
@@ -376,8 +504,8 @@ public interface Menu {
         }
 
         @Override
-        public void tick(Tick tick) {
-
+        public boolean tick(Tick tick) {
+            return false;
         }
 
     }

@@ -18,6 +18,10 @@ public interface Position {
         return new Impl(CoordType.pixel(x), CoordType.pixel(y));
     }
 
+    static Position center(SunscreenUser<?> user) {
+        return Position.position(user).x.percentage(50).back().y.percentage(50).back().finish();
+    }
+
     static PositionBuilder position(SunscreenUser<?> user) {
         return new PositionBuilder(user);
     }
@@ -39,7 +43,7 @@ public interface Position {
             return y;
         }
 
-        public class Section {
+        public static class Section {
             private final PositionBuilder parent;
             private final List<CoordType> coords = new ArrayList<>();
 
@@ -96,6 +100,7 @@ public interface Position {
         public static CoordType parse(String position, SunscreenUser<?> user, boolean x) {
             Token.Type token = Token.Type.of("\\+|\\*|\\/|\\-");
             TokenizedResult result = TokenMatcher.matcher(position).section(MatcherSection.section().token(MatcherToken.optional(token))).validate();
+            position = position.replaceAll("center", "50%").replaceAll("left", "0").replaceAll("right", "100%").replaceAll("top", "0").replaceAll("bottom", "100%");
             if (position.contains(" ") || !result.empty()) {
                 Operator operator = Operator.get(result.ordered().next().token().captured());
                 String[] split = position.split(operator.operator());
@@ -115,7 +120,6 @@ public interface Position {
         } else {
             return Double.parseDouble(input.replace("px", ""));
         }
-
     }
     
     interface CoordType {
@@ -143,8 +147,5 @@ public interface Position {
     record Impl(CoordType x, CoordType y) implements Position {
 
     }
-
-
-
 
 }

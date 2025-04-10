@@ -29,17 +29,17 @@ public class ElementDrawerElement extends SimpleBufferedElement implements Inter
     }
 
     @Override
-    public Element position(Position pos) {
+    public Element<Canvas> position(Position pos) {
         return null;
     }
 
     @Override
-    public <T> Element style(Style<T> style, Position pos2D, T t) {
+    public <T> Element<Canvas> style(Style<T> style, Position pos2D, T t) {
         return null;
     }
 
     @Override
-    public <T> Element style(Style<T> style, T t) {
+    public <T> Element<Canvas> style(Style<T> style, T t) {
         return null;
     }
 
@@ -54,12 +54,12 @@ public class ElementDrawerElement extends SimpleBufferedElement implements Inter
     }
 
     @Override
-    public void hover(Vec2d pos) {
-
+    public boolean hover(Vec2d pos) {
+        return false;
     }
 
     @Override
-    public void click(Vec2d pos) {
-
+    public boolean click(Vec2d pos) {
+        return false;
     }
 }

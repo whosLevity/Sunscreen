@@ -11,6 +11,7 @@ repositories {
     mavenCentral()
     mavenLocal()
     maven("https://jitpack.io")
+    maven("https://repo.combimagnetron.xyz/releases/")
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 

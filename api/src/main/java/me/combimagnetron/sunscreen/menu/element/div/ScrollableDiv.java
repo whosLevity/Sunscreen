@@ -1,8 +1,9 @@
 package me.combimagnetron.sunscreen.menu.element.div;
 
+import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.util.Identifier;
 
-public interface ScrollableDiv extends Div {
+public interface ScrollableDiv extends Div<Canvas> {
 
     ScrollableDiv scroll(double percentage);
 

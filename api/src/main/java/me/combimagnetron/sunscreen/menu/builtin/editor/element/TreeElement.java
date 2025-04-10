@@ -19,17 +19,17 @@ public class TreeElement extends SimpleBufferedElement {
     }
 
     @Override
-    public Element position(Position pos) {
+    public Element<Canvas> position(Position pos) {
         return null;
     }
 
     @Override
-    public <T> Element style(Style<T> style, Position pos2D, T t) {
+    public <T> Element<Canvas> style(Style<T> style, Position pos2D, T t) {
         return null;
     }
 
     @Override
-    public <T> Element style(Style<T> style, T t) {
+    public <T> Element<Canvas> style(Style<T> style, T t) {
         return null;
     }
 }

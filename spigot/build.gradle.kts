@@ -19,13 +19,14 @@ repositories {
     mavenCentral()
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://jitpack.io")
-    maven("http://repo.combimagnetron.xyz/releases/") {
-        isAllowInsecureProtocol = true
-    }
+    maven("https://repo.combimagnetron.xyz/releases/")
     maven("https://repo.papermc.io/repository/maven-public/")
     maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
 
     maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
+    maven {
+        url = uri("https://repo.extendedclip.com/releases/")
+    }
 }
 
 private val configuration : String = "reobf"
@@ -43,9 +44,10 @@ java {
 tasks {
     runServer {
         minecraftVersion("1.21.4")
-        jvmArgs("-Dcom.mojang.eula.agree=true")
+        jvmArgs("-Dcom.mojang.eula.agree=true", "-Dfile.encoding=UTF-8", "--nogui")
         downloadPlugins {
             github("retrooper", "packetevents", "v2.7.0", "packetevents-spigot-2.7.0.jar")
+            hangar("PlaceholderAPI", "2.11.6")
         }
     }
 
@@ -76,10 +78,18 @@ tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
     jvmArgs("-XX:+AllowEnhancedClassRedefinition")
 }
 
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-parameters")
+}
+
 dependencies {
     implementation(project(":api"))
     implementation(project(":spigot-v1_21_4"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
+    implementation("io.github.revxrsal:lamp.common:4.0.0-rc.10")
+    implementation("io.github.revxrsal:lamp.bukkit:4.0.0-rc.10")
+    implementation("io.github.revxrsal:lamp.brigadier:4.0.0-rc.10")
+    compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("net.kyori:adventure-api:4.14.0")
     compileOnly("net.kyori:adventure-text-serializer-gson:4.14.0")
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")

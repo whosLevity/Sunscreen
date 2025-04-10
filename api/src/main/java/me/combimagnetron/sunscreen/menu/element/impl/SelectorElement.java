@@ -21,29 +21,88 @@ import java.util.Map;
 public class SelectorElement extends SimpleBufferedElement implements Interactable {
     private final LinkedHashMap<ButtonElement, ButtonElement.State> buttons = new LinkedHashMap<>();
     private final LinkedHashMap<ButtonElement, Pair<Vec2d, Vec2d>> bounds = new LinkedHashMap<>();
+    private boolean vertical;
     private Canvas canvas;
 
-    protected SelectorElement(Vec2d size, Identifier identifier, Position position, LinkedList<ButtonElement> buttons) {
+    protected SelectorElement(Vec2d size, Identifier identifier, Position position, LinkedList<ButtonElement> buttons, boolean vertical) {
         super(size, identifier, position);
         int i = 0;
+        int x = 0, y = 0;
         for (ButtonElement button : buttons) {
             this.buttons.put(button, ButtonElement.State.DEFAULT);
-            int pos = i * buttons.getFirst().size().yi() + i * 2;
-            this.bounds.put(button, Pair.of(Vec2d.of(0, pos), button.size()));
-            i++;
+            if (vertical) {
+                int pos = i * buttons.getFirst().size().yi() + i * 2;
+                this.bounds.put(button, Pair.of(Vec2d.of(0, pos), button.size()));
+                i++;
+            } else {
+                if (button.size().xi() + x > size().x()) {
+                    x = button.size().xi() + 2;
+                    y += button.size().yi() + 2;
+                } else {
+                    x += button.size().xi() + 2;
+                }
+                Vec2d pos = Vec2d.of(x, y).sub(button.size().xi(), 0);
+                this.bounds.put(button, Pair.of(pos, button.size()));
+            }
+        }
+        this.vertical = vertical;
+        this.canvas = render();
+    }
+
+    public static SelectorElement selectorElement(Vec2d size, Identifier identifier, Position position, LinkedList<ButtonElement> buttons) {
+        return new SelectorElement(size, identifier, position, buttons, true);
+    }
+
+    public static Builder selectorElement(Vec2d size, Identifier identifier, Position position) {
+        return new Builder(size, identifier, position);
+    }
+
+    public void select(Identifier identifier) {
+        for (Map.Entry<ButtonElement, ButtonElement.State> entry : buttons.entrySet()) {
+            if (entry.getKey().identifier().equals(identifier)) {
+                buttons.replace(entry.getKey(), ButtonElement.State.CLICK);
+            } else {
+                buttons.replace(entry.getKey(), ButtonElement.State.DEFAULT);
+            }
         }
         this.canvas = render();
     }
 
-    public static SelectorElement selectorElement(Vec2d vec2d, Identifier identifier, Position position, LinkedList<ButtonElement> buttons) {
-        return new SelectorElement(vec2d, identifier, position, buttons);
+    public SelectorElement vertical(boolean vertical) {
+        this.vertical = vertical;
+        return this;
     }
 
-    public static Builder selectorElement(Vec2d vec2d, Identifier identifier, Position position) {
-        return new Builder(vec2d, identifier, position);
+    public SelectorElement horizontal() {
+        this.vertical = false;
+        return this;
     }
 
     protected Canvas render() {
+        return vertical ? renderVert() : renderHor();
+    }
+
+    protected Canvas renderHor() {
+        ButtonElement first = buttons.keySet().stream().findFirst().get();
+        int y = first.size().yi();
+        int x = 0;
+        Canvas canvas = Canvas.image(Vec2d.of(256, 256));
+        for (Map.Entry<ButtonElement, ButtonElement.State> entry : buttons.entrySet()) {
+            if (entry.getKey().size().xi() + x > size().x()) {
+                x = entry.getKey().size().xi() + 2;
+                y += entry.getKey().size().yi() + 2;
+            } else {
+                x += entry.getKey().size().xi() + 2;
+            }
+            Canvas buttonImage = entry.getKey().icons().get(entry.getValue());
+            canvas.place(buttonImage, Vec2d.of(x, y).sub(entry.getKey().size()));
+        }
+        canvas = canvas.trim();
+        size(canvas.size());
+        return canvas;
+    }
+
+    protected Canvas renderVert() {
         ButtonElement first = buttons.keySet().stream().findFirst().get();
         int x = first.size().xi();
         int y = buttons.size() * first.size().yi() + (buttons.size() + 1) * 2 + 2;
@@ -55,11 +114,6 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
             i++;
         }
         this.size(Vec2d.of(size().x(), y + 4));
-        /*for (int i = 0; i < buttons.size(); i++) {
-            ButtonElement button = buttons.get(i);
-            BufferedImage buttonImage = ((Canvas.StaticImpl) button.icons().get(ButtonElement.State.DEFAULT)).image();
-            image.getGraphics().drawImage(buttonImage, 0, i * first.size().yi() + i * 2, null);
-        }*/
         return Canvas.image(image);
     }
 
@@ -94,11 +148,44 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public void hover(Vec2d pos) {
-        //System.out.println(pos);
-        for (Map.Entry<ButtonElement, ButtonElement.State> button : buttons.entrySet()) {
-            buttons.replace(button.getKey(), ButtonElement.State.DEFAULT);
+    public boolean hover(Vec2d pos) {
+        return vertical ? hoverVertical(pos) : hoverHorizontal(pos);
+    }
+
+    private boolean hoverHorizontal(Vec2d pos) {
+        if (pos == null) {
+            return outOfBounds();
         }
+        reset();
+        for (Map.Entry<ButtonElement, Pair<Vec2d, Vec2d>> entry : bounds.entrySet()) {
+            if (buttons.get(entry.getKey()).equals(ButtonElement.State.CLICK)) continue;
+            if (HoverHelper.isHovered(pos, entry.getValue().k(), entry.getValue().v())) {
+                buttons.replace(entry.getKey(), ButtonElement.State.HOVER);
+            }
+        }
+        this.canvas = render();
+        return true;
+    }
+
+    private void reset() {
+        for (Map.Entry<ButtonElement, ButtonElement.State> button : buttons.entrySet()) {
+            if (button.getValue().equals(ButtonElement.State.HOVER)) buttons.replace(button.getKey(), ButtonElement.State.DEFAULT);
+        }
+    }
+
+    private boolean outOfBounds() {
+        for (Map.Entry<ButtonElement, ButtonElement.State> button : buttons.entrySet()) {
+            if (button.getValue().equals(ButtonElement.State.HOVER)) buttons.replace(button.getKey(), ButtonElement.State.DEFAULT);
+        }
+        this.canvas = render();
+        return true;
+    }
+
+    private boolean hoverVertical(Vec2d pos) {
+        if (pos == null) {
+            return outOfBounds();
+        }
+        reset();
         Pair<ButtonElement, Vec2d> entry = bounds.entrySet().stream().filter(e -> HoverHelper.isHovered(pos, e.getValue().k(), e.getValue().v())).map(e -> Pair.of(e.getKey(), pos)).findFirst().orElse(null);
         if (entry != null) {
             if (!buttons.get(entry.k()).equals(ButtonElement.State.HOVER)) {
@@ -112,11 +199,31 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
             });
         }
         this.canvas = render();
+        return true;
     }
 
     @Override
-    public void click(Vec2d pos) {
-
+    public boolean click(Vec2d pos) {
+        if (pos == null) {
+            return false;
+        }
+        for (Map.Entry<ButtonElement, ButtonElement.State> button : buttons.entrySet()) {
+            if (button.getValue() == null || button.getKey() == null) {
+                continue;
+            }
+            buttons.replace(button.getKey(), ButtonElement.State.DEFAULT);
+        }
+        for (Map.Entry<ButtonElement, Pair<Vec2d, Vec2d>> entry : bounds.entrySet()) {
+            if (entry.getKey() == null || entry.getValue() == null) {
+                continue;
+            }
+            if (HoverHelper.isHovered(pos, entry.getValue().k(), entry.getValue().v())) {
+                buttons.replace(entry.getKey(), ButtonElement.State.CLICK);
+                entry.getKey().click(pos);
+            }
+        }
+        this.canvas = render();
+        return true;
     }
 
     public static class Builder {
@@ -124,6 +231,7 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
         private final Vec2d size;
         private final Identifier identifier;
         private final Position position;
+        private boolean vertical = true;
 
         public Builder(Vec2d size, Identifier identifier, Position position) {
             this.size = size;
@@ -136,8 +244,13 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
             return this;
         }
 
+        public Builder horizontal() {
+            this.vertical = false;
+            return this;
+        }
+
         public SelectorElement build() {
-            return new SelectorElement(size, identifier, position, buttons);
+            return new SelectorElement(size, identifier, position, buttons, vertical);
         }
     }
 

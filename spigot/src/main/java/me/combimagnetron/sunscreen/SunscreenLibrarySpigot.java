@@ -4,6 +4,7 @@ import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import me.combimagnetron.passport.Passport;
 import me.combimagnetron.passport.event.EventBus;
 import me.combimagnetron.passport.user.UserHandler;
+import me.combimagnetron.passport.util.placeholder.PlaceholderRegistry;
 import me.combimagnetron.sunscreen.config.Config;
 import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.session.SessionHandler;
@@ -20,6 +21,7 @@ import java.nio.file.Path;
 public class SunscreenLibrarySpigot implements SunscreenLibrary<SunscreenPlugin, Player> {
     private final MenuTicker menuTicker = new MenuTicker();
     private final SessionHandler sessionHandler = new SessionHandler();
+    private final PlaceholderRegistry placeholderRegistry = new PlaceholderRegistry.Impl();
     private final SunscreenPlugin plugin;
 
     public SunscreenLibrarySpigot(SunscreenPlugin plugin) {
@@ -37,6 +39,11 @@ public class SunscreenLibrarySpigot implements SunscreenLibrary<SunscreenPlugin,
             @Override
             public Path dataFolder() {
                 return null;
+            }
+
+            @Override
+            public PlaceholderRegistry placeholders() {
+                return placeholderRegistry;
             }
 
             @Override

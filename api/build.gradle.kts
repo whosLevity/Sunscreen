@@ -7,9 +7,7 @@ group = "me.combimagnetron"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    maven("http://repo.combimagnetron.xyz/releases/") {
-        isAllowInsecureProtocol = true
-    }
+    maven("https://repo.combimagnetron.xyz/releases/")
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
@@ -27,6 +25,7 @@ dependencies {
     implementation("net.kyori:adventure-text-serializer-gson:4.14.0")
     implementation("io.github.jglrxavpok.hephaistos:common:2.6.0")
     implementation("com.typesafe:config:1.4.2")
+    implementation("io.github.revxrsal:lamp.common:4.0.0-rc.10")
     compileOnly("me.combimagnetron:Passport:1.0-SNAPSHOT")
     compileOnly("com.google.guava:guava:31.1-jre")
     compileOnly("org.apache.commons:commons-lang3:3.17.0")

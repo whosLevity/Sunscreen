@@ -2,115 +2,270 @@ package me.combimagnetron.sunscreen.menu.element.div;
 
 import me.combimagnetron.passport.event.Dispatcher;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
+import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
-import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.Editable;
 import me.combimagnetron.sunscreen.menu.element.Element;
 import me.combimagnetron.sunscreen.menu.element.Interactable;
 import me.combimagnetron.sunscreen.menu.element.Position;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.util.*;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 
-public interface Div extends Editable {
+public interface Div<T> extends Editable {
+
+    /**
+     * The identifier of the div.
+     * @return identifier of the div.
+     */
     Identifier identifier();
 
-    Canvas canvas();
+    /**
+     * The canvas of the div.
+     * @return current render iteration canvas of the div.
+     */
+    T canvas();
 
+    /**
+     * The size of the div.
+     * @return Vec2d representing size of the div, always in rounded integers.
+     */
     Vec2d size();
 
+    /**
+     * The scale of the div.
+     * @return Vector3d representing scale of the div.
+     */
     Vector3d scale();
 
+    /**
+     * The position of the div.
+     * @return Position representing position of the div, can be in pixels, percentages or a mix.
+     */
     Position position();
 
-    Div size(Vec2d size);
+    /**
+     * The condition under which the div renders.
+     * @return Condition representing the condition under which the div renders.
+     */
+    Condition condition();
 
-    Div fit();
+    /**
+     * The order of the div.
+     * @return double representing the order of the div.
+     */
+    double order();
 
-    Div scale(Vector3d scale);
+    default @Nullable Element<T> element(@NotNull Identifier identifier) {
+        return elements().stream().filter(e -> e.identifier().equals(identifier)).findFirst().orElse(null);
+    }
 
-    Div position(Position pos);
+    /**
+     * Sets the size of the div.
+     * @param size new size of the div.
+     * @return current div.
+     */
+    Div<T> size(Vec2d size);
 
-    Div add(Element element);
+    /**
+     * Sets the condition of the div.
+     * @param condition new condition of the div.
+     * @return current div.
+     */
+    Div<T> condition(Condition condition);
 
-    Div remove(Identifier identifier);
+    /**
+     * Fits the div to the size of the canvas.
+     * @return current div.
+     */
+    Div<T> fit();
 
-    Div remove(Element element);
+    /**
+     * Sets the scale of the div.
+     * @param scale new scale of the div.
+     * @return current div.
+     */
+    Div<T> scale(Vector3d scale);
 
-    Div hide(Identifier identifier);
+    /**
+     * Sets the position of the div.
+     * @param pos new position of the div.
+     * @return current div.
+     */
+    Div<T> position(Position pos);
 
-    Div hide(Element element);
+    /**
+     * Adds an element to the div.
+     * @param element element to add.
+     * @return current div.
+     */
+    Div<T> add(Element<T> element);
 
-    Div show(Identifier identifier);
+    /**
+     * Removes an element from the div.
+     * @param identifier identifier of the element to remove.
+     * @return current div.
+     */
+    Div<T> remove(Identifier identifier);
 
-    Div show(Element element);
+    /**
+     * Removes an element from the div.
+     * @param element element to remove.
+     * @return current div.
+     */
+    Div<T> remove(Element<T> element);
 
-    Collection<Element> elements();
+    /**
+     * Hides an element from the div.
+     * @param identifier identifier of the element to hide.
+     * @return current div.
+     */
+    Div<T> hide(Identifier identifier);
 
+    /**
+     * Hides an element from the div.
+     * @param element element to hide.
+     * @return current div.
+     */
+    Div<T> hide(Element<T> element);
+
+    /**
+     * Shows an element from the div.
+     * @param identifier identifier of the element to show.
+     * @return current div.
+     */
+    Div<T> show(Identifier identifier);
+
+    /**
+     * Shows an element from the div.
+     * @param element element to show.
+     * @return current div.
+     */
+    Div<T> show(Element<T> element);
+
+    /**
+     * Sets the order of the div.
+     * @param order new order of the div.
+     * @return current div.
+     */
+    Div<T> order(double order);
+
+    /**
+     * The elements of the div.
+     * @return collection of elements in the div.
+     */
+    Collection<Element<T>> elements();
+
+    /**
+     * Renders the div to an image.
+     * @param image canvas to render to.
+     * @return rendered canvas.
+     */
     Canvas render(Canvas image);
 
+    /**
+     * Renders the div.
+     */
     Canvas render();
 
-    static Div div(Identifier identifier) {
+    /**
+     * Constructs and returns a new div.
+     * @param identifier identifier of the to-be-constructed div
+     * @return new div.
+     */
+    static Div<Canvas> div(Identifier identifier) {
         return new Impl(identifier);
     }
 
+    /**
+     * Constructs and returns a new scrollable div.
+     * @param identifier identifier of the to-be-constructed scrollable div
+     * @return new scrollable div.
+     */
     static ScrollableDiv scroll(Identifier identifier) {
         return new ScrollableDiv.Impl(identifier);
     }
 
-    static Div nonRender(Identifier identifier) {
+    /**
+     * Constructs and returns a new non-rendering div.
+     * @param identifier identifier of the to-be-constructed non-rendering div
+     * @return new non-rendering div.
+     */
+    static Div<Canvas> nonRender(Identifier identifier) {
         return new NonRenderDiv(identifier);
     }
 
-    class Impl implements Div {
-        private final HashMap<Identifier, Element> elements = new HashMap<>();
-        private final HashSet<Element> hidden = new HashSet<>();
+    class Impl implements Div<Canvas> {
+        private final LinkedHashMap<Identifier, Element<Canvas>> elements = new LinkedHashMap<>();
+        private final HashSet<Element<Canvas>> hidden = new HashSet<>();
         private final Identifier identifier;
         private Vec2d size = Vec2d.of(512, 512);
-        private Canvas canvas;
         private Position pos = Position.pixel(0, 0);
         private Vector3d scale = Vector3d.vec3(1);
+        private double order = 0;
+        private Condition condition;
+        private Canvas canvas;
 
         public Canvas render(Canvas image) {
-            for (Element element : elements.values()) {
+            for (Element<Canvas> element : elements.values()) {
                 if (!hidden.contains(element)) {
+                    if (element.canvas() == null) {
+                        continue;
+                    }
                     image = image.place(element.canvas(), Vec2d.of(element.position().x().pixel(), element.position().y().pixel()));
                 }
             }
             return image;
         }
 
-        public void handleClick(Vec2d pos, Input.Type.MouseClick click) {
-            for (Element element : elements.values()) {
+        public boolean handleClick(Vec2d pos, Input.Type.MouseClick click) {
+            boolean update = false;
+            for (Element<Canvas> element : elements.values()) {
                 if (element instanceof Interactable interactable && interactable.reactiveToClick()) {
                     if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()), element.size())) {
-                        interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                        boolean a = interactable.click(null);
+                        if (a) {
+                            update = true;
+                        }
                         continue;
                     }
                     Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())), click));
-                    interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                    boolean keep = update;
+                    update = interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                    if (keep) {
+                        update = true;
+                    }
                 }
             }
+            return update;
         }
 
-        public void handleHover(Vec2d pos) {
-            for (Element element : elements.values()) {
+        public boolean handleHover(Vec2d pos) {
+            boolean update = false;
+            for (Element<Canvas> element : elements.values()) {
                 if (element instanceof Interactable interactable && interactable.reactiveToHover()) {
-                    //System.out.println(pos);
-                    //System.out.println(element.position() + " " + element.size());
                     if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()), element.size())) {
-                        //interactable.hover(null);
+                        boolean a = interactable.hover(null);
+                        if (a) {
+                            update = true;
+                        }
                         continue;
                     }
-                    //Dispatcher.dispatcher().post(ClickElementEvent.class, ClickElementEvent.create());
-                    interactable.hover(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                    //Dispatcher.dispatcher().post(ClickElementEvent.class, ClickElementEvent.create(element, pos, new Input.Type.MouseClick(false)));
+                    boolean keep = update;
+                    update = interactable.hover(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                    if (keep) {
+                        update = true;
+                    }
                 }
             }
+            return update;
         }
 
         public Canvas render() {
@@ -148,7 +303,17 @@ public interface Div extends Editable {
         }
 
         @Override
-        public Div size(Vec2d size) {
+        public Condition condition() {
+            return condition;
+        }
+
+        @Override
+        public double order() {
+            return order;
+        }
+
+        @Override
+        public Div<Canvas> size(Vec2d size) {
             this.size = size;
             /*if (size.x() < this.canvas.size().x() && size.y() < this.canvas.size().y()) {
                 this.canvas = this.canvas.sub(size, Vec2d.of(0,0));
@@ -159,67 +324,79 @@ public interface Div extends Editable {
         }
 
         @Override
-        public Div fit() {
+        public Div<Canvas> condition(Condition condition) {
+            this.condition = condition;
+            return this;
+        }
+
+        @Override
+        public Div<Canvas> fit() {
 
             return this;
         }
 
         @Override
-        public Div scale(Vector3d scale) {
+        public Div<Canvas> scale(Vector3d scale) {
             this.scale = scale;
             return this;
         }
 
         @Override
-        public Div position(Position pos) {
+        public Div<Canvas> position(Position pos) {
             this.pos = pos;
             return this;
         }
 
         @Override
-        public Div add(Element element) {
+        public Div<Canvas> add(Element<Canvas> element) {
             elements.put(element.identifier(), element);
             return this;
         }
 
         @Override
-        public Div remove(Identifier identifier) {
+        public Div<Canvas> remove(Identifier identifier) {
             elements.remove(identifier);
             return this;
         }
 
         @Override
-        public Div remove(Element element) {
+        public Div<Canvas> remove(Element<Canvas> element) {
             elements.remove(element.identifier());
             return this;
         }
 
         @Override
-        public Div hide(Identifier identifier) {
+        public Div<Canvas> hide(Identifier identifier) {
             hidden.add(elements.get(identifier));
             return this;
         }
 
         @Override
-        public Div hide(Element element) {
+        public Div<Canvas> hide(Element<Canvas> element) {
             hidden.add(element);
             return this;
         }
 
         @Override
-        public Div show(Identifier identifier) {
+        public Div<Canvas> show(Identifier identifier) {
             hidden.remove(elements.get(identifier));
             return this;
         }
 
         @Override
-        public Div show(Element element) {
+        public Div<Canvas> show(Element<Canvas> element) {
             hidden.remove(element);
             return this;
         }
 
         @Override
-        public Collection<Element> elements() {
+        public Div<Canvas> order(double order) {
+            this.order = order;
+            return this;
+        }
+
+        @Override
+        public Collection<Element<Canvas>> elements() {
             return elements.values();
         }
     }

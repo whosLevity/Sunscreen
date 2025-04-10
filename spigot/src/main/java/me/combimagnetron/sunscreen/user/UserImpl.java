@@ -7,10 +7,13 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEn
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
 import me.combimagnetron.passport.PacketEventsConnectionImpl;
+import me.combimagnetron.passport.config.Config;
+import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.internal.entity.Entity;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.internal.network.Connection;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
+import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
 import me.combimagnetron.sunscreen.session.Session;
 import org.bukkit.entity.Player;
@@ -32,6 +35,12 @@ public class UserImpl implements SunscreenUser<Player> {
     private UserImpl(Player player) {
         this.player = player;
         this.connection = new PacketEventsConnectionImpl<>(player);
+        Node<String> node = Config.file(SunscreenLibrary.library().path().resolve("data.dt")).reader().node(uniqueIdentifier().toString());
+        if (node == null) {
+            new AspectRatioMenu(this);
+            return;
+        }
+        this.screenSize = ScreenSize.fromString(node.value());
     }
 
     @Override
@@ -116,6 +125,16 @@ public class UserImpl implements SunscreenUser<Player> {
     @Override
     public Session session() {
         return SunscreenLibrary.library().sessionHandler().session(this);
+    }
+
+    @Override
+    public float worldTime() {
+        return player.getWorld().getTime();
+    }
+
+    @Override
+    public void resendInv() {
+        player.updateInventory();
     }
 
 }

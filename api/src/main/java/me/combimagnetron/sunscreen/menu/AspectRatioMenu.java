@@ -1,4 +1,4 @@
-package me.combimagnetron.sunscreen.menu.builtin;
+package me.combimagnetron.sunscreen.menu;
 
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListener;
@@ -7,13 +7,11 @@ import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
-import com.github.retrooper.packetevents.protocol.player.GameMode;
-import com.github.retrooper.packetevents.protocol.player.InteractionHand;
-import com.github.retrooper.packetevents.protocol.player.UserProfile;
-import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientAnimation;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientEntityAction;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
+import me.combimagnetron.passport.config.Config;
+import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.internal.entity.impl.display.Display;
 import me.combimagnetron.passport.internal.entity.impl.display.TextDisplay;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
@@ -22,20 +20,14 @@ import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
-import me.combimagnetron.sunscreen.image.Pixel;
-import me.combimagnetron.sunscreen.menu.Menu;
-import me.combimagnetron.sunscreen.menu.ScreenSize;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.menu.element.Element;
-import me.combimagnetron.sunscreen.menu.element.Interactable;
 import me.combimagnetron.sunscreen.menu.element.Position;
 import me.combimagnetron.sunscreen.menu.element.div.Div;
 import me.combimagnetron.sunscreen.menu.element.div.Edit;
-import me.combimagnetron.sunscreen.menu.element.impl.ButtonElement;
 import me.combimagnetron.sunscreen.menu.element.impl.ImageElement;
-import me.combimagnetron.sunscreen.menu.element.impl.SelectorElement;
 import me.combimagnetron.sunscreen.menu.element.impl.TextElement;
+import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
@@ -51,14 +43,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public class AspectRatioMenu implements Menu {
-    private final static double PixelFactor = 0.0010;
-    private final Canvas spriteSheet = Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/6tJNlmq.png"));
+public final class AspectRatioMenu implements Menu {
+    private final static double PixelFactor = ((40.75/16)*1/24)/100;//0.0010;//0.04/24;
+    private final Canvas spriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/spritesheet.png")));
     private final SunscreenUser<?> viewer;
-    private final HashMap<Identifier, Div> divHashMap = new HashMap<>();
+    private final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
     private final HashMap<Identifier, TextDisplay> divEntityIdHashMap = new HashMap<>();
     private final TextDisplay cursorDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
     private final TextDisplay instructionDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
+    private final TextDisplay selectedAreaDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
     private final TextDisplay temp = TextDisplay.textDisplay(Vector3d.vec3(0));
     private boolean cursorLocked = false;
     private boolean hover = false;
@@ -76,17 +69,17 @@ public class AspectRatioMenu implements Menu {
     }
 
     private void build() {
-        Div upperLeft = Div.nonRender(Identifier.of("upper_left"))
-                .add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
+        Div upperLeft = Div.nonRender(Identifier.of("upper_left"));
+                //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(upperLeft);
-        Div upperRight = Div.nonRender(Identifier.of("upper_right"))
-                .add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
+        Div upperRight = Div.nonRender(Identifier.of("upper_right"));
+                //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(upperRight);
-        Div lowerLeft = Div.nonRender(Identifier.of("lower_left"))
-                .add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
+        Div lowerLeft = Div.nonRender(Identifier.of("lower_left"));
+                //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(lowerLeft);
-        Div lowerRight = Div.nonRender(Identifier.of("lower_right"))
-                .add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
+        Div lowerRight = Div.nonRender(Identifier.of("lower_right"));
+                //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(lowerRight);
         Div center = Div.div(Identifier.of("center")).size(Vec2d.of(114, 140))
                 .add(ImageElement.imageElement(spriteSheet.sub(Vec2d.of(114, 140), Vec2d.of(594, 0)), Identifier.of("center", "bg"), Position.pixel(0, 0)))
@@ -118,7 +111,7 @@ public class AspectRatioMenu implements Menu {
         viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, gameMode));
         viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
         viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
-        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue()));
+        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), selectedAreaDisplay.id().intValue()));
         divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
     }
@@ -138,13 +131,15 @@ public class AspectRatioMenu implements Menu {
                     if (packet.getAction() == WrapperPlayClientEntityAction.Action.STOP_SNEAKING) {
                         Vector3d begin = divEntityIdHashMap.get(Identifier.of("lower_left")).transformation().translation();
                         Vector3d end = divEntityIdHashMap.get(Identifier.of("upper_right")).transformation().translation();
-                        begin = begin.add(Vector3d.vec3(-9 * PixelFactor, 12.75 * PixelFactor, 0));
-                        end = end.add(Vector3d.vec3(9 * PixelFactor, -12.75 * PixelFactor, 0));
+                        final double add = (8.5)*PixelFactor;
+                        begin = begin.add(Vector3d.vec3(-add, add, 0));
+                        end = end.add(Vector3d.vec3(add, -add, 0));
                         Vec2d screenSize = Vec2d.of((end.x() - begin.x())/PixelFactor, (end.y() - begin.y())/PixelFactor);
-                        viewer.screenSize(ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y()))));
+                        ScreenSize actual = ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y())));
+                        viewer.screenSize(actual);
+                        final Path data = SunscreenLibrary.library().path().resolve("data.dt");
+                        Config.file(data).node(Node.required(viewer.uniqueIdentifier().toString(), actual.compress())).save(data);
                         leave();
-                        //new SetupMenu(viewer);
-                        new EditorMenu(viewer);
                     }
 
                 }
@@ -173,6 +168,8 @@ public class AspectRatioMenu implements Menu {
             cursorDisplay.backgroundColor(0);
             send(viewer, cursorDisplay);
         }
+        Display.Transformation previewTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.24998)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
+
         divEntityIdHashMap.forEach((identifier, display) -> {
             Map<Identifier, String> charMap = Map.of(Identifier.of("upper_left"), "1a",
                     Identifier.of("upper_right"), "2b",
@@ -195,6 +192,16 @@ public class AspectRatioMenu implements Menu {
             display.backgroundColor(0);
             send(viewer, display);
         });
+        double xMov = translation.x();
+        double yMov = -translation.y();
+        Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(xMov, yMov, -0.24999).add(Vector3d.vec3(-20.5 * PixelFactor, -20.5 * PixelFactor, 0)))
+                .scale(/*Vector3d.vec3((Math.abs(xMov) * 2) *10/*24*/Vector3d.vec3((double) (20) /24, /*(Math.abs(yMov)) *10/*24*/(double) (10) /24, (double) 1/24));
+        selectedAreaDisplay.transformation(transformation);
+        selectedAreaDisplay.backgroundColor(Color.green_().rgba());
+        selectedAreaDisplay.billboard(Display.Billboard.CENTER);
+        selectedAreaDisplay.brightness(15, 15);
+        selectedAreaDisplay.text(Component.text(" "));
+        send(viewer, selectedAreaDisplay);
     }
 
     @Override
@@ -219,11 +226,19 @@ public class AspectRatioMenu implements Menu {
         temp.billboard(Display.Billboard.CENTER);
         Display.Transformation tempTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -60, -0.27)).scale(Vector3d.vec3(500, 500, (double) 1/24));
         temp.transformation(tempTransformation);
+        selectedAreaDisplay.backgroundColor(Color.green_().rgba());
+        selectedAreaDisplay.billboard(Display.Billboard.CENTER);
+        selectedAreaDisplay.brightness(15, 15);
+        selectedAreaDisplay.text(Component.text(" "));
+        Display.Transformation selectedAreaTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, 0, -0.24999)).scale(Vector3d.vec3((double)20*((double)1/24), (double)10*((double)1/24), (double) 1/24));
+        selectedAreaDisplay.transformation(selectedAreaTransformation);
+        viewer.show(selectedAreaDisplay);
         viewer.show(temp);
         List<Integer> entityIds = new ArrayList<>();
         entityIds.add(user.entityId());
         entityIds.add(temp.id().intValue());
         entityIds.add(cursorDisplay.id().intValue());
+        entityIds.add(selectedAreaDisplay.id().intValue());
         Scheduler.async(() -> {
             entityIds.addAll(divEntityIdHashMap.values().stream().map(entity -> entity.id().intValue()).toList());
             user.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
@@ -231,10 +246,11 @@ public class AspectRatioMenu implements Menu {
         });
     }
 
-    private TextDisplay spawn(Div div, User<?> user) {
+    private TextDisplay spawn(Div<?> div, User<?> user) {
         TextDisplay display = TextDisplay.textDisplay(user.position());
         display.billboard(Display.Billboard.CENTER);
-        double yOffset = div.canvas().size().mul(PixelFactor).mul(0.5).y();
+        Div<Canvas> divDisplay = (Div<Canvas>) div;
+        double yOffset = divDisplay.canvas().size().mul(PixelFactor).mul(0.5).y();
         Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -yOffset, -0.25)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
         display.transformation(transformation);
         Component component = Component.text(" ");
@@ -255,16 +271,16 @@ public class AspectRatioMenu implements Menu {
         Draft.Impl draftImpl = (Draft.Impl) draft;
         for (Edit<?> edit : draftImpl.edits()) {
             if (edit.type() == Div.class) {
-                Edit<Div> divEdit = (Edit<Div>) edit;
-                Div div = divHashMap.get(edit.identifier());
-                for (Function<Div, Div> draftEdit : divEdit.edits()) {
+                Edit<Div<?>> divEdit = (Edit<Div<?>>) edit;
+                Div<?> div = divHashMap.get(edit.identifier());
+                for (Function<Div<?>, Div<?>> draftEdit : divEdit.edits()) {
                     div = draftEdit.apply(div);
                 }
                 divHashMap.put(edit.identifier(), div);
             } else if (edit.type() == Element.class) {
-                Edit<Element> elementEdit = (Edit<Element>) edit;
-                Element element = divHashMap.get(edit.identifier()).elements().stream().filter(e -> e.identifier().equals(edit.identifier())).findFirst().orElse(null);
-                for (Function<Element, Element> draftEdit : elementEdit.edits()) {
+                Edit<Element<Canvas>> elementEdit = (Edit<Element<Canvas>>) edit;
+                Element<Canvas> element = (Element<Canvas>) divHashMap.get(edit.identifier()).elements().stream().filter(e -> e.identifier().equals(edit.identifier())).findFirst().orElse(null);
+                for (Function<Element<Canvas>, Element<Canvas>> draftEdit : elementEdit.edits()) {
                     element = draftEdit.apply(element);
                 }
                 Div div = divHashMap.get(edit.identifier());
@@ -285,6 +301,11 @@ public class AspectRatioMenu implements Menu {
     @Override
     public boolean close() {
         return false;
+    }
+
+    @Override
+    public InputHandler inputHandler() {
+        return null;
     }
 
 }

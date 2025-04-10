@@ -2,6 +2,7 @@ package me.combimagnetron.sunscreen.image;
 
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.effect.Effect;
+import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
 import javax.imageio.ImageIO;
@@ -25,6 +26,10 @@ public interface Canvas {
     Canvas trim();
 
     Canvas scale(Vec2d scale);
+
+    Canvas text(Text text, Vec2d coords, Color color);
+
+    Canvas text(Text text, Vec2d coords);
 
     Vec2d size();
 
@@ -103,6 +108,21 @@ public interface Canvas {
         }
 
         @Override
+        public Canvas text(Text text, Vec2d coords, Color color) {
+            Graphics2D graphics = image.createGraphics();
+            graphics.setColor(new java.awt.Color(color.rgb()));
+            graphics.setFont(text.font().internal());
+            graphics.drawString(text.content(), coords.xi(), coords.yi());
+            graphics.dispose();
+            return this;
+        }
+
+        @Override
+        public Canvas text(Text text, Vec2d coords) {
+            return text(text, coords, Color.white());
+        }
+
+        @Override
         public Vec2d size() {
             return Vec2d.of(image.getWidth(), image.getHeight());
         }
@@ -176,7 +196,7 @@ public interface Canvas {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        int top = 0, bottom = height - 1, left = 0, right = width - 1;
+        int top, bottom, left, right;
         boolean emptyRow;
         searchTop:
         for (top = 0; top < height; top++) {
@@ -208,7 +228,7 @@ public interface Canvas {
     private static boolean isNonEmptyPixel(BufferedImage image, int x, int y) {
         int pixel = image.getRGB(x, y);
         java.awt.Color color = new java.awt.Color(pixel, true);
-        return color.getAlpha() != 0; // Checks if the pixel is non-transparent
+        return color.getAlpha() != 0;
     }
 
 }

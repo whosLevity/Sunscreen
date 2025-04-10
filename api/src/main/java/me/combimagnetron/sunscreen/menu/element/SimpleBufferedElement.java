@@ -4,7 +4,7 @@ import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
-public abstract class SimpleBufferedElement implements Element {
+public abstract class SimpleBufferedElement implements Element<Canvas> {
     private Vec2d size;
     protected final Identifier identifier;
     protected Position position;

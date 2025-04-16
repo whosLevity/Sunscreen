@@ -13,6 +13,7 @@ import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.passport.util.condition.Supplier;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
+import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.element.Element;
@@ -325,6 +326,10 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             viewer.connection().send(new WrapperPlayServerPlayerRotation((float) rotation.x(), (float) rotation.y()));
             viewer.connection().send(new WrapperPlayServerPlayerPositionAndLook(viewer.position().x(), viewer.position().y(), viewer.position().z(), (float) rotation.x(), (float) rotation.y(), (byte)0, 0, false));
             referenceHolder.references().forEach(reference -> viewer.connection().send(new WrapperPlayServerDestroyEntities(reference.t().id().intValue())));
+        }
+
+        public Div<Canvas> div(Identifier identifier) {
+            return (Div<Canvas>) divHashMap.get(identifier);
         }
 
         /**

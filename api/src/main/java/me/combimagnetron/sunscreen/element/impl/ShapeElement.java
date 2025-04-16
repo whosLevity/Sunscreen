@@ -5,6 +5,7 @@ import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
@@ -37,6 +38,12 @@ public abstract class ShapeElement extends SimpleBufferedElement {
 
     public static Rectangle rectangle(Size size, Identifier identifier, Position position, Color color) {
         return new Rectangle(size, identifier, position, color);
+    }
+
+    public static Rectangle rectangle(Size size, Identifier identifier, RuntimeDefinableGeometry.GeometryBuilder<?> position, Color color) {
+        Rectangle rectangle = new Rectangle(size, identifier, null, color);
+        rectangle.geometry(position);
+        return rectangle;
     }
 
     public static class Circle extends ShapeElement {

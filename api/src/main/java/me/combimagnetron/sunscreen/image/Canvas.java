@@ -47,6 +47,9 @@ public interface Canvas {
     }
 
     static Canvas image(Size size) {
+        if (size == null) {
+            return new StaticImpl(new BufferedImage(256, 256, 2));
+        }
         return new StaticImpl(new BufferedImage((int) size.x().pixel(), (int) size.y().pixel(), 2));
     }
 

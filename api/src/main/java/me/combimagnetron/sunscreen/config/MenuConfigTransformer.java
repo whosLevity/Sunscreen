@@ -5,6 +5,7 @@ import me.combimagnetron.passport.config.element.ConfigElement;
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
+import me.combimagnetron.sunscreen.element.impl.ShapeElement;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
@@ -120,7 +121,8 @@ public interface MenuConfigTransformer {
         Map<String, ElementTransformer> Transformers = Map.of(
                 "image", new ImageElementTransformer(),
                 "button", new ButtonElementTransformer(),
-                "text", new TextElementTransformer()
+                "text", new TextElementTransformer(),
+                "shape", new ShapeElementTransformer()
         );
 
         static Element<?> transform(Section section, String fileName) {
@@ -241,6 +243,57 @@ public interface MenuConfigTransformer {
             }
         }
 
+        class ShapeElementTransformer implements ElementTransformer {
+
+            @Override
+            public Element<?> transform(Section section) {
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("identifier"))) {
+                    SunscreenLibrary.library().logger().error("[CR014] No identifier defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Identifier identifier = Identifier.split(((Node<String>)section.find("identifier")).value());
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
+                    SunscreenLibrary.library().logger().error("[CR015] No position defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Section positionSection = section.find("position");
+                Position.PositionBuilder position = Position.config(positionSection);
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("size"))) {
+                    SunscreenLibrary.library().logger().error("[CR016] No size defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Section sizeSection = section.find("size");
+                Size.SizeBuilder size = Size.config(sizeSection);
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("color"))) {
+                    SunscreenLibrary.library().logger().error("[CR017] No color defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Color color;
+                Section colorSection = section.find("color");
+                int red = ((Node<Integer>)colorSection.find("red")).value();
+                int green = ((Node<Integer>)colorSection.find("green")).value();
+                int blue = ((Node<Integer>)colorSection.find("blue")).value();
+                color = Color.of(red, green, blue);
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("shape"))) {
+                    SunscreenLibrary.library().logger().error("[CR018] No shape defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                String shape = ((Node<String>)section.find("shape")).value();
+                if (shape == null) {
+                    SunscreenLibrary.library().logger().error("[CR019] No shape found in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                if (shape.equals("rectangle")) {
+                    SimpleBufferedElement element = ShapeElement.rectangle(null, identifier, position, color);
+                    element.geometry(size);
+                    return element;
+                } else if (shape.equals("circle")) {
+
+                }
+                return null;
+            }
+        }
+
         class ButtonElementTransformer implements ElementTransformer {
             @Override
             public Element<?> transform(Section section) {
@@ -262,7 +315,15 @@ public interface MenuConfigTransformer {
                 }
                 Map<ButtonElement.State, Canvas> icons = new HashMap<>();
                 canvases.forEach((key, value) -> icons.put(ButtonElement.State.valueOf(key.toUpperCase()), value));
-                SimpleBufferedElement element = ButtonElement.buttonElement(Size.pixel(canvases.values().stream().findAny().get().size()), identifier, position, icons);
+                Size size = Size.pixel(canvases.values().stream().findAny().get().size());
+                boolean hasSize = section.elements().stream().anyMatch(configElement -> configElement.name().equals("size"));
+                if (hasSize) {
+                    size = null;
+                }
+                SimpleBufferedElement element = ButtonElement.buttonElement(size, identifier, position, icons);
+                if (hasSize) {
+                    element.geometry(Size.config(section.find("size")));
+                }
                 return element;
             }
         }

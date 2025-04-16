@@ -8,7 +8,7 @@ import me.combimagnetron.sunscreen.util.Vec2d;
 import java.util.ArrayList;
 import java.util.List;
 
-public interface RuntimeDefinableGeometry extends RuntimeDefinable<Geometry, RuntimeDefinableGeometry.GeometryBuilder<? extends Geometry>, Vec2d> {
+public sealed interface RuntimeDefinableGeometry extends RuntimeDefinable<Geometry, RuntimeDefinableGeometry.GeometryBuilder<? extends Geometry>, Vec2d> permits Position, Size {
 
     CoordType x();
 

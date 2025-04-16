@@ -1,10 +1,12 @@
 package me.combimagnetron.sunscreen.menu;
 
+import me.combimagnetron.passport.config.element.Node;
+import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
 import java.util.Objects;
 
-public interface Size extends RuntimeDefinableGeometry, Geometry {
+public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
 
     static SizeBuilder size() {
         return new SizeBuilder();
@@ -16,6 +18,17 @@ public interface Size extends RuntimeDefinableGeometry, Geometry {
 
     static Size pixel(Vec2d size) {
         return new Impl(RuntimeDefinableGeometry.CoordType.pixel(size.x()), RuntimeDefinableGeometry.CoordType.pixel(size.y()));
+    }
+
+    static SizeBuilder config(Section section) {
+        String x = ((Node<String>)section.find("width")).value();
+        String y = ((Node<String>)section.find("height")).value();
+        GeometryBuilder.Section<Size> xSection = RuntimeDefinableGeometry.GeometryBuilder.parse(x);
+        GeometryBuilder.Section<Size> ySection = RuntimeDefinableGeometry.GeometryBuilder.parse(y);
+        SizeBuilder builder = new SizeBuilder(xSection, ySection);
+        xSection.parent(builder);
+        ySection.parent(builder);
+        return builder;
     }
 
     Vec2d vec2d();

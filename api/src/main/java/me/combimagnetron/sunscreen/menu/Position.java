@@ -4,7 +4,7 @@ import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
-public interface Position extends RuntimeDefinableGeometry, Geometry {
+public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry {
 
     static PositionBuilder position() {
         return new PositionBuilder();

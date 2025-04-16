@@ -43,15 +43,16 @@ import java.util.Map;
 import java.util.function.Function;
 
 public final class AspectRatioMenu implements OpenedMenu {
-    private final static double PixelFactor = ((40.75/16)*1/24)/100;//0.0010;//0.04/24;
+    private final static double PixelFactor = /*((40.75/16)*1/24)/100;*/0.0010;//0.04/24;
     private final Canvas spriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/spritesheet.png")));
     private final SunscreenUser<?> viewer;
     private final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
     private final HashMap<Identifier, TextDisplay> divEntityIdHashMap = new HashMap<>();
-    private final TextDisplay cursorDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
-    private final TextDisplay instructionDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
-    private final TextDisplay selectedAreaDisplay = TextDisplay.textDisplay(Vector3d.vec3(0));
-    private final TextDisplay temp = TextDisplay.textDisplay(Vector3d.vec3(0));
+    private final TextDisplay cursorDisplay;
+    private final TextDisplay instructionDisplay;
+    private final TextDisplay selectedAreaDisplay;
+    private final TextDisplay cameraDisplay;
+    private final TextDisplay temp;
     private boolean cursorLocked = false;
     private boolean hover = false;
     private int stage = 0;
@@ -62,6 +63,11 @@ public final class AspectRatioMenu implements OpenedMenu {
     public AspectRatioMenu(SunscreenUser<?> viewer) {
         this.viewer = viewer;
         this.gameMode = viewer.gameMode();
+        cursorDisplay = TextDisplay.textDisplay(viewer.position());
+        instructionDisplay = TextDisplay.textDisplay(viewer.position());
+        selectedAreaDisplay = TextDisplay.textDisplay(viewer.position());
+        cameraDisplay = TextDisplay.textDisplay(viewer.position());
+        temp = TextDisplay.textDisplay(viewer.position());
         build();
         hideCursor();
         open(viewer);
@@ -111,7 +117,7 @@ public final class AspectRatioMenu implements OpenedMenu {
         viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, gameMode));
         viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
         viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
-        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), selectedAreaDisplay.id().intValue()));
+        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), selectedAreaDisplay.id().intValue(), cameraDisplay.id().intValue()));
         divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
     }
@@ -207,14 +213,13 @@ public final class AspectRatioMenu implements OpenedMenu {
     public void open(SunscreenUser<?> user) {
         user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
         initListener();
-        TextDisplay camera = TextDisplay.textDisplay(Vector3d.vec3(user.position().x(), user.position().y() + 1.6, user.position().z()));
         Vector3d rotation = Vector3d.vec3(user.rotation().y(), user.rotation().x(), user.rotation().z());
-        camera.rotation(rotation);
-        user.show(camera);
+        cameraDisplay.rotation(rotation);
+        user.show(cameraDisplay);
         if (SunscreenLibrary.library().config().forceShaderFov()) {
             user.fov(70);
         }
-        user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
+        user.connection().send(new WrapperPlayServerCamera(cameraDisplay.id().intValue()));
         user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
         for (Div div : divHashMap.values()) {
             divEntityIdHashMap.put(div.identifier(), spawn(div, user));
@@ -240,7 +245,7 @@ public final class AspectRatioMenu implements OpenedMenu {
         entityIds.add(selectedAreaDisplay.id().intValue());
         Scheduler.async(() -> {
             entityIds.addAll(divEntityIdHashMap.values().stream().map(entity -> entity.id().intValue()).toList());
-            user.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
+            user.connection().send(new WrapperPlayServerSetPassengers(cameraDisplay.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
             return null;
         });
     }

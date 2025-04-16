@@ -1,9 +1,9 @@
 package me.combimagnetron.sunscreen.bedrock.jsonui;
 
-import me.combimagnetron.sunscreen.menu.Menu;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 
 public interface JsonUI {
 
-    JUIScreen transform(Menu menu);
+    JUIScreen transform(OpenedMenu openedMenu);
 
 }

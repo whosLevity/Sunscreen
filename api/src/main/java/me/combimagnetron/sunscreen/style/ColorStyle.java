@@ -1,6 +1,6 @@
 package me.combimagnetron.sunscreen.style;
 
-import me.combimagnetron.sunscreen.menu.element.Position;
+import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
 

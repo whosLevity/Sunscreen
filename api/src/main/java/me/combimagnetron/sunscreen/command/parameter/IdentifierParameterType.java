@@ -10,9 +10,10 @@ import revxrsal.commands.stream.MutableStringStream;
 public class IdentifierParameterType implements ParameterType<CommandActor, Identifier> {
     @Override
     public Identifier parse(@NotNull MutableStringStream mutableStringStream, @NotNull ExecutionContext<@NotNull CommandActor> executionContext) {
-        if (!mutableStringStream.readString().contains(":")) {
-            return Identifier.of(mutableStringStream.readString());
+        String input = mutableStringStream.readString();
+        if (!input.contains(":")) {
+            return Identifier.of(input);
         }
-        return Identifier.split(mutableStringStream.readString());
+        return Identifier.split(input);
     }
 }

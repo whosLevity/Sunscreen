@@ -4,13 +4,13 @@ import com.github.retrooper.packetevents.event.PacketListener;
 import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
+import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.client.*;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDamageEvent;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
-import me.combimagnetron.sunscreen.menu.Menu;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
-import me.combimagnetron.sunscreen.menu.input.TextInput;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import net.kyori.adventure.audience.Audience;
@@ -48,71 +48,100 @@ public class MenuListener implements PacketListener {
             case PacketType.Play.Client.CLICK_WINDOW:
                 handleClickWindow(new WrapperPlayClientClickWindow(event), user);
                 break;
+            case PacketType.Play.Client.HELD_ITEM_CHANGE:
+                handleHeldItemChange(new WrapperPlayClientHeldItemChange(event), user);
+                break;
+            case PacketType.Play.Client.INTERACT_ENTITY:
+                handleInteractEntity(event, user);
+                break;
             default:
                 break;
         }
     }
 
-    private void handleClickWindow(WrapperPlayClientClickWindow packet, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+    private void handleInteractEntity(PacketReceiveEvent event, SunscreenUser<?> user) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
-        if (menu instanceof Menu.Base base && base.inputHandler().active()) {
+        WrapperPlayClientInteractEntity wrapperPlayClientInteractEntity = new WrapperPlayClientInteractEntity(event);
+        if (openedMenu instanceof OpenedMenu.Base base) {
+            if (wrapperPlayClientInteractEntity.getEntityId() != user.entityId()) {
+                return;
+            }
+            event.setCancelled(true);
+        }
+    }
+
+    private void handleHeldItemChange(WrapperPlayClientHeldItemChange wrapperPlayClientHeldItemChange, SunscreenUser<?> user) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
+            return;
+        }
+        if (openedMenu instanceof OpenedMenu.Base base) {
+            base.handleScroll(wrapperPlayClientHeldItemChange.getSlot());
+        }
+    }
+
+    private void handleClickWindow(WrapperPlayClientClickWindow packet, SunscreenUser<?> user) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
+            return;
+        }
+        if (openedMenu instanceof OpenedMenu.Base base && base.inputHandler().active()) {
             InputHandler inputHandler = base.inputHandler();
             inputHandler.quit();
         }
     }
 
     private void handleItemName(WrapperPlayClientNameItem packet, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
-        if (menu instanceof Menu.Base base && base.inputHandler().active()) {
+        if (openedMenu instanceof OpenedMenu.Base base && base.inputHandler().active()) {
             InputHandler inputHandler = base.inputHandler();
             inputHandler.textInput().handle(packet.getItemName());
         }
     }
 
     private void handlePlayerRotation(WrapperPlayClientPlayerRotation packet, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
-        if (menu instanceof Menu.Base base) {
+        if (openedMenu instanceof OpenedMenu.Base base) {
             base.handleRot(packet.getYaw(), packet.getPitch());
         }
     }
 
-    private static Menu menu(SunscreenUser<?> user) {
+    private static OpenedMenu menu(SunscreenUser<?> user) {
         Session session = user.session();
         if (session == null) {
             return null;
         }
-        Menu menu = session.menu();
-        return menu;
+        return session.menu();
     }
 
     private void handleEntityAction(WrapperPlayClientEntityAction packet, SunscreenUser<?> user) {
         if (packet.getAction() != WrapperPlayClientEntityAction.Action.STOP_SNEAKING) {
             return;
         }
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
-        if (menu instanceof Menu.Base base) {
+        if (openedMenu instanceof OpenedMenu.Base base) {
             base.handleSneak();
         }
     }
 
     private void handleAnimation(WrapperPlayClientAnimation packet, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
-        if (menu instanceof Menu.Base base) {
+        if (openedMenu instanceof OpenedMenu.Base base) {
             base.handleClick();
         }
     }
@@ -150,16 +179,16 @@ public class MenuListener implements PacketListener {
     }
 
     private void handleSystemChatMessageSend(PacketSendEvent event, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
         event.setCancelled(true);
     }
 
     private void handleTimeUpdateSend(PacketSendEvent event, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
         if (!event.getPacketType().equals(PacketType.Play.Server.TIME_UPDATE)) {
@@ -170,31 +199,31 @@ public class MenuListener implements PacketListener {
     }
 
     private void handleBossBarSend(PacketSendEvent event, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
         event.setCancelled(true);
     }
 
     private void handleChatMessageSend(PacketSendEvent event, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
         event.setCancelled(true);
     }
 
     private void handleDamageEventSend(PacketSendEvent event, SunscreenUser<?> user) {
-        Menu menu = menu(user);
-        if (menu == null) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
             return;
         }
         WrapperPlayServerDamageEvent packet = new WrapperPlayServerDamageEvent(event);
         if (packet.getEntityId() != user.entityId()) {
             return;
         }
-        if (menu instanceof Menu.Base base) {
+        if (openedMenu instanceof OpenedMenu.Base base) {
             base.handleDamage();
         }
     }

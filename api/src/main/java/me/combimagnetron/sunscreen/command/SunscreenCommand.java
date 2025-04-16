@@ -1,14 +1,11 @@
 package me.combimagnetron.sunscreen.command;
 
-import me.combimagnetron.generated.R1_21_4.item.Material_1_21_4;
-import me.combimagnetron.passport.internal.entity.impl.display.ItemDisplay;
-import me.combimagnetron.passport.internal.item.Item;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
-import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
-import me.combimagnetron.sunscreen.menu.Menu;
+import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
+import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
-import me.combimagnetron.sunscreen.menu.element.Position;
-import me.combimagnetron.sunscreen.menu.element.div.Div;
+import me.combimagnetron.sunscreen.element.div.Div;
+import me.combimagnetron.sunscreen.registry.MenuRegistry;
 import me.combimagnetron.sunscreen.menu.timing.DebugElement;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
@@ -29,6 +26,9 @@ import revxrsal.commands.annotation.CommandPlaceholder;
 import revxrsal.commands.annotation.Optional;
 import revxrsal.commands.annotation.Subcommand;
 import revxrsal.commands.command.CommandActor;
+
+import java.nio.file.Path;
+import java.util.Collection;
 
 @Command({"sunscreen", "ss", "screen"})
 public class SunscreenCommand {
@@ -51,7 +51,7 @@ public class SunscreenCommand {
                 .clickEvent(ClickEvent.runCommand("/sunscreen resolution " + sunscreenUser.name()))
                 .hoverEvent(HoverEvent.showText(Component.text("Click to run").color(NamedTextColor.GRAY)))));
         builder.append(Component.space());
-        builder.append(Component.text("Opens the aspect ratio menu.", TextColor.color(143, 211, 255)));
+        builder.append(Component.text("Opens the aspect ratio openedMenu.", TextColor.color(143, 211, 255)));
         sunscreenUser.message(builder.build());
     }
 
@@ -64,18 +64,18 @@ public class SunscreenCommand {
         }
         Session session = sunscreenUser.session();
         if (session == null || session.menu() == null) {
-            actor.reply("You don't have a menu opened.");
+            actor.reply("You don't have a openedMenu opened.");
             return;
         }
-        Menu menu = session.menu();
-        if (!(menu instanceof Menu.FloatImpl impl)) {
-            actor.reply("You don't the right menu opened. Contact and administrator.");
+        OpenedMenu openedMenu = session.menu();
+        if (!(openedMenu instanceof OpenedMenu.FloatImpl impl)) {
+            actor.reply("You don't the right openedMenu opened. Contact and administrator.");
             return;
         }
-        DebugElement element = new DebugElement(Vec2d.of(100, 100), Identifier.of("debug"), Position.pixel(0,0), sunscreenUser);
-        Div debugDiv = Div.div(Identifier.of("internal", "debug")).position(Position.position(sunscreenUser).x().percentage(50).back().y().percentage(50).back().finish());
+        DebugElement element = new DebugElement(Size.pixel(100, 100), Identifier.of("debug"), Position.pixel(0,0), sunscreenUser);
+        Div debugDiv = Div.div(Identifier.of("internal", "debug")).position(Position.position().x().percentage(50).back().y().percentage(50).back());
         debugDiv.add(element);
-        impl.div(debugDiv);
+        //impl.div(debugDiv);
         impl.render(debugDiv);
     }
 
@@ -86,7 +86,20 @@ public class SunscreenCommand {
 
     @Subcommand("reload")
     public void reload(CommandActor actor) {
-
+        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
+        if (sunscreenUser == null) {
+            actor.reply("Something went wrong, please contact support.");
+            throw new IllegalArgumentException("User not found");
+        }
+        MenuRegistry menuRegistry = SunscreenLibrary.library().menuRegistry();
+        menuRegistry.clear();
+        MenuConfigTransformer menuConfigTransformer = SunscreenLibrary.library().menuConfigTransformer();
+        Collection<MenuTemplate> templates = SunscreenLibrary.library().menuConfigTransformer().read(SunscreenLibrary.library().path().resolve(Path.of("menus")));
+        SunscreenLibrary.library().logger().info("Loaded {} menus", templates.size());
+        for (MenuTemplate template : templates) {
+            SunscreenLibrary.library().menuRegistry().register(template);
+        }
+        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menus loaded."));
     }
 
     @Subcommand("open")
@@ -96,6 +109,8 @@ public class SunscreenCommand {
             actor.reply("Something went wrong, please contact support.");
             throw new IllegalArgumentException("User not found");
         }
+        MenuTemplate template = SunscreenLibrary.library().menuRegistry().get(identifier);
+        sunscreenUser.open(template);
     }
 
     @Subcommand({"editor", "edit", "e", "maker", "create"})
@@ -118,16 +133,25 @@ public class SunscreenCommand {
         }
         if (sunscreenUser.session() != null) {
             if (sunscreenUser.session().menu() != null) {
-                actor.reply("You already have a menu opened.");
+                actor.reply("You already have a openedMenu opened.");
                 return;
             }
         }
-        SunscreenLibrary.library().menuTicker().start(new EditorMenu(sunscreenUser));
+        OpenedMenu.FloatImpl menu = new EditorMenu(sunscreenUser);
+        SunscreenLibrary.library().menuTicker().start(menu);
+        Session session = Session.session(menu, sunscreenUser);
+        SunscreenLibrary.library().sessionHandler().session(session);
     }
 
     @Subcommand("list")
     public void list(CommandActor actor) {
-
+        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
+        if (sunscreenUser == null) {
+            actor.reply("Something went wrong, please contact support.");
+            throw new IllegalArgumentException("User not found");
+        }
+        MenuRegistry menuRegistry = SunscreenLibrary.library().menuRegistry();
+        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menus loaded."));
     }
 
     @Subcommand({"aspectratio", "resolution"})
@@ -138,7 +162,7 @@ public class SunscreenCommand {
             throw new IllegalArgumentException("User not found");
         }
         if (sunscreenUser.session() != null) {
-            actor.reply("You already have a menu opened.");
+            actor.reply("You already have a openedMenu opened.");
             return;
         }
         new AspectRatioMenu(sunscreenUser);

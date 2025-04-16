@@ -20,7 +20,7 @@ public enum CustomCondition implements CommandCondition<CommandActor> {
         if (!annotationPresent) {
             return;
         }
-        String input = executionContext.input().toString();
+        String input = executionContext.command().annotations().get(me.combimagnetron.sunscreen.command.condition.Condition.class).condition();
         Condition condition = Condition.of(input);
         SunscreenUser<Audience> user = SunscreenLibrary.library().users().user(executionContext.actor().uniqueId()).orElseThrow(() -> new IllegalArgumentException("User not found"));
         if (!condition.eval(Supplier.of(user.platformSpecificPlayer(), user)).value()) {

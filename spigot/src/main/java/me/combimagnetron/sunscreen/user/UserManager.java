@@ -30,6 +30,8 @@ public class UserManager implements Listener, UserHandler<Player, SunscreenUser<
     @EventHandler
     public void onLeave(PlayerQuitEvent event) {
         final Player player = event.getPlayer();
+        SunscreenUser<Player> user = userMap.get(player.getUniqueId());
+        user.session().close();
         userMap.remove(player.getUniqueId());
     }
 

@@ -4,120 +4,293 @@ import me.combimagnetron.passport.config.Config;
 import me.combimagnetron.passport.config.element.ConfigElement;
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
-import me.combimagnetron.passport.user.User;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.Canvas;
-import me.combimagnetron.sunscreen.menu.Menu;
-import me.combimagnetron.sunscreen.menu.element.Element;
-import me.combimagnetron.sunscreen.menu.element.Position;
-import me.combimagnetron.sunscreen.menu.element.div.Div;
-import me.combimagnetron.sunscreen.menu.element.impl.ButtonElement;
-import me.combimagnetron.sunscreen.menu.element.impl.ImageElement;
-import me.combimagnetron.sunscreen.menu.element.impl.TextElement;
-import me.combimagnetron.sunscreen.user.SunscreenUser;
+import me.combimagnetron.sunscreen.image.Color;
+import me.combimagnetron.sunscreen.menu.MenuTemplate;
+import me.combimagnetron.sunscreen.element.Element;
+import me.combimagnetron.sunscreen.menu.Position;
+import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.element.div.Div;
+import me.combimagnetron.sunscreen.element.impl.ButtonElement;
+import me.combimagnetron.sunscreen.element.impl.ImageElement;
+import me.combimagnetron.sunscreen.element.impl.TextElement;
+import me.combimagnetron.sunscreen.menu.Size;
+import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.ViewportHelper;
+import org.jetbrains.annotations.Nullable;
 
+import java.io.File;
 import java.nio.file.Path;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
+@SuppressWarnings("unchecked")
 public interface MenuConfigTransformer {
 
-    Menu handle(Config config, String fileName, SunscreenUser<?> user);
+    Collection<MenuTemplate> read(Path folder);
+
+    @Nullable MenuTemplate handle(Config config, String fileName);
 
     class Impl implements MenuConfigTransformer {
-        private final static String ErrorMessage = "\nPlease revisit the menu config or contact plugin developers.\nWhen contacting the developers please provide the fault code in the square brackets and your config file.";
+        public final static String ErrorMessage = "\nPlease revisit the menu config or contact plugin developers.\nWhen contacting the developers please provide the fault code in the square brackets and your config file.";
 
         @Override
-        public Menu handle(Config config, String fileName, SunscreenUser<?> user) {
-            Optional<Section> menuSectionOptional = config.sections().stream().findFirst();
-            if (menuSectionOptional.isEmpty()) {
-                SunscreenLibrary.library().logger().error("[CR001] No menu section found in config file \"{}\".{}", fileName, ErrorMessage);
+        public Collection<MenuTemplate> read(Path folder) {
+            List<MenuTemplate> menuTemplates = new ArrayList<>();
+            for (File file : folder.toFile().listFiles()) {
+                if (!file.getName().endsWith(".menu")) {
+                    continue;
+                }
+                Config config = Config.file(file.toPath());
+                MenuTemplate menuTemplate = handle(config, file.getName());
+                if (menuTemplate != null) {
+                    menuTemplates.add(menuTemplate);
+                }
+            }
+            return menuTemplates;
+        }
+
+        private boolean exists(String entry, Config config) {
+            return config.nodes().stream().anyMatch(configElement -> configElement.name().equals(entry)) ||
+                    config.sections().stream().anyMatch(configElement -> configElement.name().equals(entry));
+        }
+
+        private String get(String entry, Config config) {
+            return ((Node<String>)config.nodes().stream().filter(configElement -> configElement.name().equals(entry)).findFirst().get()).value();
+        }
+
+        @Override
+        public @Nullable MenuTemplate handle(Config config, String fileName) {
+            if (!exists("identifier", config)) {
+                SunscreenLibrary.library().logger().error("[CR001] No identifier found in config file \"{}\".{}", fileName, ErrorMessage);
                 return null;
             }
-            Section menuSection = menuSectionOptional.get();
-            if (menuSection.elements().stream().noneMatch(configElement -> configElement.name().equals("type"))) {
+            Identifier identifier = Identifier.split(get("identifier", config));
+            if (!exists("type", config)) {
                 SunscreenLibrary.library().logger().error("[CR002] No menu type defined in config file \"{}\".{}", fileName, ErrorMessage);
                 return null;
             }
-            String menuType = ((Node<String>)menuSection.elements().stream().filter(configElement -> configElement.name().equals("type")).findFirst().get()).value();
-            Menu menu = null;
-            switch (menuType) {
-                case "float":
-                    menu = new Menu.Float(user);
-                    break;
-                case "single":
-                    menu = new Menu.Single(user);
-                    break;
-                case null:
-                    break;
-                default:
-                    SunscreenLibrary.library().logger().error("[CR003] Invalid menu type \"{}\" in config file \"{}\".{}", menuType, fileName, ErrorMessage);
-                    return null;
+            String menuType = get("type", config);
+            MenuTemplate.Type openedMenuType = MenuTemplate.Type.valueOf(menuType.toUpperCase());
+            if (openedMenuType == null) {
+                SunscreenLibrary.library().logger().error("[CR003] Invalid menu type \"{}\" in config file \"{}\".{}", menuType, fileName, ErrorMessage);
+                return null;
             }
-            if (menu == null) {
+            MenuTemplate openedMenu = MenuTemplate.simple(openedMenuType, identifier);
+            if (openedMenu == null) {
                 SunscreenLibrary.library().logger().error("[CR004] Failed to create menu from config file \"{}\".{}", fileName, ErrorMessage);
                 return null;
             }
-            if (menuSection.elements().stream().noneMatch(configElement ->  configElement.name().equals("divs"))) {
+            if (!exists("divs", config)) {
                 SunscreenLibrary.library().logger().error("[CR005] No divs defined in config file \"{}\".{}", fileName, ErrorMessage);
                 return null;
             }
-            Section divsSection = (Section)menuSection.elements().stream().filter(configElement -> configElement.name().equals("divs")).findFirst().get();
+            Section divsSection = config.sections().stream().filter(configElement -> configElement.name().equals("divs")).findFirst().get();
             for (ConfigElement divConfigElement : divsSection.elements()) {
                 if (divConfigElement instanceof Section divSection) {
                     Div div = Div.div(Identifier.split(((Node<String>)divSection.find("identifier")).value()));
                     Section elements = divSection.find("elements");
                     for (ConfigElement elementConfigElement : elements.elements()) {
                         if (elementConfigElement instanceof Section elementSection) {
-                            div.add(ElementTransformer.transform(elementSection, fileName, user));
+                            div.add(ElementTransformer.transform(elementSection, fileName));
                         } else {
                             SunscreenLibrary.library().logger().error("[CR007] Invalid element \"{}\" in config file \"{}\".{}", elementConfigElement.name(), fileName, ErrorMessage);
                         }
                     }
-                    menu.div(div);
+                    if (divSection.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
+                        SunscreenLibrary.library().logger().error("[CR008] No position defined in config file \"{}\".{}", fileName, ErrorMessage);
+                        return null;
+                    }
+                    Section positionSection = divSection.find("position");
+                    Position.PositionBuilder position = Position.config(positionSection);
+                    div.position(position);
+                    openedMenu.div(div);
                 } else {
                     SunscreenLibrary.library().logger().error("[CR006] Invalid div \"{}\" in config file \"{}\".{}", divConfigElement.name(), fileName, ErrorMessage);
                 }
             }
-            return null;
+            return openedMenu;
         }
 
     }
 
-    class ElementTransformer {
-        private static final Map<String, Class<? extends Element>> ElementTypes = Map.of(
-                "button", ButtonElement.class,
-                "text", TextElement.class,
-                "image", ImageElement.class
+    interface ElementTransformer {
+        Map<String, ElementTransformer> Transformers = Map.of(
+                "image", new ImageElementTransformer(),
+                "button", new ButtonElementTransformer(),
+                "text", new TextElementTransformer()
         );
 
-        static Element transform(Section section, String config, SunscreenUser<?> user) {
-            String type = section.name();
-            if (!ElementTypes.containsKey(type)) {
-                SunscreenLibrary.library().logger().error("[CR008] Type \"{}\" not expected for element in config file \"{}\".{}", type, config, Impl.ErrorMessage);
+        static Element<?> transform(Section section, String fileName) {
+            if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("type"))) {
+                SunscreenLibrary.library().logger().error("[CR008] No element type defined in config file \"{}\".{}", fileName, Impl.ErrorMessage);
                 return null;
             }
-            Identifier identifier = Identifier.split(section.find("identifier"));
-            Position position = Position.RegexPositionParser.parse(((Section) section.find("position")).find("x"), ((Section) section.find("position")).find("y"), user);
-            Element element = switch (type) {
-                //case "button" -> ButtonElement.buttonElement(Vec2d.of(26, 26), position, identifier, null);
-                case "image" -> {
-                    String canvasType = ((Node<String>)section.find("canvas")).value().split("\\(")[0];
-                    Canvas canvas = switch (canvasType) {
-                        case "file" -> Canvas.image(Canvas.ImageProvider.file(Path.of(((Node<String>)section.find("canvas")).value().replace("file(", "").replace(")", ""))));
-                        case "url" -> Canvas.image(Canvas.ImageProvider.url(((Node<String>)section.find("canvas")).value().replace("file(", "").replace(")", "")));
-                        default -> null;
-                    };
-                    yield ImageElement.imageElement(canvas, identifier, position);
-                }
-                default -> null;
-            };
-            if (element == null) {
-                SunscreenLibrary.library().logger().error("[CR009] Failed to create element from config file \"{}\".{}", config, Impl.ErrorMessage);
+            String elementType = ((Node<String>)section.elements().stream().filter(configElement -> configElement.name().equals("type")).findFirst().get()).value();
+            ElementTransformer transformer = Transformers.get(elementType);
+            if (transformer == null) {
+                SunscreenLibrary.library().logger().error("[CR009] Invalid element type \"{}\" in config file \"{}\".{}", elementType, fileName, Impl.ErrorMessage);
+                return null;
             }
-            return element;
+            return transformer.transform(section);
+        }
+
+        Element<?> transform(Section section);
+
+        private static Canvas text(Section section, Canvas canvas) {
+            Section textSection = section.find("text");
+            String text = ((Node<String>)textSection.find("text")).value();
+            Section positionSection = textSection.find("position");
+            Position.PositionBuilder positionBuilder = Position.config(positionSection);
+            Position position = positionBuilder.finish(canvas.size());
+            Vec2d vec2d = ViewportHelper.fromPosition(position);
+            Text.Font font = Text.Fonts.stream().filter(f -> f.name().equals(((Node<String>)textSection.find("font")).value())).findFirst().orElse(Text.Font.vanilla());
+            Text style = Text.text(text, font);
+            return canvas.text(style, vec2d, Color.white());
+        }
+
+        static Map<String, Canvas> get(Section section) {
+            Map<String, Canvas> canvases = new LinkedHashMap<>();
+            if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("canvas"))) {
+                SunscreenLibrary.library().logger().error("[CR008] No canvas defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                return canvases;
+            }
+            boolean hasText = section.elements().stream().anyMatch(configElement -> configElement.name().equals("text"));
+            ConfigElement canvasElement = section.elements().stream().filter(configElement -> configElement.name().equals("canvas")).findFirst().get();
+            if (canvasElement instanceof Node canvasNode) {
+                Node<String> node = (Node<String>)canvasNode;
+                if (!node.value().startsWith("file(")) {
+                    return canvases;
+                }
+                Canvas file = file(node.value().substring(5, node.value().length() - 1));
+                if (hasText) {
+                    file = text(section, file);
+                }
+                canvases.put(node.name(), file);
+                return canvases;
+            } else if (canvasElement instanceof Section canvasSection) {
+                boolean hasSplit = canvasSection.elements().stream().anyMatch(configElement -> configElement.name().equals("split"));
+                boolean shouldSplit = hasSplit && ((Node<String>) canvasSection.find("split")).value() != null;
+                if (shouldSplit) {
+                    int split = ((Node<Integer>) canvasSection.find("split")).value();
+                    String image = ((Node<String>) canvasSection.find("image")).value();
+                    Canvas canvas = file(image.substring(5, image.length() - 1));
+                    ArrayList<String > types = ((Node<ArrayList<String>>)canvasSection.find("order")).value();
+                    int y = (int) (canvas.size().y() / split);
+                    for (int i = 0; i < split; i+= y) {
+                        Canvas sub = canvas.sub(Vec2d.of(canvas.size().x(), y), Vec2d.of(0, i));
+                        if (hasText) {
+                            sub = text(section, sub);
+                        }
+                        canvases.put(types.get(i/5), sub);
+                    }
+                    return canvases;
+                }
+                for (ConfigElement element : canvasSection.elements()) {
+                        if (element instanceof Node canvasNode) {
+                            Node<String> node = (Node<String>)canvasNode;
+                            if (node.value().startsWith("file(")) {
+                                Canvas file = file(node.value().substring(5, node.value().length() - 1));
+                                if (hasText) {
+                                    file = text(section, file);
+                                }
+                                canvases.put(node.name(), file);
+                            }
+                            return canvases;
+                        }
+                }
+                return canvases;
+            } else {
+                SunscreenLibrary.library().logger().error("[CR009] Invalid canvas \"{}\" in config file \"{}\".{}", canvasElement.name(), section.name(), Impl.ErrorMessage);
+                return canvases;
+            }
+        }
+
+        static Canvas file(String fileName) {
+            Path path = Path.of(fileName);
+            if (!SunscreenLibrary.library().path().resolve(path).toFile().exists()) {
+                SunscreenLibrary.library().logger().error("[CR010] File \"{}\" does not exist.{}", fileName, Impl.ErrorMessage);
+                return null;
+            }
+            return Canvas.image(Canvas.ImageProvider.file(path));
+        }
+
+        class ImageElementTransformer implements ElementTransformer {
+            @Override
+            public Element<?> transform(Section section) {
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("identifier"))) {
+                    SunscreenLibrary.library().logger().error("[CR011] No identifier defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Identifier identifier = Identifier.split(((Node<String>)section.find("identifier")).value());
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
+                    SunscreenLibrary.library().logger().error("[CR012] No position defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Section positionSection = section.find("position");
+                Position.PositionBuilder position = Position.config(positionSection);
+                Map<String, Canvas> canvases = get(section);
+                if (canvases.isEmpty()) {
+                    SunscreenLibrary.library().logger().error("[CR013] No canvas found in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                SimpleBufferedElement element = ImageElement.imageElement(canvases.values().stream().findAny().get(), identifier, position);
+                return element;
+            }
+        }
+
+        class ButtonElementTransformer implements ElementTransformer {
+            @Override
+            public Element<?> transform(Section section) {
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("identifier"))) {
+                    SunscreenLibrary.library().logger().error("[CR014] No identifier defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Identifier identifier = Identifier.split(((Node<String>)section.find("identifier")).value());
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
+                    SunscreenLibrary.library().logger().error("[CR015] No position defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Section positionSection = section.find("position");
+                Position.PositionBuilder position = Position.config(positionSection);
+                Map<String, Canvas> canvases = get(section);
+                if (canvases.isEmpty()) {
+                    SunscreenLibrary.library().logger().error("[CR016] No canvas found in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Map<ButtonElement.State, Canvas> icons = new HashMap<>();
+                canvases.forEach((key, value) -> icons.put(ButtonElement.State.valueOf(key.toUpperCase()), value));
+                SimpleBufferedElement element = ButtonElement.buttonElement(Size.pixel(canvases.values().stream().findAny().get().size()), identifier, position, icons);
+                return element;
+            }
+        }
+
+        class TextElementTransformer implements ElementTransformer {
+            @Override
+            public Element<?> transform(Section section) {
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("identifier"))) {
+                    SunscreenLibrary.library().logger().error("[CR017] No identifier defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Identifier identifier = Identifier.split(((Node<String>)section.find("identifier")).value());
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
+                    SunscreenLibrary.library().logger().error("[CR018] No position defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Section positionSection = section.find("position");
+                Position.PositionBuilder position = Position.config(positionSection);
+                Text.Font font = Text.Fonts.stream().filter(f -> f.name().equals(((Node<String>)section.find("font")).value())).findFirst().orElse(Text.Font.vanilla());
+                String text = ((Node<String>)section.find("text")).value();
+                if (text == null) {
+                    SunscreenLibrary.library().logger().error("[CR020] No text found in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Text text1 = Text.text(text, font);
+                SimpleBufferedElement element = TextElement.textElement(identifier, position, text1);
+                return element;
+            }
         }
 
     }

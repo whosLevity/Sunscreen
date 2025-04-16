@@ -5,34 +5,24 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.combimagnetron.passport.Passport;
-import me.combimagnetron.passport.config.Config;
-import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.user.User;
 import me.combimagnetron.sunscreen.command.SunscreenCommand;
 import me.combimagnetron.sunscreen.command.condition.CustomCondition;
 import me.combimagnetron.sunscreen.command.parameter.IdentifierParameterType;
 import me.combimagnetron.sunscreen.command.parameter.UserParameterType;
-import me.combimagnetron.sunscreen.menu.ScreenSize;
-import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
+import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.listener.MenuListener;
-import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.placeholder.PapiPlaceholderProvider;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.user.UserManager;
 import me.combimagnetron.sunscreen.util.Identifier;
-import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.EventHandler;
-import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerSwapHandItemsEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import revxrsal.commands.Lamp;
 import revxrsal.commands.bukkit.BukkitLamp;
 
-import java.io.File;
-import java.nio.ByteBuffer;
+import java.nio.file.Path;
+import java.util.Collection;
 
 public class SunscreenPlugin extends JavaPlugin {
     private SunscreenLibrary<SunscreenPlugin, Player> library;
@@ -62,6 +52,11 @@ public class SunscreenPlugin extends JavaPlugin {
                 .build();
         lamp.register(new SunscreenCommand());
         this.getDataFolder().mkdirs();
+        Collection<MenuTemplate> templates = library.menuConfigTransformer().read(getDataPath().resolve(Path.of("menus")));
+        library.logger().info("Loaded {} menus", templates.size());
+        for (MenuTemplate template : templates) {
+            library.menuRegistry().register(template);
+        }
         library.passport().placeholders().register(new PapiPlaceholderProvider());
     }
 

@@ -1,6 +1,6 @@
 package me.combimagnetron.sunscreen.util;
 
-import me.combimagnetron.sunscreen.menu.element.Position;
+import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 
 public class ShaderHelper {

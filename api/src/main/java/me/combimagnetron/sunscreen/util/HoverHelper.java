@@ -1,6 +1,7 @@
 package me.combimagnetron.sunscreen.util;
 
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
+import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 
 public class HoverHelper {
@@ -12,6 +13,10 @@ public class HoverHelper {
 
     public static boolean isHovered(Vec2d cursor, Vec2d position, Vec2d size) {
         return cursor.x() > position.x() && cursor.x() < position.x() + size.x() && cursor.y() > position.y() && cursor.y() < position.y() + size.y();
+    }
+
+    public static boolean isHovered(Vec2d cursor, Vec2d position, Size size) {
+        return cursor.x() > position.x() && cursor.x() < position.x() + size.x().pixel() && cursor.y() > position.y() && cursor.y() < position.y() + size.y().pixel();
     }
 
 }

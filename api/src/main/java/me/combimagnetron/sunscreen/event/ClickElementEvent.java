@@ -1,7 +1,7 @@
 package me.combimagnetron.sunscreen.event;
 
 import me.combimagnetron.passport.event.Event;
-import me.combimagnetron.sunscreen.menu.element.Element;
+import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.util.Vec2d;
 

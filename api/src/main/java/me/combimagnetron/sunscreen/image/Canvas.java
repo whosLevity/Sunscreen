@@ -2,6 +2,7 @@ package me.combimagnetron.sunscreen.image;
 
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.effect.Effect;
+import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
@@ -43,6 +44,10 @@ public interface Canvas {
 
     static Canvas image(BufferedImage image) {
         return new StaticImpl(image);
+    }
+
+    static Canvas image(Size size) {
+        return new StaticImpl(new BufferedImage((int) size.x().pixel(), (int) size.y().pixel(), 2));
     }
 
     static Canvas image(Vec2d size) {

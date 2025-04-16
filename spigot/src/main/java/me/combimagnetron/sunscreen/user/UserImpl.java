@@ -14,6 +14,8 @@ import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.internal.network.Connection;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
+import me.combimagnetron.sunscreen.menu.MenuTemplate;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
 import me.combimagnetron.sunscreen.session.Session;
 import org.bukkit.entity.Player;
@@ -125,6 +127,14 @@ public class UserImpl implements SunscreenUser<Player> {
     @Override
     public Session session() {
         return SunscreenLibrary.library().sessionHandler().session(this);
+    }
+
+    @Override
+    public Session open(MenuTemplate template) {
+        OpenedMenu.Float menu = new OpenedMenu.Float(this, template);
+        SunscreenLibrary.library().menuTicker().start(menu);
+        Session session = Session.session(menu, this);
+        return SunscreenLibrary.library().sessionHandler().session(session);
     }
 
     @Override

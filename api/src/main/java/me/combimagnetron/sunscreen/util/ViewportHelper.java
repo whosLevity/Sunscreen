@@ -2,7 +2,7 @@ package me.combimagnetron.sunscreen.util;
 
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
-import me.combimagnetron.sunscreen.menu.element.Position;
+import me.combimagnetron.sunscreen.menu.Position;
 
 public class ViewportHelper {
 

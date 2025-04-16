@@ -30,7 +30,7 @@ public interface InputHandler {
 
         @Override
         public boolean active() {
-            return this.textInput != null;
+            return active;
         }
 
         @Override
@@ -51,6 +51,7 @@ public interface InputHandler {
         @Override
         public TextInput open() {
             this.textInput = new TextInput.Impl(user);
+            this.active = true;
             return textInput;
         }
 

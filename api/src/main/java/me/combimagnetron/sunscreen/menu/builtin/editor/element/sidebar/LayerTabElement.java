@@ -3,12 +3,13 @@ package me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
+import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
-import me.combimagnetron.sunscreen.menu.element.Element;
-import me.combimagnetron.sunscreen.menu.element.Interactable;
-import me.combimagnetron.sunscreen.menu.element.Position;
-import me.combimagnetron.sunscreen.menu.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.element.Element;
+import me.combimagnetron.sunscreen.element.Interactable;
+import me.combimagnetron.sunscreen.menu.Position;
+import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
@@ -20,18 +21,17 @@ import java.util.Collection;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 public class LayerTabElement extends SimpleBufferedElement implements Interactable {
     private final Map<Identifier, Element<Canvas>> elements;
     private final Collection<Identifier> selected = new LinkedList<>();
     private Consumer<ClickElementEvent<?>> elementEventConsumer = (e) -> {};
 
-    public static LayerTabElement of(Vec2d size, Identifier identifier, Position position, Map<Identifier, Element<Canvas>> elements) {
+    public static LayerTabElement of(Size size, Identifier identifier, Position position, Map<Identifier, Element<Canvas>> elements) {
         return new LayerTabElement(size, identifier, position, elements);
     }
 
-    public LayerTabElement(Vec2d size, Identifier identifier, Position position, Map<Identifier, Element<Canvas>> elements) {
+    public LayerTabElement(Size size, Identifier identifier, Position position, Map<Identifier, Element<Canvas>> elements) {
         super(size, identifier, position);
         this.elements = elements;
     }
@@ -58,28 +58,23 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
         result.place(SectionElement.sectionElement(Identifier.of("_"), Position.pixel(0, 0), size()).canvas(), Vec2d.of(0, 0));
         int y = 1;
         for (Element<Canvas> element : elements.values()) {
-            Canvas elementCanvas = Canvas.image(Vec2d.of(size().xi() - 2, 23));
+            Canvas elementCanvas = Canvas.image(Vec2d.of(size().vec2d().xi() - 2, 23));
             if (selected.contains(element.identifier())) {
-                elementCanvas.fill(Vec2d.of(1, 1), Vec2d.of(size().xi(), 23), Color.white());
+                elementCanvas.fill(Vec2d.of(1, 1), Vec2d.of(size().vec2d().xi(), 23), Color.white());
             } else {
-                elementCanvas.fill(Vec2d.of(1, 1), Vec2d.of(size().xi() - 2, 23), EditorMenu.Colors.Background);
+                elementCanvas.fill(Vec2d.of(1, 1), Vec2d.of(size().x().pixel() - 2, 23), EditorMenu.Colors.Background);
             }
-            elementCanvas.fill(Vec2d.of(2, 2), Vec2d.of(size().xi() - 2, 21), EditorMenu.Colors.Secondary);
+            elementCanvas.fill(Vec2d.of(2, 2), Vec2d.of(size().x().pixel() - 2, 21), EditorMenu.Colors.Secondary);
             elementCanvas.fill(Vec2d.of(3, 3), Vec2d.of(19, 19), EditorMenu.Colors.Tertiary);
             elementCanvas.text(Text.text(element.identifier().key().string(), Text.Font.vanilla()), Vec2d.of(24, 10), EditorMenu.Colors.PrimaryText);
             elementCanvas.text(Text.text("1 element", Text.Font.five()), Vec2d.of(23, 17), EditorMenu.Colors.SecondaryText);
-            elementCanvas.text(Text.text(element.size().xi() + "x" + element.size().yi() + "px", Text.Font.five()), Vec2d.of(23, 23), EditorMenu.Colors.SecondaryText);
+            elementCanvas.text(Text.text(element.size().x().pixel() + "x" + element.size().y().pixel() + "px", Text.Font.five()), Vec2d.of(23, 23), EditorMenu.Colors.SecondaryText);
             result.place(elementCanvas, Vec2d.of(1, y));
             y += 22;
         }
-        result.fill(Vec2d.of(3, size().y()- 13), Vec2d.of(size().xi() - 6, 10), EditorMenu.Colors.Secondary);
-        result.text(Text.text("Add Layer", Text.Font.vanilla()), Vec2d.of(4, size().y() - 5), EditorMenu.Colors.PrimaryText);
+        result.fill(Vec2d.of(3, size().y().pixel() - 13), Vec2d.of(size().x().pixel() - 6, 10), EditorMenu.Colors.Secondary);
+        result.text(Text.text("Add Layer", Text.Font.vanilla()), Vec2d.of(4, size().y().pixel() - 5), EditorMenu.Colors.PrimaryText);
         return result;
-    }
-
-    @Override
-    public Element<Canvas> position(Position pos) {
-        return null;
     }
 
     @Override
@@ -112,7 +107,7 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
         if (pos == null) {
             return false;
         }
-        if (HoverHelper.isHovered(pos, Vec2d.of(3, size().y()- 13), Vec2d.of(size().xi() - 6, 10))) {
+        if (HoverHelper.isHovered(pos, Vec2d.of(3, size().y().pixel() - 13), Vec2d.of(size().x().pixel() - 6, 10))) {
             elementEventConsumer.accept(new ClickElementEvent<Element>(this, pos, new Input.Type.MouseClick(false)));
             return true;
         }

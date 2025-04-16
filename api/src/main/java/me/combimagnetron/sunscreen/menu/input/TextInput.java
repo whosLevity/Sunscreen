@@ -4,13 +4,10 @@ import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemCustomModelData;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
-import com.github.retrooper.packetevents.protocol.world.MaterialType;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSetSlot;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems;
 import me.combimagnetron.passport.internal.menu.AnvilMenu;
 import me.combimagnetron.passport.internal.menu.Title;
-import me.combimagnetron.sunscreen.menu.element.Position;
+import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.ShaderHelper;
 import net.kyori.adventure.text.Component;
@@ -60,9 +57,7 @@ public interface TextInput {
                 }
                 items.add(ItemStack.EMPTY);
             }
-            System.out.println(menu.windowId());
             viewer.connection().send(new WrapperPlayServerWindowItems(menu.windowId(), 0, items, ItemStack.EMPTY));
-            System.out.println("Sent window items");
         }
 
         @Override

@@ -14,8 +14,8 @@ public class SessionHandler {
         return sessions.get(user.uniqueIdentifier());
     }
 
-    public void session(Session session) {
-        sessions.put(session.user().uniqueIdentifier(), session);
+    public Session session(Session session) {
+        return sessions.put(session.user().uniqueIdentifier(), session);
     }
 
 }

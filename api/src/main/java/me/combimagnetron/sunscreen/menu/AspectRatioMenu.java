@@ -21,12 +21,11 @@ import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
-import me.combimagnetron.sunscreen.menu.element.Element;
-import me.combimagnetron.sunscreen.menu.element.Position;
-import me.combimagnetron.sunscreen.menu.element.div.Div;
-import me.combimagnetron.sunscreen.menu.element.div.Edit;
-import me.combimagnetron.sunscreen.menu.element.impl.ImageElement;
-import me.combimagnetron.sunscreen.menu.element.impl.TextElement;
+import me.combimagnetron.sunscreen.element.Element;
+import me.combimagnetron.sunscreen.element.div.Div;
+import me.combimagnetron.sunscreen.element.div.Edit;
+import me.combimagnetron.sunscreen.element.impl.ImageElement;
+import me.combimagnetron.sunscreen.element.impl.TextElement;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
@@ -43,7 +42,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-public final class AspectRatioMenu implements Menu {
+public final class AspectRatioMenu implements OpenedMenu {
     private final static double PixelFactor = ((40.75/16)*1/24)/100;//0.0010;//0.04/24;
     private final Canvas spriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/spritesheet.png")));
     private final SunscreenUser<?> viewer;
@@ -69,19 +68,19 @@ public final class AspectRatioMenu implements Menu {
     }
 
     private void build() {
-        Div upperLeft = Div.nonRender(Identifier.of("upper_left"));
+        Div<Canvas> upperLeft = Div.nonRender(Identifier.of("upper_left"));
                 //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(upperLeft);
-        Div upperRight = Div.nonRender(Identifier.of("upper_right"));
+        Div<Canvas> upperRight = Div.nonRender(Identifier.of("upper_right"));
                 //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(upperRight);
-        Div lowerLeft = Div.nonRender(Identifier.of("lower_left"));
+        Div<Canvas> lowerLeft = Div.nonRender(Identifier.of("lower_left"));
                 //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(lowerLeft);
-        Div lowerRight = Div.nonRender(Identifier.of("lower_right"));
+        Div<Canvas> lowerRight = Div.nonRender(Identifier.of("lower_right"));
                 //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(lowerRight);
-        Div center = Div.div(Identifier.of("center")).size(Vec2d.of(114, 140))
+        Div<Canvas> center = Div.div(Identifier.of("center")).size(Size.pixel(114, 140))
                 .add(ImageElement.imageElement(spriteSheet.sub(Vec2d.of(114, 140), Vec2d.of(594, 0)), Identifier.of("center", "bg"), Position.pixel(0, 0)))
                 .add(ImageElement.imageElement(spriteSheet.sub(Vec2d.of(101, 12), Vec2d.of(115, 194)), Identifier.of("center", "button"), Position.pixel(3, 125)))
                 .add(TextElement.textElement(Identifier.of("center", "button_label"), Position.pixel(13, 127), Text.text("Sneak to continue", Text.Font.vanilla()))
@@ -89,6 +88,7 @@ public final class AspectRatioMenu implements Menu {
                 .add(TextElement.textElement(Identifier.of("center", "label"), Position.pixel(3, 3), Text.text("Move the arrows to\nthe corner of your\nscreen by moving\nyour mouse.", Text.Font.vanilla()))
                         .style(Style.color(), Color.of(155, 171, 178)));
         div(center);
+        Size.SizeBuilder size = (Size.SizeBuilder) Size.size().x().pixel(20).back().y().pixel(10).back();
     }
 
     private void hideCursor() {
@@ -204,7 +204,6 @@ public final class AspectRatioMenu implements Menu {
         send(viewer, selectedAreaDisplay);
     }
 
-    @Override
     public void open(SunscreenUser<?> user) {
         user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
         initListener();
@@ -255,7 +254,7 @@ public final class AspectRatioMenu implements Menu {
         display.transformation(transformation);
         Component component = Component.text(" ");
         if (!(div instanceof Div.NonRenderDiv)) {
-            component = CanvasRenderer.optimized().render(div.render()).component();
+            component = CanvasRenderer.optimized().render(div.render(viewer)).component();
         }
         display.onFire(true);
         display.backgroundColor(0);
@@ -266,8 +265,7 @@ public final class AspectRatioMenu implements Menu {
         return display;
     }
 
-    @Override
-    public Menu apply(Draft draft) {
+    public OpenedMenu apply(Draft draft) {
         Draft.Impl draftImpl = (Draft.Impl) draft;
         for (Edit<?> edit : draftImpl.edits()) {
             if (edit.type() == Div.class) {
@@ -292,8 +290,7 @@ public final class AspectRatioMenu implements Menu {
         return this;
     }
 
-    @Override
-    public Menu div(Div div) {
+    public OpenedMenu div(Div div) {
         divHashMap.put(div.identifier(), div);
         return this;
     }

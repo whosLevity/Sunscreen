@@ -13,4 +13,3 @@ plugins {
 rootProject.name = "Sunscreen"
 include("api")
 include("spigot")
-include("spigot-v1_21_4")

@@ -84,7 +84,6 @@ tasks.withType<JavaCompile> {
 
 dependencies {
     implementation(project(":api"))
-    implementation(project(":spigot-v1_21_4"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
     implementation("io.github.revxrsal:lamp.common:4.0.0-rc.10")
     implementation("io.github.revxrsal:lamp.bukkit:4.0.0-rc.10")

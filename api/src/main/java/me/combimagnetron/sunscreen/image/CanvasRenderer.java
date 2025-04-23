@@ -97,15 +97,16 @@ public interface CanvasRenderer {
             return Scheduler.async(() -> {Canvas.InternalCanvas internalCanvas = (Canvas.InternalCanvas) canvas;
             BufferedImage image = internalCanvas.image();
             int r = 3;
+            int maxSection = image.getHeight() / 3;
             TextComponent.Builder component = Component.text();
-            for (int x = 0; x < image.getHeight(); x += 3) {
+            for (int x = 0; x <= image.getHeight(); x += 3) {
                 int roundedHeight = (image.getHeight() + 2) / 3 * 3;
-                if (roundedHeight -x <= 3) {
+                /*if (roundedHeight -x <= 3) {
                     component.append(FontUtil.offset((image.getWidth() - (image.getWidth() % 3))));
-                    component.append(Component.newline(), Component.newline(), Component.newline());
-                    r = 2;
-                }
-                for (int y = 0; y < image.getWidth(); y += 3) {
+                    //component.append(Component.newline(), Component.newline(), Component.newline());
+                    //component.append(FontUtil.offset(-(image.getWidth() - (image.getWidth() % 3))));
+                }*/
+                for (int y = 0; y <= image.getWidth(); y += 3) {
                     if (x + 3 > image.getHeight() || y + 3 > image.getWidth()) {
                         continue;
                     }
@@ -115,9 +116,12 @@ public interface CanvasRenderer {
                 if (r == -7) {
                     r = 2;
                     component.append(Component.newline(), Component.newline(), Component.newline());
-                } else if (!(image.getHeight() -x < 3)) {
+                } else if (!(image.getHeight() -x <= 3)) {
                     r--;
                     component.append(FontUtil.offset(-(image.getWidth() - (image.getWidth() % 3))));
+                } else {
+                    r--;
+                    component.append(FontUtil.offset((image.getWidth() - (image.getWidth() % 3))));
                 }
             }
             Component finished = component.build();

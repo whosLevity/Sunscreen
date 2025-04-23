@@ -7,7 +7,7 @@ import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.passport.util.Pair;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.Interactable;
-import me.combimagnetron.sunscreen.element.impl.ShapeElement;
+import me.combimagnetron.sunscreen.element.impl.*;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.logic.action.Action;
@@ -17,15 +17,16 @@ import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.logic.action.adapter.TypeAdapter;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.element.Element;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.div.Div;
-import me.combimagnetron.sunscreen.element.impl.ButtonElement;
-import me.combimagnetron.sunscreen.element.impl.ImageElement;
-import me.combimagnetron.sunscreen.element.impl.TextElement;
 import me.combimagnetron.sunscreen.menu.Size;
+import me.combimagnetron.sunscreen.menu.input.Input;
+import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.ViewportHelper;
 import org.jetbrains.annotations.Nullable;
@@ -175,7 +176,8 @@ public interface MenuConfigTransformer {
                 "image", new ImageElementTransformer(),
                 "button", new ButtonElementTransformer(),
                 "text", new TextElementTransformer(),
-                "shape", new ShapeElementTransformer()
+                "shape", new ShapeElementTransformer(),
+                "text_input", new TextInputElementTransformer()
         );
 
         static Element<?> transform(Section section, String fileName) {
@@ -405,6 +407,46 @@ public interface MenuConfigTransformer {
                 SimpleBufferedElement element = TextElement.textElement(identifier, position, text1);
                 return element;
             }
+        }
+
+        private static boolean exists(String entry, Section section) {
+            return section.elements().stream().anyMatch(configElement -> configElement.name().equals(entry));
+        }
+
+        private static <A> A get(Class<A> clazz, String entry, Section section) {
+            if (!exists(entry, section)) {
+                SunscreenLibrary.library().logger().error("[CR021] No {} defined in config file \"{}\".{}", entry, section.name(), Impl.ErrorMessage);
+                return null;
+            }
+            return ((Node<A>)section.find(entry)).value();
+        }
+
+        private static String get(String entry, Section section) {
+            return get(String.class, entry, section);
+        }
+
+        class TextInputElementTransformer implements ElementTransformer {
+
+            @Override
+            public Element<?> transform(Section section) {
+                Identifier identifier = Identifier.split(ElementTransformer.get("identifier", section));
+                if (!ElementTransformer.exists("position", section)) {
+                    SunscreenLibrary.library().logger().error("[CR018] No position defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("size"))) {
+                    SunscreenLibrary.library().logger().error("[CR019] No input handler defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Position.PositionBuilder position = Position.config(section.find("position"));
+                Size.SizeBuilder size = Size.config(section.find("size"));
+                TextInputElement element = TextInputElement.of(null, identifier, position, null);
+                element.add(size);
+                RuntimeDefinable.Type<InputHandler, OpenedMenu> type = new RuntimeDefinable.Impl.Type<>(InputHandler.class, OpenedMenu::inputHandler);
+                element.add(type);
+                return element;
+            }
+
         }
 
     }

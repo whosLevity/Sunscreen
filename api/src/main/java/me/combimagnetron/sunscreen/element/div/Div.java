@@ -231,8 +231,8 @@ public interface Div<T> extends Editable {
 
         public Canvas render(Canvas image, SunscreenUser<?> user) {
             for (Element<Canvas> element : elements.values()) {
-                for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : element.definables()) {
-                    definable.finish(user.screenSize().pixel());
+                for (RuntimeDefinableGeometry definable : element.definables().stream().filter(runtimeDefinable -> runtimeDefinable instanceof RuntimeDefinableGeometry).map(runtimeDefinable -> (RuntimeDefinableGeometry) runtimeDefinable).toList()) {
+                    definable.build(user.screenSize().pixel());
                 }
                 if (!hidden.contains(element)) {
                     if (element.canvas() == null) {

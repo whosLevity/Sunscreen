@@ -6,6 +6,7 @@ import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
 import java.util.ArrayList;
@@ -16,7 +17,7 @@ public abstract class SimpleBufferedElement implements Element<Canvas> {
     private Size size;
     protected final Identifier identifier;
     protected Position position;
-    protected List<RuntimeDefinableGeometry.GeometryBuilder<?>> geometryBuilders = new ArrayList<>();
+    protected List<RuntimeDefinable.Type<?, ?>> geometryBuilders = new ArrayList<>();
     protected Canvas canvas;
 
     public SimpleBufferedElement(Size size, Identifier identifier, Position position) {
@@ -33,12 +34,17 @@ public abstract class SimpleBufferedElement implements Element<Canvas> {
     }
 
     @Override
+    public void add(RuntimeDefinable.Type<?, ?> definable) {
+        geometryBuilders.add(definable);
+    }
+
+    @Override
     public Identifier identifier() {
         return identifier;
     }
 
     @Override
-    public Collection<RuntimeDefinableGeometry.GeometryBuilder<?>> definables() {
+    public Collection<RuntimeDefinable.Type<?, ?>> definables() {
         return geometryBuilders;
     }
 

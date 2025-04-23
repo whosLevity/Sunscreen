@@ -1,6 +1,7 @@
 package me.combimagnetron.sunscreen.element.impl;
 
 import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
@@ -15,10 +16,13 @@ import me.combimagnetron.sunscreen.menu.timing.TickFailException;
 import me.combimagnetron.sunscreen.menu.timing.Tickable;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
-public class TextInputElement extends SimpleBufferedElement implements Tickable, Interactable {
-    private final InputHandler inputHandler;
+import java.util.Collection;
+
+public class TextInputElement extends SimpleBufferedElement implements Tickable, Interactable{
+    private InputHandler inputHandler;
     private Style style = Style.SIMPLE;
     private String result;
 
@@ -125,6 +129,11 @@ public class TextInputElement extends SimpleBufferedElement implements Tickable,
         TextInput input = inputHandler.open();
         input.position(Position.pixel(10, 20));
         return true;
+    }
+
+    public TextInputElement inputHandler(InputHandler inputHandler) {
+        this.inputHandler = inputHandler;
+        return this;
     }
 
     public enum Style {

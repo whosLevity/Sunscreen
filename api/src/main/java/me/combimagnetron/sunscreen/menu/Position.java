@@ -44,6 +44,7 @@ public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry 
         public Class<?> type() {
             return Position.class;
         }
+
     }
 
     final class Impl implements Position {

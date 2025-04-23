@@ -14,7 +14,7 @@ public sealed interface RuntimeDefinableGeometry extends RuntimeDefinable<Geomet
 
     CoordType y();
 
-    abstract class GeometryBuilder<G extends Geometry> implements RuntimeDefinable.Type {
+    abstract class GeometryBuilder<G extends Geometry> implements RuntimeDefinable.Type<G, Vec2d> {
         private final Section<G> x;
         private final Section<G> y;
 

@@ -13,6 +13,7 @@ import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.passport.util.condition.Supplier;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.div.Edit;
+import me.combimagnetron.sunscreen.element.impl.TextInputElement;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
@@ -85,28 +86,17 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         private int damageTick = 0;
 
         public FloatImpl(SunscreenUser<?> viewer, MenuTemplate template) {
-            MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
-            menuTemplate.divHashMap.forEach((identifier, div) -> {
-                for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
-                    div.geometry(definable.finish(viewer.screenSize().pixel()));
-                }
-                for (Element<?> element : div.elements()) {
-                    if (!(element instanceof SimpleBufferedElement bufferedElement)) {
-                        continue;
-                    }
-                    for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : element.definables()) {
-                        element.geometry(definable.finish(viewer.screenSize().pixel()));
-                    }
-                }
-            });
-            divHashMap.putAll(menuTemplate.divHashMap);
             this.rotation = viewer.rotation();
             Vector3d position = viewer.position();
             this.viewer = viewer;
+            this.inputHandler = new InputHandler.Impl(viewer);
+            MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
+            divHashMap.putAll(menuTemplate.divHashMap);
+            forceDivGeometry();
             SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
-            this.inputHandler = new InputHandler.Impl(viewer);
+
             this.simulator = null;//new Simulator(viewer, this);
         }
 
@@ -119,8 +109,16 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                     if (!(element instanceof SimpleBufferedElement bufferedElement)) {
                         continue;
                     }
-                    for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : element.definables()) {
-                        element.geometry(definable.finish(viewer.screenSize().pixel()));
+                    for (RuntimeDefinable.Type<?, ?> definable : element.definables()) {
+                        if (definable instanceof RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
+                            element.geometry(geometry.finish(viewer.screenSize().pixel()));
+                        }
+                        if (definable.type() == InputHandler.class) {
+                            RuntimeDefinable.Type<InputHandler, OpenedMenu> inputHandler = (RuntimeDefinable.Type<InputHandler, OpenedMenu>) definable;
+                            TextInputElement textInputElement = (TextInputElement) element;
+                            textInputElement.inputHandler(inputHandler.finish(this));
+                            System.out.println("Found input handler");
+                        }
                     }
                 }
             });

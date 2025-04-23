@@ -4,8 +4,10 @@ import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
+import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.ViewportHelper;
 
@@ -81,8 +83,10 @@ public interface ScrollableDiv extends Div<Canvas> {
             int slot = (int) (scroll / Multiplier);
             lastSlot = slot;
             for (Element<Canvas> element : elements()) {
-                for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : element.definables()) {
-                    element.geometry(definable.finish(user.screenSize().pixel()));
+                for (RuntimeDefinable.Type<?, ?> definable : element.definables()) {
+                    if (definable instanceof RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
+                        element.geometry(geometry.finish(user.screenSize().pixel()));
+                    }
                 }
                 if (!hiddenElements().contains(element)) {
                     if (element.canvas() == null) {

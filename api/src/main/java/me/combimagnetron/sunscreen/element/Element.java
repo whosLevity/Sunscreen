@@ -4,11 +4,12 @@ import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
 import java.util.Collection;
 
-public interface Element<T> extends Editable {
+public interface Element<T> extends Editable, RuntimeDefinable.Holder {
 
     /**
      * The identifier of this element.
@@ -28,7 +29,7 @@ public interface Element<T> extends Editable {
      */
     Position position();
 
-    Collection<RuntimeDefinableGeometry.GeometryBuilder<?>> definables();
+    Collection<RuntimeDefinable.Type<?, ?>> definables();
 
     Element<T> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry);
 

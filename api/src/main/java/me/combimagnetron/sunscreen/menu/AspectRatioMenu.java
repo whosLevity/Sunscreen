@@ -27,6 +27,7 @@ import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.element.impl.ImageElement;
 import me.combimagnetron.sunscreen.element.impl.TextElement;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
+import me.combimagnetron.sunscreen.menu.simulate.Simulator;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
@@ -140,7 +141,7 @@ public final class AspectRatioMenu implements OpenedMenu {
                         final double add = (8.5)*PixelFactor;
                         begin = begin.add(Vector3d.vec3(-add, add, 0));
                         end = end.add(Vector3d.vec3(add, -add, 0));
-                        Vec2d screenSize = Vec2d.of((end.x() - begin.x())/PixelFactor, (end.y() - begin.y())/PixelFactor);
+                        Vec2d screenSize = Vec2d.of((end.x() - begin.x())*40.75*24 + 17*((double) 960 /978), (end.y() - begin.y())*40.75*24 + 17*((double) 960 /978));
                         ScreenSize actual = ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y())));
                         viewer.screenSize(actual);
                         final Path data = SunscreenLibrary.library().path().resolve("data.dt");
@@ -307,6 +308,11 @@ public final class AspectRatioMenu implements OpenedMenu {
 
     @Override
     public InputHandler inputHandler() {
+        return null;
+    }
+
+    @Override
+    public Simulator simulator() {
         return null;
     }
 

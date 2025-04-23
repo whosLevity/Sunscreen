@@ -5,13 +5,10 @@ import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
-import me.combimagnetron.sunscreen.menu.Editable;
+import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
-import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
-import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
-import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.*;
@@ -59,6 +56,8 @@ public interface Div<T> extends Editable {
     Condition condition();
 
     Collection<RuntimeDefinableGeometry.GeometryBuilder<?>> definables();
+
+    boolean hidden();
 
     /**
      * The order of the div.
@@ -111,6 +110,8 @@ public interface Div<T> extends Editable {
     default Div<T> position(RuntimeDefinableGeometry.GeometryBuilder<?> builder) {
         return geometry(builder);
     }
+
+    Div<T> geometry(Geometry builder);
 
     Div<T> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> builder);
 
@@ -224,6 +225,7 @@ public interface Div<T> extends Editable {
         private Position pos = Position.pixel(0, 0);
         private Vector3d scale = Vector3d.vec3(1);
         private double order = 0;
+        private boolean isHidden = false;
         private Condition condition;
         private Canvas canvas;
 
@@ -242,8 +244,17 @@ public interface Div<T> extends Editable {
             return image;
         }
 
-        protected HashSet<Element<Canvas>> hidden() {
+        protected HashSet<Element<Canvas>> hiddenElements() {
             return hidden;
+        }
+
+        @Override
+        public boolean hidden() {
+            return isHidden;
+        }
+
+        public void hide(boolean isHidden) {
+            this.isHidden = isHidden;
         }
 
         public boolean handleClick(Vec2d pos, Input.Type.MouseClick click) {
@@ -371,6 +382,17 @@ public interface Div<T> extends Editable {
         @Override
         public Div<Canvas> position(Position pos) {
             this.pos = pos;
+            return this;
+        }
+
+        @Override
+        public Div<Canvas> geometry(Geometry geometry) {
+            if (geometry instanceof Position position) {
+                this.pos = position;
+            } else if (geometry instanceof Size size) {
+                this.size = size;
+                this.canvas = Canvas.image(size);
+            }
             return this;
         }
 

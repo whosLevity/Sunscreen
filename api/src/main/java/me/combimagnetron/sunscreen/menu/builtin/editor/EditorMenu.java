@@ -1,18 +1,18 @@
 package me.combimagnetron.sunscreen.menu.builtin.editor;
 
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
+import me.combimagnetron.sunscreen.SunscreenLibrary;
+import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
+import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.impl.*;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
-import me.combimagnetron.sunscreen.menu.MenuTemplate;
-import me.combimagnetron.sunscreen.menu.OpenedMenu;
-import me.combimagnetron.sunscreen.menu.Size;
+import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.CheckerBoardEditorElement;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar.ElementTabElement;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar.LayerTabElement;
 import me.combimagnetron.sunscreen.element.Element;
-import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
 import me.combimagnetron.sunscreen.menu.timing.Tick;
@@ -20,12 +20,18 @@ import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.Scheduler;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import org.jetbrains.annotations.NotNull;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.UUID;
 
 @SuppressWarnings("unchecked")
 public class EditorMenu extends OpenedMenu.FloatImpl {
@@ -41,6 +47,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
         this.viewer = viewer;
         this.previewSize = viewer.screenSize().pixel().mul(PreviewScale);
         divHashMap.putAll(((MenuTemplate.Simple)build()).divHashMap());
+        forceDivGeometry();
         open(viewer);
         hide(Identifier.of("editor", "preview"));
         hide(Identifier.of("editor", "creation_popup"));
@@ -93,7 +100,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
                                 .pixel(2)
                             .back()
                                 .y()
-                                .pixel(previewSize.y()/PreviewScale + 2/PreviewScale)
+                                .pixel(250)
                             .back()
                 )
                 .add(
@@ -170,7 +177,9 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
                     currentTab = SidebarTab.ELEMENT;
                     SelectorElement element = (SelectorElement) sidebar.elements().stream().filter(el -> el.identifier().equals(Identifier.of("sidebar", "selector_bar"))).findFirst().get();
                     element.select(Identifier.of("selector_bar", "element"));
-                    show(divHashMap.get(Identifier.of("editor", "creation_popup")));
+                    Identifier elementId = Identifier.of("editor", "creation_popup");
+                    show(elementId);
+                    focus(elementId);
                 });
                 Collection<Element<Canvas>> selected = editorElement.selected();
                 int add = 0;
@@ -184,12 +193,15 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
                     double scale = (double) 18 / Math.max(preview.size().x().pixel(), preview.size().y().pixel());
                     Div<Canvas> previewDiv = Div.div(previewId)
                             .size(preview.size())
-                            .position(Position.position().x().percentage(50 + add).back().y().percentage(50 + add).back())
+                            .position(Position.position().x().pixel(5.5).back().y().pixel((14 + add)).back())
+                            .add(preview)
                             .scale(Vector3d.vec3(scale))
-                            .add(preview);
+                            .order(1);
                     divHashMap.put(previewId, previewDiv);
+                    BufferedImage canvas = ((Canvas.StaticImpl)previewDiv.render(viewer)).image();
+                    forceDivGeometry();
                     render(previewDiv);
-                    add += 5;
+                    add += 25;
                 }
                 for (Element<Canvas> element : editorElements.values()) {
                     if (selected.contains(element)) {
@@ -211,7 +223,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
     }
 
     private Div<Canvas> creationPopup() {
-        ScrollableDiv div = (ScrollableDiv) Div.scroll(Identifier.of("editor", "creation_popup"))
+        Div<Canvas> div = Div.div(Identifier.of("editor", "creation_popup"))
                 .size(Size.pixel(200, 200))
                 .position(
                         Position.position()
@@ -238,33 +250,38 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
                         ShapeElement.rectangle(Size.pixel(196, 11), Identifier.of("creation_popup", "element_type_background"), Position.pixel(3, 27), Colors.Secondary)
                 ).add(
                         TextElement.textElement(Identifier.of("creation_popup", "type_dropdown_text"), Position.pixel(5, 29), Text.text("Type", Text.Font.vanilla())).style(Style.color(), Colors.SecondaryText)
-                ).add(
-                        DropdownElement.dropdownElement(Size.pixel(100, 100), Identifier.of("creation_popup", "element_type_dropdown"), Position.pixel(96, 28))
-                                .button(
-                                        ButtonElement.buttonElement(Size.pixel(100, 9), Identifier.of("creation_popup", "layer"), Position.pixel(2, 2))
-                                                .standard(Canvas.image(Vec2d.of(100, 9)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Background).text(Text.text("Layer", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .hover(Canvas.image(Vec2d.of(100, 9)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text("Layer", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .click(Canvas.image(Vec2d.of(100, 9)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text("Layer", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .build()
-                                )
-                                .button(
-                                        ButtonElement.buttonElement(Size.pixel(100, 9), Identifier.of("creation_popup", "element"), Position.pixel(2, 2))
-                                                .standard(Canvas.image(Vec2d.of(100, 11)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Background).text(Text.text("Element", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .hover(Canvas.image(Vec2d.of(100, 11)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text("Element", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .click(Canvas.image(Vec2d.of(100, 11)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text("Element", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .build()
-                                )
-                                .button(
-                                        ButtonElement.buttonElement(Size.pixel(100, 9), Identifier.of("creation_popup", "file"), Position.pixel(2, 2))
-                                                .standard(Canvas.image(Vec2d.of(100, 11)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Background).text(Text.text("File", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .hover(Canvas.image(Vec2d.of(100, 11)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text("File", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .click(Canvas.image(Vec2d.of(100, 11)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text("File", Text.Font.vanilla()), Vec2d.of(2, 8)))
-                                                .build()
-                                )
-                                .build()
                 )
                 .order(1);
-        div.visibleSize(Vec2d.of(200, 20));
+        DropdownElement.Builder builder = DropdownElement.dropdownElement(Size.pixel(100, 100), Identifier.of("creation_popup", "element_type_dropdown"), Position.pixel(96, 28));
+        for (Map.Entry<String, MenuConfigTransformer.ElementTransformer> entry : MenuConfigTransformer.ElementTransformer.Transformers.entrySet()) {
+            String string = entry.getKey();
+            string = string.replace("_", " ");
+            StringBuilder stringBuilder = new StringBuilder();
+            for (String s : string.split(" ")) {
+                stringBuilder.append(s.substring(0, 1).toUpperCase());
+                stringBuilder.append(s.substring(1));
+                stringBuilder.append(" ");
+            }
+            ButtonElement element = ButtonElement.buttonElement(Size.pixel(100, 9), Identifier.of("creation_popup", "layer"), Position.pixel(2, 2))
+                    .standard(Canvas.image(Vec2d.of(100, 9)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Background).text(Text.text(stringBuilder.toString(), Text.Font.vanilla()), Vec2d.of(2, 8)))
+                    .hover(Canvas.image(Vec2d.of(100, 9)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text(stringBuilder.toString(), Text.Font.vanilla()), Vec2d.of(2, 8)))
+                    .click(Canvas.image(Vec2d.of(100, 9)).fill(Vec2d.of(0, 0), Vec2d.of(100, 9), Colors.Tertiary).text(Text.text(stringBuilder.toString(), Text.Font.vanilla()), Vec2d.of(2, 8))).build();
+            builder.button(element);
+        }
+        div.add(builder.build());
+        ButtonElement button = ButtonElement.buttonElement(Size.pixel(96, 9), Identifier.of("creation_popup", "close"), Position.pixel(2, 187))
+                .standard(Canvas.image(Vec2d.of(96, 9)).fill(Vec2d.of(0, 0), Vec2d.of(96, 9), Colors.Background).text(Text.text("Close", Text.Font.vanilla()), Vec2d.of(2, 8)))
+                .hover(Canvas.image(Vec2d.of(96, 9)).fill(Vec2d.of(0, 0), Vec2d.of(96, 9), Colors.Tertiary).text(Text.text("Close", Text.Font.vanilla()), Vec2d.of(2, 8)))
+                .click(Canvas.image(Vec2d.of(96, 9)).fill(Vec2d.of(0, 0), Vec2d.of(96, 9), Colors.Tertiary).text(Text.text("Close", Text.Font.vanilla()), Vec2d.of(2, 8)))
+                .click(e -> {
+                    if (e.coords() == null) {
+                        return;
+                    }
+                    unfocus();
+                    Scheduler.delay(() -> hide(Identifier.of("editor", "creation_popup")), 1);
+                })
+                .build();
+        div.add(button);
         return div;
     }
 

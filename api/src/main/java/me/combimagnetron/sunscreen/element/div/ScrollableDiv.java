@@ -84,7 +84,7 @@ public interface ScrollableDiv extends Div<Canvas> {
                 for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : element.definables()) {
                     element.geometry(definable.finish(user.screenSize().pixel()));
                 }
-                if (!hidden().contains(element)) {
+                if (!hiddenElements().contains(element)) {
                     if (element.canvas() == null) {
                         continue;
                     }

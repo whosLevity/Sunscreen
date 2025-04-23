@@ -1,12 +1,17 @@
 package me.combimagnetron.sunscreen.menu;
 
+import me.combimagnetron.sunscreen.logic.action.Action;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
+import me.combimagnetron.sunscreen.logic.action.Argument;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.util.Identifier;
 
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.function.Function;
 
 public interface MenuTemplate {
@@ -25,6 +30,7 @@ public interface MenuTemplate {
         private final Type type;
         private final Identifier identifier;
         protected final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
+        protected final HashMap<Identifier, List<ActionWrapper>> actionHashMap = new HashMap<>();
 
         protected Simple(Type type, Identifier identifier) {
             this.type = type;
@@ -33,6 +39,10 @@ public interface MenuTemplate {
 
         public HashMap<Identifier, Div<?>> divHashMap() {
             return divHashMap;
+        }
+
+        public HashMap<Identifier, List<ActionWrapper>> actionHashMap() {
+            return actionHashMap;
         }
 
         @Override

@@ -1,5 +1,13 @@
 package me.combimagnetron.sunscreen.command;
 
+import co.aikar.commands.BaseCommand;
+import co.aikar.commands.CommandIssuer;
+import co.aikar.commands.annotation.*;
+import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
+import me.combimagnetron.generated.R1_21_4.item.Material_1_21_4;
+import me.combimagnetron.passport.internal.entity.impl.block.ItemFrame;
+import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
+import me.combimagnetron.passport.internal.item.Item;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
 import me.combimagnetron.sunscreen.menu.*;
@@ -10,7 +18,6 @@ import me.combimagnetron.sunscreen.menu.timing.DebugElement;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.ComponentBuilder;
@@ -21,29 +28,30 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.Style;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import revxrsal.commands.annotation.Command;
-import revxrsal.commands.annotation.CommandPlaceholder;
-import revxrsal.commands.annotation.Optional;
-import revxrsal.commands.annotation.Subcommand;
-import revxrsal.commands.command.CommandActor;
 
 import java.nio.file.Path;
 import java.util.Collection;
 
-@Command({"sunscreen", "ss", "screen"})
-public class SunscreenCommand {
+@CommandAlias("sunscreen|screen|ss")
+public class SunscreenCommand extends BaseCommand {
 
-    @CommandPlaceholder
-    public void helpP(CommandActor actor) {
+    @Default
+    @Syntax("help")
+    public void helpP(CommandIssuer actor) {
         sendHelp(actor);
     }
 
-    private void sendHelp(CommandActor actor) {
-        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
+    private static SunscreenUser<Audience> sunscreenUser(CommandIssuer actor) {
+        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.getUniqueId()).orElse(null);
         if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
+            actor.sendMessage("Something went wrong, please contact support.");
             throw new IllegalArgumentException("User not found");
         }
+        return sunscreenUser;
+    }
+
+    private void sendHelp(CommandIssuer actor) {
+        SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         ComponentBuilder<TextComponent, TextComponent.Builder> builder = Component.text();
         builder.append(Component.text("Sunscreen Commands").style(Style.style().decorate(TextDecoration.BOLD)).color(TextColor.color(230, 144, 78)));
         builder.append(Component.newline());
@@ -51,25 +59,21 @@ public class SunscreenCommand {
                 .clickEvent(ClickEvent.runCommand("/sunscreen resolution " + sunscreenUser.name()))
                 .hoverEvent(HoverEvent.showText(Component.text("Click to run").color(NamedTextColor.GRAY)))));
         builder.append(Component.space());
-        builder.append(Component.text("Opens the aspect ratio openedMenu.", TextColor.color(143, 211, 255)));
+        builder.append(Component.text("Opens the aspect ratio menu.", TextColor.color(143, 211, 255)));
         sunscreenUser.message(builder.build());
     }
 
     @Subcommand("debug")
-    public void debug(CommandActor actor) {
-        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
-        if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
-            throw new IllegalArgumentException("User not found");
-        }
+    public void debug(CommandIssuer actor) {
+        SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         Session session = sunscreenUser.session();
         if (session == null || session.menu() == null) {
-            actor.reply("You don't have a openedMenu opened.");
+            actor.sendMessage("You don't have a menu opened.");
             return;
         }
         OpenedMenu openedMenu = session.menu();
         if (!(openedMenu instanceof OpenedMenu.FloatImpl impl)) {
-            actor.reply("You don't the right openedMenu opened. Contact and administrator.");
+            actor.sendMessage("You don't the have the right menu type specified. Contact and administrator.");
             return;
         }
         DebugElement element = new DebugElement(Size.pixel(100, 100), Identifier.of("debug"), Position.pixel(0,0), sunscreenUser);
@@ -79,47 +83,33 @@ public class SunscreenCommand {
         impl.render(debugDiv);
     }
 
-    @Subcommand("help")
-    public void help(CommandActor actor) {
-        sendHelp(actor);
-    }
-
     @Subcommand("reload")
-    public void reload(CommandActor actor) {
-        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
-        if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
-            throw new IllegalArgumentException("User not found");
-        }
+    public void reload(CommandIssuer actor) {
+        SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         MenuRegistry menuRegistry = SunscreenLibrary.library().menuRegistry();
         menuRegistry.clear();
         MenuConfigTransformer menuConfigTransformer = SunscreenLibrary.library().menuConfigTransformer();
-        Collection<MenuTemplate> templates = SunscreenLibrary.library().menuConfigTransformer().read(SunscreenLibrary.library().path().resolve(Path.of("menus")));
-        SunscreenLibrary.library().logger().info("Loaded {} menus", templates.size());
+        Collection<MenuTemplate> templates = menuConfigTransformer.read(SunscreenLibrary.library().path().resolve(Path.of("menus")));
+        SunscreenLibrary.library().logger().info("Loaded {} menu(s).", templates.size());
         for (MenuTemplate template : templates) {
             SunscreenLibrary.library().menuRegistry().register(template);
         }
-        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menus loaded."));
+        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menu(s) loaded.").color(TextColor.color(143, 211, 255)));
     }
 
     @Subcommand("open")
-    public void open(CommandActor actor, Identifier identifier) {
-        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
-        if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
-            throw new IllegalArgumentException("User not found");
-        }
+    @Syntax("<menu>")
+    @CommandCompletion("@menus")
+    public void open(CommandIssuer actor, Identifier identifier) {
+        SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         MenuTemplate template = SunscreenLibrary.library().menuRegistry().get(identifier);
         sunscreenUser.open(template);
     }
 
-    @Subcommand({"editor", "edit", "e", "maker", "create"})
-    public void editor(CommandActor actor, @Optional Identifier identifier) {
-        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
-        if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
-            throw new IllegalArgumentException("User not found");
-        }
+    @Subcommand("editor")
+    @CommandAlias("edit")
+    public void editor(CommandIssuer actor, @Optional Identifier identifier) {
+        SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         if (sunscreenUser.screenSize() == null) {
             TextComponent.Builder builder = Component.text();
             builder.append(Component.text("You need to set a screen size before opening the editor ", TextColor.color(232, 59, 59)));
@@ -133,7 +123,7 @@ public class SunscreenCommand {
         }
         if (sunscreenUser.session() != null) {
             if (sunscreenUser.session().menu() != null) {
-                actor.reply("You already have a openedMenu opened.");
+                actor.sendMessage("You already have a openedMenu opened.");
                 return;
             }
         }
@@ -144,25 +134,24 @@ public class SunscreenCommand {
     }
 
     @Subcommand("list")
-    public void list(CommandActor actor) {
-        SunscreenUser<Audience> sunscreenUser = SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null);
-        if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
-            throw new IllegalArgumentException("User not found");
-        }
+    public void list(CommandIssuer actor) {
+        SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         MenuRegistry menuRegistry = SunscreenLibrary.library().menuRegistry();
-        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menus loaded."));
+        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menu(s) loaded."));
     }
 
-    @Subcommand({"aspectratio", "resolution"})
-    public void aspectRatio(CommandActor actor, @Optional SunscreenUser<?> user) {
-        SunscreenUser<Audience> sunscreenUser = user == null ? SunscreenLibrary.library().users().user(actor.uniqueId()).orElse(null) : (SunscreenUser<Audience>) user;
+    @Subcommand("aspectratio")
+    @CommandAlias("resolution")
+    @CommandCompletion("@users")
+    @Syntax("<user>")
+    public void aspectRatio(CommandIssuer actor, @Optional SunscreenUser<?> user) {
+        SunscreenUser<Audience> sunscreenUser = user == null ? SunscreenLibrary.library().users().user(actor.getUniqueId()).orElse(null) : (SunscreenUser<Audience>) user;
         if (sunscreenUser == null) {
-            actor.reply("Something went wrong, please contact support.");
+            actor.sendMessage("Something went wrong, please contact support.");
             throw new IllegalArgumentException("User not found");
         }
         if (sunscreenUser.session() != null) {
-            actor.reply("You already have a openedMenu opened.");
+            actor.sendMessage("You already have a openedMenu opened.");
             return;
         }
         new AspectRatioMenu(sunscreenUser);

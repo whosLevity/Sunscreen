@@ -6,18 +6,19 @@ import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
 import com.github.retrooper.packetevents.wrapper.play.client.*;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerDamageEvent;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
+import com.github.retrooper.packetevents.wrapper.play.server.*;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
+import me.combimagnetron.sunscreen.menu.simulate.ChestMenuEmulator;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import net.kyori.adventure.audience.Audience;
 
-import java.util.Optional;
+import java.util.*;
 
 public class MenuListener implements PacketListener {
+    private final List<UUID> inChestEmulator = new ArrayList<>();
 
     @Override
     public void onPacketReceive(PacketReceiveEvent event) {
@@ -173,6 +174,12 @@ public class MenuListener implements PacketListener {
                 handleDamageEventSend(event, user);
             case PacketType.Play.Server.TIME_UPDATE:
                 handleTimeUpdateSend(event, user);
+            case PacketType.Play.Server.PLAYER_POSITION_AND_LOOK, PacketType.Play.Server.PLAYER_ROTATION:
+                //event.setCancelled(true);
+                break;
+            case PacketType.Play.Server.OPEN_WINDOW:
+                handleOpenWindowSend(event, user);
+                break;
             default:
                 break;
         }
@@ -186,6 +193,18 @@ public class MenuListener implements PacketListener {
         event.setCancelled(true);
     }
 
+    private void handleOpenWindowSend(PacketSendEvent event, SunscreenUser<?> user) {
+        WrapperPlayServerOpenWindow packet = new WrapperPlayServerOpenWindow(event);
+        if (!inChestEmulator.contains(user.uniqueIdentifier())) {
+            return;
+        }
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
+            return;
+        }
+
+    }
+
     private void handleTimeUpdateSend(PacketSendEvent event, SunscreenUser<?> user) {
         OpenedMenu openedMenu = menu(user);
         if (openedMenu == null) {
@@ -195,7 +214,7 @@ public class MenuListener implements PacketListener {
             return;
         }
         WrapperPlayServerTimeUpdate packet = new WrapperPlayServerTimeUpdate(event);
-        packet.setWorldAge(-100);
+        packet.setWorldAge(-1000);
     }
 
     private void handleBossBarSend(PacketSendEvent event, SunscreenUser<?> user) {

@@ -4,12 +4,16 @@ import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.Argument;
+import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
 
+import java.util.Collection;
+import java.util.List;
+
 public class ShowElementAction extends Action.AbstractAction {
-    private final static Identifier ActionIdentifier = Identifier.of("sunscreen_action", "show_element");
+    public final static Identifier ActionIdentifier = Identifier.of("sunscreen", "show_element");
 
     public ShowElementAction() {
         super(ActionIdentifier);
@@ -40,4 +44,11 @@ public class ShowElementAction extends Action.AbstractAction {
         }
         return arguments[0].type() == Identifier.class && arguments[1].type() == Identifier.class;
     }
+
+    @Override
+    public Collection<ArgumentType> argumentType() {
+        return List.of(ArgumentType.of("div", Identifier.class), ArgumentType.of("element", Identifier.class));
+    }
+
+
 }

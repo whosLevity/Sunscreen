@@ -4,8 +4,6 @@ import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
-import java.util.Objects;
-
 public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
 
     static SizeBuilder size() {

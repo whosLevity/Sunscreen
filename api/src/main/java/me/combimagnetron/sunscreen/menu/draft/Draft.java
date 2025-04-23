@@ -35,6 +35,11 @@ public interface Draft {
             return this;
         }
 
+        public <T> ElementSubSection edit(Class<T> type, Function<T, Element> edit) {
+            element.add((Function<Element, Element>) edit);
+            return this;
+        }
+
         public <T> ElementSubSection style(Style<T> style, Position position, T t) {
             element.add(d -> d.style(style, position, t));
             return this;

@@ -12,6 +12,7 @@ import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.passport.util.condition.Supplier;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
+import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
@@ -20,8 +21,11 @@ import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
+import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
+import me.combimagnetron.sunscreen.menu.simulate.ChestMenuEmulator;
+import me.combimagnetron.sunscreen.menu.simulate.Simulator;
 import me.combimagnetron.sunscreen.renderer.div.DivRenderer;
 import me.combimagnetron.sunscreen.renderer.div.Reference;
 import me.combimagnetron.sunscreen.renderer.div.ReferenceHolder;
@@ -36,12 +40,17 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
+import java.util.function.Function;
 
 public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
 
     boolean close();
 
     InputHandler inputHandler();
+
+    Simulator simulator();
+
+    OpenedMenu apply(Draft draft);
 
     sealed abstract class Base implements OpenedMenu permits FloatImpl {
         protected final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
@@ -68,7 +77,8 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         private final TextDisplay cursorDisplay;
         private final TextDisplay background;
         private final Vector3d rotation;
-        private final Vector3d position;
+        private final Simulator simulator;
+        private Identifier focused = null;
         private TextDisplay camera;
         private Color backgroundColor = Color.of(0, 0, 0, 255);
         private Vec2d lastInput = Vec2d.of(0, 0);
@@ -78,7 +88,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
             menuTemplate.divHashMap.forEach((identifier, div) -> {
                 for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
-                    definable.finish(viewer.screenSize().pixel());
+                    div.geometry(definable.finish(viewer.screenSize().pixel()));
                 }
                 for (Element<?> element : div.elements()) {
                     if (!(element instanceof SimpleBufferedElement bufferedElement)) {
@@ -91,12 +101,29 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             });
             divHashMap.putAll(menuTemplate.divHashMap);
             this.rotation = viewer.rotation();
-            this.position = viewer.position();
+            Vector3d position = viewer.position();
             this.viewer = viewer;
             SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
             this.inputHandler = new InputHandler.Impl(viewer);
+            this.simulator = null;//new Simulator(viewer, this);
+        }
+
+        protected void forceDivGeometry() {
+            divHashMap.forEach((identifier, div) -> {
+                for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
+                    div.geometry(definable.finish(viewer.screenSize().pixel()));
+                }
+                for (Element<?> element : div.elements()) {
+                    if (!(element instanceof SimpleBufferedElement bufferedElement)) {
+                        continue;
+                    }
+                    for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : element.definables()) {
+                        element.geometry(definable.finish(viewer.screenSize().pixel()));
+                    }
+                }
+            });
         }
 
         @Override
@@ -187,7 +214,11 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             Dispatcher.dispatcher().post(ClickElementEvent.create(null, ViewportHelper.toScreen(cursorDisplay.transformation().translation(), viewer.screenSize()), new Input.Type.MouseClick(false)));
             for (Reference<TextDisplay> reference : referenceHolder.references()) {
                 Div div = reference.div();
+                if (focused != null && !div.identifier().equals(focused)) {
+                    continue;
+                }
                 if (div instanceof Div.NonRenderDiv) continue;
+                if (div.hidden()) continue;
                 Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
                 Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
@@ -201,6 +232,11 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                     MenuHelper.send(viewer, reference.t());
                 }
             }
+        }
+
+        @Override
+        public Simulator simulator() {
+            return simulator;
         }
 
         @Override
@@ -240,18 +276,31 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public void hide(Div div) {
             TextDisplay display = referenceHolder.reference(div.identifier()).t();
             display.text(Component.empty());
+            if (div instanceof Div.Impl impl) {
+                impl.hide(true);
+            }
             MenuHelper.send(viewer, display);
         }
 
         public void hide(Identifier identifier) {
-            TextDisplay display = referenceHolder.reference(identifier).t();
+            Reference<TextDisplay> reference = referenceHolder.reference(identifier);
+            TextDisplay display = reference.t();
+            Div div = reference.div();
             display.text(Component.empty());
+            if (div instanceof Div.Impl impl) {
+                impl.hide(true);
+            }
             MenuHelper.send(viewer, display);
         }
 
         public void show(Identifier identifier) {
-            TextDisplay display = referenceHolder.reference(identifier).t();
+            Reference<TextDisplay> reference = referenceHolder.reference(identifier);
+            TextDisplay display = reference.t();
+            Div div = reference.div();
             display.text(CanvasRenderer.optimized().render(divHashMap.get(identifier).render(viewer)).component());
+            if (div instanceof Div.Impl impl) {
+                impl.hide(false);
+            }
             MenuHelper.send(viewer, display);
         }
 
@@ -264,7 +313,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public void render(Div div) {
             Reference<TextDisplay> reference = renderer.render(div, viewer);
             TextDisplay display = reference.t();
-            display.text(CanvasRenderer.optimized().render(div.render(viewer)).component());
+            //display.text(CanvasRenderer.optimized().render(div.render(viewer)).component());
             riding.add(display.id().intValue());
             viewer.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(riding.toArray(new Integer[0]))));
         }
@@ -272,11 +321,22 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public void show(Div div) {
             TextDisplay display = referenceHolder.reference(div.identifier()).t();
             display.text(CanvasRenderer.optimized().render(div.render(viewer)).component());
+            if (div instanceof Div.Impl impl) {
+                impl.hide(false);
+            }
             MenuHelper.send(viewer, display);
         }
 
         public DivRenderer<TextDisplay> renderer() {
             return renderer;
+        }
+
+        public void focus(Identifier identifier) {
+            this.focused = identifier;
+        }
+
+        public void unfocus() {
+            this.focused = null;
         }
 
         private void move() {
@@ -288,6 +348,10 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             MenuHelper.send(viewer, cursorDisplay);
             for (Reference<TextDisplay> reference: referenceHolder.references()) {
                 Div div = reference.div();
+                if (focused != null && !div.identifier().equals(focused)) {
+                    continue;
+                }
+                if (div.hidden()) continue;
                 if (div instanceof Div.NonRenderDiv) continue;
                 Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
@@ -328,6 +392,34 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             referenceHolder.references().forEach(reference -> viewer.connection().send(new WrapperPlayServerDestroyEntities(reference.t().id().intValue())));
         }
 
+        @Override
+        public OpenedMenu apply(Draft draft) {
+            Draft.Impl draftImpl = (Draft.Impl) draft;
+            for (Edit<?> edit : draftImpl.edits()) {
+                if (edit.type() == Div.class) {
+                    Edit<Div> divEdit = (Edit<Div>) edit;
+                    Div div = divHashMap.get(edit.identifier());
+                    for (Function<Div, Div> draftEdit : divEdit.edits()) {
+                        div = draftEdit.apply(div);
+                    }
+                    divHashMap.put(edit.identifier(), div);
+                    update(div);
+                } else if (edit.type() == Element.class) {
+                    Edit<Element<?>> elementEdit = (Edit<Element<?>>) edit;
+                    Element<?> element = divHashMap.get(edit.identifier()).elements().stream().filter(e -> e.identifier().equals(edit.identifier())).findFirst().orElse(null);
+                    for (Function<Element<?>, Element<?>> draftEdit : elementEdit.edits()) {
+                        element = draftEdit.apply(element);
+                    }
+                    Div div = divHashMap.get(edit.identifier());
+                    div.remove(edit.identifier());
+                    div.add(element);
+                    divHashMap.put(edit.identifier(), div);
+                    update(div);
+                }
+            }
+            return this;
+        }
+
         public Div<Canvas> div(Identifier identifier) {
             return (Div<Canvas>) divHashMap.get(identifier);
         }
@@ -348,9 +440,6 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
             user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
             user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.CREATIVE, Component.empty(), null)));
-            /*for (Div div : divHashMap.values()) {
-                divEntityIdHashMap.put(div.identifier(), spawn(div));
-            }*/
             List<Integer> entityIds = new ArrayList<>();
             entityIds.add(user.entityId());
             showCursor();
@@ -377,23 +466,6 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             viewer.show(background);
         }
 
-        protected TextDisplay spawn(Div div) {
-            TextDisplay display = TextDisplay.textDisplay(viewer.position());
-            display.billboard(Display.Billboard.CENTER);
-            Vector3d scale = div.scale();
-            CanvasRenderer.Frame frame = CanvasRenderer.optimized().render(div.render(viewer));
-            Vector3d translation = ViewportHelper.toTranslation(Vec2d.of(div.position().x().pixel() / div.scale().x() + div.size().x() * 0.5 / div.scale().x(), (div.position().y().pixel() / div.scale().y() /*+ (((div.size().y() + 2) / 3) * 3) - div.size().y() + div.size().y()) / div.scale().y()*/)), viewer.screenSize());
-            //translation = translation.add(Vector3d.vec3(div.size().x() * 0.5 * PixelFactor/10, div.size().y() * 0.5 * PixelFactor/10, 0));
-            Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.25 + Integer.MIN_VALUE * div.order())).scale(Vector3d.vec3((double) 1/(24/scale.x()), (double) 1/(24/scale.y()), (double) 1/(24/scale.z())));
-            display.transformation(transformation);
-            display.brightness(15, 15);
-            display.backgroundColor(0);
-            display.text(frame.component());
-            display.lineWidth(200000);
-            viewer.show(display);
-            return display;
-        }
-
     }
 
     class Float extends FloatImpl {
@@ -401,6 +473,23 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             super(viewer, template);
             open(viewer);
         }
+
+        public Float(SunscreenUser<?> viewer) {
+            super(viewer, new MenuTemplate.Simple(MenuTemplate.Type.FLOAT, null));
+            MenuTemplate template = template();
+            if (template == null) {
+                throw new IllegalStateException("template() in Float menu isn't overridden, please change or contact devs if you did override.");
+            }
+            divHashMap.putAll(((MenuTemplate.Simple)template()).divHashMap);
+            forceDivGeometry();
+            open(viewer);
+        }
+
+        public MenuTemplate template() {
+            //OVERRIDE
+            return null;
+        }
+
     }
 
     class MenuHelper {

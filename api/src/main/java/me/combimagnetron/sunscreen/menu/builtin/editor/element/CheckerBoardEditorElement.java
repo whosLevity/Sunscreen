@@ -109,7 +109,7 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
                                 .build()
                 );
 
-        return null;//div.render();
+        return div.render(null);
     }
 
     @Override

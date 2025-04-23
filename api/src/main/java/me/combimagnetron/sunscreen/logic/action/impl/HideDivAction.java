@@ -2,13 +2,16 @@ package me.combimagnetron.sunscreen.logic.action.impl;
 
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.Argument;
+import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
-import org.checkerframework.checker.units.qual.A;
+
+import java.util.Collection;
+import java.util.List;
 
 public class HideDivAction extends Action.AbstractAction {
-    private static final Identifier ActionIdentifier = Identifier.of("sunscreen_action", "hide_div");
+    public static final Identifier ActionIdentifier = Identifier.of("sunscreen", "hide_div");
 
     public HideDivAction() {
         super(ActionIdentifier);
@@ -37,4 +40,10 @@ public class HideDivAction extends Action.AbstractAction {
         }
         return arguments[0].type() == Identifier.class;
     }
+
+    @Override
+    public Collection<ArgumentType> argumentType() {
+        return List.of(ArgumentType.of("div", Identifier.class));
+    }
+
 }

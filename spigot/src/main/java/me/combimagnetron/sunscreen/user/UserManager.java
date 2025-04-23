@@ -4,6 +4,7 @@ import me.combimagnetron.passport.internal.network.ByteBuffer;
 import me.combimagnetron.passport.user.User;
 import me.combimagnetron.passport.user.UserHandler;
 import me.combimagnetron.sunscreen.SunscreenPlugin;
+import me.combimagnetron.sunscreen.session.Session;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -31,7 +32,10 @@ public class UserManager implements Listener, UserHandler<Player, SunscreenUser<
     public void onLeave(PlayerQuitEvent event) {
         final Player player = event.getPlayer();
         SunscreenUser<Player> user = userMap.get(player.getUniqueId());
-        user.session().close();
+        Session session = user.session();
+        if (session != null) {
+            session.close();
+        }
         userMap.remove(player.getUniqueId());
     }
 

@@ -11,9 +11,9 @@ repositories {
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
-    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
-
-    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
+    maven("https://repo.codemc.io/repository/maven-releases/")
+    maven("https://repo.codemc.io/repository/maven-snapshots/")
+    maven("https://repo.aikar.co/content/groups/aikar/")
 }
 
 java {
@@ -21,18 +21,16 @@ java {
 }
 
 dependencies {
-    implementation("net.kyori:adventure-api:4.14.0")
-    implementation("net.kyori:adventure-text-serializer-gson:4.14.0")
-    implementation("io.github.jglrxavpok.hephaistos:common:2.6.0")
+    implementation("net.kyori:adventure-api:4.20.0")
+    implementation("net.kyori:adventure-text-serializer-gson:4.20.0")
+    implementation("net.kyori:adventure-text-serializer-plain:4.20.0")
     implementation("com.typesafe:config:1.4.2")
-    implementation("io.github.revxrsal:lamp.common:4.0.0-rc.10")
+    implementation("co.aikar:acf-core:0.5.1-SNAPSHOT")
     compileOnly("me.combimagnetron:Passport:1.0-SNAPSHOT")
     compileOnly("com.google.guava:guava:31.1-jre")
     compileOnly("org.apache.commons:commons-lang3:3.17.0")
     compileOnly("commons-io:commons-io:2.18.0")
     compileOnly("com.github.ben-manes.caffeine:caffeine:3.2.0")
-    compileOnly("org.jetbrains.kotlin:kotlin-reflect:1.7.22")
-    compileOnly("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.22")
     compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
 }
 

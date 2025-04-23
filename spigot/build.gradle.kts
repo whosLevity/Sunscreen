@@ -21,12 +21,10 @@ repositories {
     maven("https://jitpack.io")
     maven("https://repo.combimagnetron.xyz/releases/")
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
-
-    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
-    maven {
-        url = uri("https://repo.extendedclip.com/releases/")
-    }
+    maven("https://repo.codemc.io/repository/maven-releases/")
+    maven("https://repo.codemc.io/repository/maven-snapshots/")
+    maven("https://repo.extendedclip.com/releases/")
+    maven("https://repo.aikar.co/content/groups/aikar/")
 }
 
 private val configuration : String = "reobf"
@@ -85,9 +83,7 @@ tasks.withType<JavaCompile> {
 dependencies {
     implementation(project(":api"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
-    implementation("io.github.revxrsal:lamp.common:4.0.0-rc.10")
-    implementation("io.github.revxrsal:lamp.bukkit:4.0.0-rc.10")
-    implementation("io.github.revxrsal:lamp.brigadier:4.0.0-rc.10")
+    implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("net.kyori:adventure-api:4.14.0")
     compileOnly("net.kyori:adventure-text-serializer-gson:4.14.0")

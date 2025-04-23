@@ -26,7 +26,7 @@ public class ViewportHelper {
     public static Vector3d toTranslation(Vec2d screen, ScreenSize screenSize) {
         return Vector3d.vec3(
                 (screenSize.coordinates().k().x() + ((screen.x()*(screenSize.coordinates().v().x() - screenSize.coordinates().k().x()))/screenSize.pixel().x())),
-                (screenSize.coordinates().v().y() - ((screen.y())*(screenSize.coordinates().v().y() - screenSize.coordinates().k().y()))/screenSize.pixel().y()),
+                (screenSize.coordinates().v().y() - ((screen.y()*(screenSize.coordinates().v().y() - screenSize.coordinates().k().y()))/screenSize.pixel().y())),
                 0);
     }
 

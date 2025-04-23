@@ -24,7 +24,7 @@ public record Edit<T>(Identifier identifier, List<Function<T, T>> edits, Class<T
         }
 
         public static EditBuilder<Element, Draft.ElementSubSection> element() {
-            EditBuilder<Element, Draft.ElementSubSection> builder = new EditBuilder<>(Element.class);
+            EditBuilder<Element, Draft.ElementSubSection> builder = new EditBuilder(Element.class);
             builder.supplier(() -> new Draft.ElementSubSection(builder));
             return builder;
         }

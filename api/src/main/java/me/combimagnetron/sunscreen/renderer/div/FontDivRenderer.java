@@ -32,10 +32,9 @@ public final class FontDivRenderer implements DivRenderer<TextDisplay> {
         textDisplay.billboard(Display.Billboard.CENTER);
         textDisplay.brightness(15, 15);
         textDisplay.lineWidth(200000);
-        //textDisplay.backgroundColor(0);
+        textDisplay.backgroundColor(0);
         Display.Transformation transformation = Display.Transformation.transformation();
         ScreenSize screenSize = user.screenSize();
-        System.out.println(((screenSize.coordinates().v().x() - screenSize.coordinates().k().x())/screenSize.pixel().x()) * div.size().x() * 0.5 + ((40.75*0.5)/screenSize.pixel().x()) + " " + (screenSize.coordinates().v().x() - screenSize.coordinates().k().x()) + " " + (40.75*0.5)/screenSize.pixel().x());
         transformation = transformation.translation(ViewportHelper.toTranslation(ViewportHelper.fromPosition(div.position()), user.screenSize()).add(Vector3d.vec3(((screenSize.coordinates().v().x() - screenSize.coordinates().k().x() + 0.027)/screenSize.pixel().x()) * div.size().x() * 0.5, -((screenSize.coordinates().v().y() - screenSize.coordinates().k().y())/screenSize.pixel().y()) * div.size().y(), -0.25 + ((double) 1 /1_000_000) * div.order())));
         transformation = transformation.scale(Vector3d.vec3((double) 1 /24).mul(div.scale()));
         textDisplay.transformation(transformation);

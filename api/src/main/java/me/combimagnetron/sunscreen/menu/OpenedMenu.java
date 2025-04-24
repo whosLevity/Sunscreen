@@ -15,6 +15,11 @@ import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.element.impl.TextInputElement;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
+import me.combimagnetron.sunscreen.hook.ClientHook;
+import me.combimagnetron.sunscreen.hook.SunscreenHook;
+import me.combimagnetron.sunscreen.hook.labymod.LabyModSunscreenHook;
+import me.combimagnetron.sunscreen.hook.labymod.protocol.LabyModMessage;
+import me.combimagnetron.sunscreen.hook.lunar.LunarClientSunscreenHook;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
@@ -96,8 +101,11 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
-
-            this.simulator = null;//new Simulator(viewer, this);
+            Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
+            for (SunscreenHook hook : hooks) {
+                hook.onMenuEnter(viewer, this);
+            }
+            this.simulator = null;
         }
 
         protected void forceDivGeometry() {
@@ -376,6 +384,10 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             SunscreenLibrary.library().menuTicker().stop(this);
             SunscreenLibrary.library().sessionHandler().session(Session.session(null, viewer));
             viewer.resendInv();
+            Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
+            for (SunscreenHook hook : hooks) {
+                hook.onMenuLeave(viewer, this);
+            }
             return true;
         }
 

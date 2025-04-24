@@ -12,6 +12,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 
 public class AnvilListener implements PacketListener {
+    private final static Component ANVIL = Component.empty().append(FontUtil.offset(-60).font(Key.key("comet:offset"))).append(Component.text("a").font(Key.key("comet:anvil"))).append(FontUtil.offset(-118)).append(Component.text("b").font(Key.key("comet:anvil"))).color(NamedTextColor.WHITE).append(FontUtil.offset(-110));
 
     @Override
     public void onPacketSend(PacketSendEvent event) {
@@ -30,8 +31,7 @@ public class AnvilListener implements PacketListener {
             return;
         }
         Component title = openWindow.getTitle();
-        Component newTitle = Component.empty().append(FontUtil.offset(-60).font(Key.key("comet:offset"))).append(Component.text("a").font(Key.key("comet:anvil"))).append(FontUtil.offset(-118)).append(Component.text("b").font(Key.key("comet:anvil"))).color(NamedTextColor.WHITE).append(FontUtil.offset(-110));
-        Component product = newTitle.append(title.color(NamedTextColor.DARK_GRAY)).font(Key.key("default"));
+        Component product = ANVIL.append(title.color(NamedTextColor.DARK_GRAY)).font(Key.key("default"));
         openWindow.setTitle(product);
     }
 

@@ -128,7 +128,7 @@ public class UserImpl implements SunscreenUser<Player> {
 
     @Override
     public Session session() {
-        return SunscreenLibrary.library().sessionHandler().session(this);
+        return SunscreenLibrary.library().sessionHandler().session(this) == null ? new Session.Impl(null, this) : SunscreenLibrary.library().sessionHandler().session(this);
     }
 
     @Override

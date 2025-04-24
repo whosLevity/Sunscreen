@@ -9,6 +9,7 @@ import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import me.combimagnetron.passport.Passport;
 import me.combimagnetron.sunscreen.command.SunscreenCommand;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
+import me.combimagnetron.sunscreen.menu.listener.AnvilListener;
 import me.combimagnetron.sunscreen.menu.listener.MenuListener;
 import me.combimagnetron.sunscreen.placeholder.PapiPlaceholderProvider;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
@@ -29,6 +30,7 @@ public class SunscreenPlugin extends JavaPlugin {
         PacketEvents.setAPI(SpigotPacketEventsBuilder.build(this));
         PacketEvents.getAPI().load();
         PacketEvents.getAPI().getEventManager().registerListener(new MenuListener(), PacketListenerPriority.LOWEST);
+        PacketEvents.getAPI().getEventManager().registerListener(new AnvilListener(), PacketListenerPriority.LOWEST);
     }
 
     @Override

@@ -2,6 +2,7 @@ package me.combimagnetron.sunscreen.menu.builtin.editor.element;
 
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
 import me.combimagnetron.sunscreen.element.Element;
@@ -18,6 +19,7 @@ import me.combimagnetron.sunscreen.util.*;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 public class CheckerBoardEditorElement extends SimpleBufferedElement implements Interactable {
     private final LinkedHashMap<Identifier, Pair<Element<Canvas>, Boolean>> elements = new LinkedHashMap<>();
@@ -143,5 +145,10 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
             return true;
         }
         return update;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return Map.of();
     }
 }

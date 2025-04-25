@@ -23,6 +23,7 @@ public interface TypeAdapter<T> {
     TypeAdapter<Short> SHORT = of(Short.class, Short::parseShort);
     TypeAdapter<Byte> BYTE = of(Byte.class, Byte::parseByte);
     TypeAdapter<Boolean> BOOLEAN = of(Boolean.class, Boolean::parseBoolean);
+    TypeAdapter<String> STRING = of(String.class, string -> string);
     Values<TypeAdapter<?>> VALUES = Values.of(
             TEXT,
             IDENTIFIER,
@@ -32,7 +33,8 @@ public interface TypeAdapter<T> {
             LONG,
             SHORT,
             BYTE,
-            BOOLEAN
+            BOOLEAN,
+            STRING
     );
 
     Class<T> type();

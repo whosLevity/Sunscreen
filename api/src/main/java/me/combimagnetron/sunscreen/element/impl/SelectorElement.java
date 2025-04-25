@@ -2,6 +2,8 @@ package me.combimagnetron.sunscreen.element.impl;
 
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.logic.action.Action;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.HoverHelper;
@@ -12,13 +14,13 @@ import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 
 public class SelectorElement extends SimpleBufferedElement implements Interactable {
+    private final Map<ActionType, ActionWrapper> actions = new LinkedHashMap<>();
     private final LinkedHashMap<ButtonElement, ButtonElement.State> buttons = new LinkedHashMap<>();
     private final LinkedHashMap<ButtonElement, Pair<Vec2d, Vec2d>> bounds = new LinkedHashMap<>();
     private boolean vertical;
@@ -91,6 +93,11 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
             }
         }
         return null;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return actions;
     }
 
     protected Canvas render() {

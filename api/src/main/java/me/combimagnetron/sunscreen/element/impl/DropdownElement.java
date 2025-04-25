@@ -1,6 +1,8 @@
 package me.combimagnetron.sunscreen.element.impl;
 
 import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.logic.action.Action;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
@@ -14,9 +16,12 @@ import me.combimagnetron.sunscreen.util.HoverHelper;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 public class DropdownElement extends SimpleBufferedElement implements Interactable {
+    private final Map<ActionType, ActionWrapper> actions = new HashMap<>();
     private final LinkedList<ButtonElement> buttons;
     private final SelectorElement selector;
     private String defaultLabel = "Select";
@@ -45,6 +50,11 @@ public class DropdownElement extends SimpleBufferedElement implements Interactab
     public DropdownElement defaultLabel(String label) {
         this.defaultLabel = label;
         return this;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return actions;
     }
 
     @Override

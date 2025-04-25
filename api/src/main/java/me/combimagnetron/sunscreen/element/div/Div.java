@@ -5,6 +5,10 @@ import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.logic.action.Action;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
+import me.combimagnetron.sunscreen.logic.action.Argument;
+import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
@@ -217,6 +221,7 @@ public interface Div<T> extends Editable {
     }
 
     class Impl implements Div<Canvas> {
+        private final UUID uniqueIdentifier = UUID.randomUUID();
         private final LinkedHashMap<Identifier, Element<Canvas>> elements = new LinkedHashMap<>();
         private final HashSet<Element<Canvas>> hidden = new HashSet<>();
         private final List<RuntimeDefinableGeometry.GeometryBuilder<?>> geometryBuilders = new ArrayList<>();
@@ -257,7 +262,7 @@ public interface Div<T> extends Editable {
             this.isHidden = isHidden;
         }
 
-        public boolean handleClick(Vec2d pos, Input.Type.MouseClick click) {
+        public boolean handleClick(Vec2d pos, Input.Type.MouseClick click, SunscreenUser<?> user) {
             boolean update = false;
             for (Element<Canvas> element : elements.values()) {
                 if (element instanceof Interactable interactable && interactable.reactiveToClick()) {
@@ -270,6 +275,13 @@ public interface Div<T> extends Editable {
                     }
                     Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())), click));
                     boolean keep = update;
+                    List<ActionWrapper> actions = interactable.actions().entrySet().stream().filter(actionTypeActionEntry -> actionTypeActionEntry.getKey() == Interactable.ActionType.CLICK).map(Map.Entry::getValue).toList();
+                    System.out.println(actions.size());
+                    for (ActionWrapper actionWrapper : actions) {
+                        Action action = actionWrapper.action();
+                        System.out.println(action.identifier().string());
+                        action.execute(user, actionWrapper.arguments().toArray(new Argument<?>[0]));
+                    }
                     update = interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
                     if (keep) {
                         update = true;
@@ -279,7 +291,7 @@ public interface Div<T> extends Editable {
             return update;
         }
 
-        public boolean handleHover(Vec2d pos) {
+        public boolean handleHover(Vec2d pos, SunscreenUser<?> user) {
             boolean update = false;
             for (Element<Canvas> element : elements.values()) {
                 if (element instanceof Interactable interactable && interactable.reactiveToHover()) {
@@ -290,7 +302,12 @@ public interface Div<T> extends Editable {
                         }
                         continue;
                     }
-                    //Dispatcher.dispatcher().post(ClickElementEvent.class, ClickElementEvent.create(element, pos, new Input.Type.MouseClick(false)));
+                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos, new Input.Type.MouseClick(false)));
+                    List<ActionWrapper> actions = interactable.actions().entrySet().stream().filter(actionTypeActionEntry -> actionTypeActionEntry.getKey() == Interactable.ActionType.HOVER).map(Map.Entry::getValue).toList();
+                    for (ActionWrapper actionWrapper : actions) {
+                        Action action = actionWrapper.action();
+                        action.execute(user, actionWrapper.arguments().toArray(new Argument<?>[0]));
+                    }
                     boolean keep = update;
                     update = interactable.hover(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
                     if (keep) {

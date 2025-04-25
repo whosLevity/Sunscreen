@@ -3,12 +3,15 @@ package me.combimagnetron.sunscreen.menu.builtin.editor.element;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+
+import java.util.Map;
 
 public class ElementDrawerElement extends SimpleBufferedElement implements Interactable {
 
@@ -57,5 +60,10 @@ public class ElementDrawerElement extends SimpleBufferedElement implements Inter
     @Override
     public boolean click(Vec2d pos) {
         return false;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return Map.of();
     }
 }

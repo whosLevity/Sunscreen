@@ -1,5 +1,6 @@
 package me.combimagnetron.sunscreen.action;
 
+import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.Argument;
 import me.combimagnetron.sunscreen.logic.action.ArgumentType;
@@ -7,6 +8,7 @@ import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Collection;
 import java.util.List;
@@ -16,10 +18,6 @@ public class RunCommandAction extends Action.AbstractAction {
 
     public RunCommandAction() {
         super(ActionIdentifier);
-    }
-
-    static {
-        Action.ACTION_MAP.put(ActionIdentifier, new RunCommandAction());
     }
 
     @Override
@@ -33,11 +31,11 @@ public class RunCommandAction extends Action.AbstractAction {
         String command = (String) arguments[0].value();
         boolean console = arguments.length == 2 && (Boolean) arguments[1].value();
         if (console) {
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command);
+            Bukkit.getScheduler().runTask((JavaPlugin) SunscreenLibrary.library().plugin(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command));
             return;
         }
         Player player = (Player) user.platformSpecificPlayer();
-        player.chat("/" + command);
+        Bukkit.getScheduler().runTask((JavaPlugin)SunscreenLibrary.library().plugin(), () -> player.chat("/" + command));
     }
 
     @Override

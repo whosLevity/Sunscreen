@@ -1,8 +1,9 @@
 package me.combimagnetron.sunscreen.element;
 
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
-import java.util.function.Consumer;
+import java.util.Map;
 
 public interface Interactable {
 
@@ -31,5 +32,16 @@ public interface Interactable {
      * @return true if the element should be rendered again.
      */
     boolean click(Vec2d pos);
+
+    Map<ActionType, ActionWrapper> actions();
+
+    default void action(ActionType type, ActionWrapper action) {
+        actions().put(type, action);
+    }
+
+    enum ActionType {
+        HOVER,
+        CLICK
+    }
 
 }

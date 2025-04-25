@@ -7,7 +7,9 @@ import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
 import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder;
 import me.combimagnetron.passport.Passport;
+import me.combimagnetron.sunscreen.action.RunCommandAction;
 import me.combimagnetron.sunscreen.command.SunscreenCommand;
+import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.listener.AnvilListener;
 import me.combimagnetron.sunscreen.menu.listener.MenuListener;
@@ -40,15 +42,7 @@ public class SunscreenPlugin extends JavaPlugin {
         SunscreenLibrary.Holder.INSTANCE = library;
         Passport.Holder.INSTANCE = library.passport();
         this.userManager = new UserManager(this);
-        /*Lamp<?> lamp = BukkitLamp.builder(this)
-                .commandCondition(CustomCondition.INSTANCE)
-                .parameterTypes(builder -> {
-                    builder.addParameterType(SunscreenUser.class, new UserParameterType());
-                    builder.addParameterType(Identifier.class, new IdentifierParameterType());
-                })
-                .suggestionProviders(builder -> builder.addProvider(SunscreenUser.class, (context) -> userManager.users().stream().map(User::name).toList()))
-                .build();
-        lamp.register(new SunscreenCommand());*/
+        Action.ACTION_MAP.put(RunCommandAction.ActionIdentifier, new RunCommandAction());
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.getCommandContexts().registerContext(Identifier.class, (bukkitCommandExecutionContext -> Identifier.split(bukkitCommandExecutionContext.popFirstArg())));
         manager.getCommandContexts().registerContext(SunscreenUser.class, (bukkitCommandExecutionContext) -> {

@@ -3,6 +3,7 @@ package me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
 import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
@@ -112,5 +113,10 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
             return true;
         }
         return false;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return Map.of();
     }
 }

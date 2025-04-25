@@ -1,5 +1,8 @@
 package me.combimagnetron.sunscreen.menu;
 
+import me.combimagnetron.passport.config.element.Section;
+import me.combimagnetron.sunscreen.config.CachedConfigDiv;
+import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.logic.action.Argument;
@@ -16,9 +19,7 @@ import java.util.function.Function;
 
 public interface MenuTemplate {
 
-    MenuTemplate apply(Draft draft);
-
-    MenuTemplate div(Div div);
+    MenuTemplate div(CachedConfigDiv div);
 
     Identifier identifier();
 
@@ -29,7 +30,7 @@ public interface MenuTemplate {
     class Simple implements MenuTemplate {
         private final Type type;
         private final Identifier identifier;
-        protected final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
+        protected final HashMap<Identifier, CachedConfigDiv> divHashMap = new HashMap<>();
         protected final HashMap<Identifier, List<ActionWrapper>> actionHashMap = new HashMap<>();
 
         protected Simple(Type type, Identifier identifier) {
@@ -37,7 +38,7 @@ public interface MenuTemplate {
             this.identifier = identifier;
         }
 
-        public HashMap<Identifier, Div<?>> divHashMap() {
+        public HashMap<Identifier, CachedConfigDiv> divHashMap() {
             return divHashMap;
         }
 
@@ -50,34 +51,24 @@ public interface MenuTemplate {
             return identifier;
         }
 
-        @Override
-        public MenuTemplate apply(Draft draft) {
-            Draft.Impl draftImpl = (Draft.Impl) draft;
-            for (Edit<?> edit : draftImpl.edits()) {
-                if (edit.type() == Div.class) {
-                    Edit<Div> divEdit = (Edit<Div>) edit;
-                    Div div = divHashMap.get(edit.identifier());
-                    for (Function<Div, Div> draftEdit : divEdit.edits()) {
-                        div = draftEdit.apply(div);
-                    }
-                    divHashMap.put(edit.identifier(), div);
-                } else if (edit.type() == Element.class) {
-                    Edit<Element<?>> elementEdit = (Edit<Element<?>>) edit;
-                    Element<?> element = divHashMap.get(edit.identifier()).elements().stream().filter(e -> e.identifier().equals(edit.identifier())).findFirst().orElse(null);
-                    for (Function<Element<?>, Element<?>> draftEdit : elementEdit.edits()) {
-                        element = draftEdit.apply(element);
-                    }
-                    Div div = divHashMap.get(edit.identifier());
-                    div.remove(edit.identifier());
-                    div.add(element);
-                    divHashMap.put(edit.identifier(), div);
+       public HashMap<Identifier, Div<?>> create() {
+            HashMap<Identifier, Div<?>> divs = new HashMap<>();
+            for (CachedConfigDiv div : divHashMap.values()) {
+                Div<?> d = Div.div(div.identifier());
+                for (Section element : div.elements()) {
+                    Element e = MenuConfigTransformer.ElementTransformer.transform(element, identifier.string());
+                    d.add(e);
                 }
+                for (RuntimeDefinableGeometry.GeometryBuilder<?> geometry : div.geometry()) {
+                    d.geometry(geometry);
+                }
+                divs.put(div.identifier(), d);
             }
-            return this;
-        }
+            return divs;
+       }
 
         @Override
-        public MenuTemplate div(Div div) {
+        public MenuTemplate div(CachedConfigDiv div) {
             divHashMap.put(div.identifier(), div);
             return this;
         }

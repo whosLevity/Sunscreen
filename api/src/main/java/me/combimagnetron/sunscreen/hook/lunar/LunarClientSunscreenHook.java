@@ -11,6 +11,7 @@ import me.combimagnetron.sunscreen.user.SunscreenUser;
 import java.util.Map;
 
 public class LunarClientSunscreenHook implements SunscreenHook, ClientHook {
+    private final static String CHANNEL = "apollo:json";
     private final static Map<String, Boolean> MODS_DISABLE = Map.of("menu-blur", false,
             "direction-hud", false,
             "freelook", false,
@@ -42,7 +43,7 @@ public class LunarClientSunscreenHook implements SunscreenHook, ClientHook {
         JsonObject object = new JsonObject();
         ClientboundLunarClientModActionMessage message = ClientboundLunarClientModActionMessage.of(MODS_DISABLE);
         message.write(object);
-        user.connection().send(new WrapperPlayServerPluginMessage("apollo:json", object.toString().getBytes()));
+        user.connection().send(new WrapperPlayServerPluginMessage(CHANNEL, object.toString().getBytes()));
     }
 
     @Override
@@ -50,7 +51,7 @@ public class LunarClientSunscreenHook implements SunscreenHook, ClientHook {
         JsonObject object = new JsonObject();
         ClientboundLunarClientModActionMessage message = ClientboundLunarClientModActionMessage.of(MODS_ENABLE);
         message.write(object);
-        user.connection().send(new WrapperPlayServerPluginMessage("apollo:json", object.toString().getBytes()));
+        user.connection().send(new WrapperPlayServerPluginMessage(CHANNEL, object.toString().getBytes()));
     }
 
 }

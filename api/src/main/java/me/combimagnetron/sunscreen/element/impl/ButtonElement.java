@@ -3,6 +3,8 @@ package me.combimagnetron.sunscreen.element.impl;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
+import me.combimagnetron.sunscreen.logic.action.Action;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.input.Input;
@@ -18,6 +20,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 public class ButtonElement extends SimpleBufferedElement implements Interactable {
+    private final Map<ActionType, ActionWrapper> actions = new HashMap<>();
     private final Map<State, Canvas> icons = new HashMap<>();
     private final Consumer<ClickElementEvent<ButtonElement>> click;
     private Canvas selected;
@@ -56,6 +59,11 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
     @Override
     public <T> Element style(Style<T> style, T t) {
         return null;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return actions;
     }
 
     @Override

@@ -74,6 +74,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
     }
 
     non-sealed abstract class FloatImpl extends Base implements Tickable {
+        private final UUID uuid = UUID.randomUUID();
         private final DivRenderer<TextDisplay> renderer = DivRenderer.font();
         private final ReferenceHolder<TextDisplay> referenceHolder = renderer.referenceHolder();
         private final SunscreenUser<?> viewer;
@@ -92,13 +93,12 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
 
         public FloatImpl(SunscreenUser<?> viewer, MenuTemplate template) {
             this.rotation = viewer.rotation();
-            Vector3d position = viewer.position();
             this.viewer = viewer;
             this.inputHandler = new InputHandler.Impl(viewer);
             MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
-            divHashMap.putAll(menuTemplate.divHashMap);
+            divHashMap.putAll(menuTemplate.create());
             forceDivGeometry();
-            SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
+            //SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
             Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
@@ -137,6 +137,10 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             return inputHandler;
         }
 
+        public UUID uuid() {
+            return uuid;
+        }
+
         /**
          * Tick method for the openedMenu, called every tick.
          * @param tick Tick to calculate generation time.
@@ -164,7 +168,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                         }
                     }
                 }
-                if (update) {
+                if (update && !div.hidden()) {
                     update(div);
                 }
                 if (div.condition() == null) {
@@ -230,10 +234,11 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, 10);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos, div.size())) {
-                    boolean update = ((Div.Impl)div).handleClick(cursorPos.sub(divPos), new Input.Type.MouseClick(false));
+                    boolean update = ((Div.Impl)div).handleClick(cursorPos.sub(divPos), new Input.Type.MouseClick(false), viewer);
                     if (!update) {
                         continue;
                     }
+
                     reference.t().text(CanvasRenderer.optimized().render(div.render(viewer)).component());
                     MenuHelper.send(viewer, reference.t());
                 }
@@ -364,7 +369,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, 10);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos.mul(ViewportHelper.fromVector3d(div.scale())), div.size().mul(ViewportHelper.fromVector3d(div.scale())))) {
-                    boolean render = ((Div.Impl)div).handleHover(cursorPos.sub(divPos));
+                    boolean render = ((Div.Impl)div).handleHover(cursorPos.sub(divPos), viewer);
                     if (!render) {
                         continue;
                     }
@@ -382,12 +387,12 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public boolean close() {
             leave();
             SunscreenLibrary.library().menuTicker().stop(this);
-            SunscreenLibrary.library().sessionHandler().session(Session.session(null, viewer));
             viewer.resendInv();
             Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
             for (SunscreenHook hook : hooks) {
                 hook.onMenuLeave(viewer, this);
             }
+            SunscreenLibrary.library().sessionHandler().session(Session.session(null, viewer));
             return true;
         }
 
@@ -490,7 +495,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             if (template == null) {
                 throw new IllegalStateException("template() in Float menu isn't overridden, please change or contact devs if you did override.");
             }
-            divHashMap.putAll(((MenuTemplate.Simple)template()).divHashMap);
+            divHashMap.putAll(((MenuTemplate.Simple)template()).create());
             forceDivGeometry();
             open(viewer);
         }

@@ -46,6 +46,10 @@ public class MenuTicker {
             this.time = 0;
         }
 
+        public UUID uuid() {
+            return uuid;
+        }
+
         void future(Future<?> future) {
             this.future = future;
         }

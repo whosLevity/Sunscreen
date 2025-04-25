@@ -22,16 +22,14 @@ import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Scheduler;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 @SuppressWarnings("unchecked")
 public class EditorMenu extends OpenedMenu.FloatImpl {
@@ -46,7 +44,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
         super(viewer, MenuTemplate.simple(MenuTemplate.Type.FLOAT, null));
         this.viewer = viewer;
         this.previewSize = viewer.screenSize().pixel().mul(PreviewScale);
-        divHashMap.putAll(((MenuTemplate.Simple)build()).divHashMap());
+        divHashMap.putAll((build()));
         forceDivGeometry();
         open(viewer);
         hide(Identifier.of("editor", "preview"));
@@ -59,7 +57,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
         return tickSidebar();
     }
 
-    private MenuTemplate build() {
+    private Map<Identifier, Div<Canvas>> build() {
         MenuTemplate template = MenuTemplate.simple(MenuTemplate.Type.FLOAT, Identifier.of("editor", "menu"));
         CheckerBoardEditorElement editorElement = CheckerBoardEditorElement.of(Size.pixel(viewer.screenSize().pixel()), Identifier.of("editor", "background"), Position.pixel(0, 0), Vec2d.of(8, 8));
         Div<Canvas> editor = Div.div(Identifier.of("editor", "preview"))
@@ -80,14 +78,14 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
         editorElements.put(Identifier.of("editor", "image"), ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/editor/island.png"))), Identifier.of("editor", "image"), Position.position().x().percentage(50).back().x().percentage(50).back()));
         editorElements.put(Identifier.of("editor","shape"), ShapeElement.rectangle(Size.pixel(100, 100), Identifier.of("editor", "shape"), Position.pixel(100, 100), Color.of(255, 0, 0)));
         editorElements.values().forEach(editorElement::element);
-        template.div(editor);
+        Map<Identifier, Div<Canvas>> divs = new LinkedHashMap<>();
         Div<Canvas> sidebar = constructSidebar();
-        template.div(sidebar);
+        divs.put(sidebar.identifier(), sidebar);
         Div<Canvas> editbar = constructEditbar();
-        template.div(editbar);
+        divs.put(editbar.identifier(), editbar);
         Div<Canvas> creationPopup = creationPopup();
-        template.div(creationPopup);
-        return template;
+        divs.put(creationPopup.identifier(), creationPopup);
+        return divs;
     }
 
     private Div<Canvas> constructEditbar() {

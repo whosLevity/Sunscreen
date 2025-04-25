@@ -137,7 +137,15 @@ public class SunscreenCommand extends BaseCommand {
     public void list(CommandIssuer actor) {
         SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         MenuRegistry menuRegistry = SunscreenLibrary.library().menuRegistry();
-        sunscreenUser.message(Component.text(menuRegistry.all().size() + " menu(s) loaded."));
+        ComponentBuilder<TextComponent, TextComponent.Builder> builder = Component.text();
+        for (MenuTemplate template : menuRegistry.all()) {
+            builder.append(Component.newline()).append(Component.text(template.identifier().string(), TextColor.color(143, 211, 255))
+                    .style(Style.style().decorate(TextDecoration.UNDERLINED).color(TextColor.color(77, 155, 230))
+                            .clickEvent(ClickEvent.runCommand("/sunscreen open " + template.identifier().string()))
+                            .hoverEvent(HoverEvent.showText(Component.text("Click to open").color(NamedTextColor.GRAY)))));
+        }
+        builder.append(Component.text(menuRegistry.all().size() + " menu(s) loaded."));
+        sunscreenUser.message(builder.build());
     }
 
     @Subcommand("aspectratio")
@@ -150,8 +158,8 @@ public class SunscreenCommand extends BaseCommand {
             actor.sendMessage("Something went wrong, please contact support.");
             throw new IllegalArgumentException("User not found");
         }
-        if (sunscreenUser.session() != null) {
-            actor.sendMessage("You already have a openedMenu opened.");
+        if (sunscreenUser.session().menu() != null) {
+            actor.sendMessage("You already have a menu opened.");
             return;
         }
         new AspectRatioMenu(sunscreenUser);

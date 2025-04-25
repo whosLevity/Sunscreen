@@ -15,13 +15,10 @@ import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.logic.action.Argument;
 import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.logic.action.adapter.TypeAdapter;
-import me.combimagnetron.sunscreen.menu.MenuTemplate;
+import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.element.Element;
-import me.combimagnetron.sunscreen.menu.OpenedMenu;
-import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.div.Div;
-import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.style.Text;
@@ -99,9 +96,10 @@ public interface MenuConfigTransformer {
             Section divsSection = config.sections().stream().filter(configElement -> configElement.name().equals("divs")).findFirst().get();
             for (ConfigElement divConfigElement : divsSection.elements()) {
                 if (divConfigElement instanceof Section divSection) {
-                    Div div = Div.div(Identifier.split(((Node<String>)divSection.find("identifier")).value()));
+                    Identifier id = Identifier.split(((Node<String>)divSection.find("identifier")).value());
                     Section elements = divSection.find("elements");
-                    for (ConfigElement elementConfigElement : elements.elements()) {
+                    List<Section> elementConfigElements = elements.elements().stream().filter(configElement -> configElement instanceof Section).map(configElement -> (Section) configElement).toList();
+                    /*for (ConfigElement elementConfigElement : elements.elements()) {
                         if (elementConfigElement instanceof Section elementSection) {
                             Element<?> element = ElementTransformer.transform(elementSection, fileName);
                             div.add(element);
@@ -115,12 +113,10 @@ public interface MenuConfigTransformer {
                     if (divSection.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
                         SunscreenLibrary.library().logger().error("[CR008] No position defined in config file \"{}\".{}", fileName, ErrorMessage);
                         return null;
-                    }
+                    }*/
                     Section positionSection = divSection.find("position");
-                    Position.PositionBuilder position = Position.config(positionSection);
-                    div.geometry(position);
-                    Size.SizeBuilder size = Size.config(divSection.find("size"));
-                    div.geometry(size);
+                    List<RuntimeDefinableGeometry.GeometryBuilder<?>> geometryBuilders = List.of(Position.config(positionSection), Size.config(divSection.find("size")));
+                    CachedConfigDiv div = new CachedConfigDiv(elementConfigElements, id, geometryBuilders);
                     openedMenu.div(div);
                 } else {
                     SunscreenLibrary.library().logger().error("[CR006] Invalid div \"{}\" in config file \"{}\".{}", divConfigElement.name(), fileName, ErrorMessage);
@@ -129,42 +125,57 @@ public interface MenuConfigTransformer {
             return openedMenu;
         }
 
-        private List<ActionWrapper> action(Section elementConfigElement) {
+        protected static Map<Interactable.ActionType, ActionWrapper> action(Section elementConfigElement) {
             if (elementConfigElement.elements().stream().noneMatch(configElement -> configElement.name().equals("actions"))) {
                 SunscreenLibrary.library().logger().error("[CR007] No action defined in config file \"{}\".{}", elementConfigElement.name(), ErrorMessage);
                 return null;
             }
             Section actionsSection = elementConfigElement.find("actions");
-            List<ActionWrapper> actionWrappers = new ArrayList<>();
+            Map<Interactable.ActionType, ActionWrapper> actionWrappers = new HashMap<>();
             for (ConfigElement element : actionsSection.elements()) {
-                String listen;
-                if (elementConfigElement.elements().stream().anyMatch(configElement -> configElement.name().equals("listen"))) {
-                    listen = ((Node<String>)elementConfigElement.find("listen")).value();
+                Section elementSection = (Section) element;
+                String listen = "";
+                if (elementSection.elements().stream().anyMatch(configElement -> configElement.name().equals("listen"))) {
+                    listen = ((Node<String>)elementSection.find("listen")).value();
                 }
-                String actionType = ((Node<String>)elementConfigElement.find("type")).value();
+                Section executeSection = ((Section)element).find("execute");
+                String actionType = ((Node<String>)executeSection.find("type")).value();
                 Action action = Action.ACTION_MAP.get(Identifier.split(actionType));
                 if (action == null) {
-                    SunscreenLibrary.library().logger().error("[CR008] Invalid action \"{}\" in config file \"{}\".{}", actionType, elementConfigElement.name(), ErrorMessage);
+                    SunscreenLibrary.library().logger().error("[CR008] Invalid action \"{}\" in config file \"{}\".{}", actionType, executeSection.name(), ErrorMessage);
                     return null;
                 }
                 List<Argument<?>> arguments = new ArrayList<>();
                 for (ArgumentType argumentType : action.argumentType()) {
                     String key = argumentType.name();
-                    if (elementConfigElement.elements().stream().noneMatch(configElement -> configElement.name().equals(key))) {
-                        SunscreenLibrary.library().logger().error("[CR009] No argument \"{}\" defined in config file \"{}\".{}", key, elementConfigElement.name(), ErrorMessage);
+                    if (executeSection.elements().stream().noneMatch(configElement -> configElement.name().equals(key))) {
+                        SunscreenLibrary.library().logger().error("[CR009] No argument \"{}\" defined in config file \"{}\".{}", key, executeSection.name(), ErrorMessage);
                         return null;
                     }
                     TypeAdapter<?> typeAdapter = TypeAdapter.VALUES.stream().filter(typeAdapter1 -> typeAdapter1.type().equals(argumentType.type())).findFirst().orElse(null);
                     if (typeAdapter == null) {
-                        SunscreenLibrary.library().logger().error("[CR010] Invalid argument type \"{}\" in config file \"{}\".{}", argumentType.type(), elementConfigElement.name(), ErrorMessage);
+                        SunscreenLibrary.library().logger().error("[CR010] Invalid argument type \"{}\" in config file \"{}\".{}", argumentType.type(), executeSection.name(), ErrorMessage);
                         return null;
                     }
-                    String value = ((Node<String>)elementConfigElement.find(key)).value();
-                    Argument<?> argument = Argument.of(null, key, typeAdapter.adapt(value));
+                    Object value = ((Node<?>)executeSection.find(key)).value();
+                    Argument<?> argument;
+                    System.out.println(value.getClass() + " " + argumentType.type());
+                    if (value instanceof String stringVal) {
+                        argument = Argument.of(null, key, typeAdapter.adapt(stringVal));
+                    } else if (value.getClass() == argumentType.type()) {
+                        argument = Argument.of(null, key, value);
+                    } else {
+                        SunscreenLibrary.library().logger().error("[CR011] Invalid argument \"{}\" in config file \"{}\".{}", key, executeSection.name(), ErrorMessage);
+                        return null;
+                    }
                     arguments.add(argument);
                 }
+                System.out.println("Action: " + action.identifier().string() + " Arguments: " + arguments);
                 ActionWrapper actionWrapper = ActionWrapper.of(element.name(), null, action, arguments);
-                actionWrappers.add(actionWrapper);
+                actionWrappers.put(Interactable.ActionType.valueOf(listen.toUpperCase()), actionWrapper);
+            }
+            for (Map.Entry<Interactable.ActionType, ActionWrapper> actionTypeActionWrapperEntry : actionWrappers.entrySet()) {
+                System.out.println("Action: " + actionTypeActionWrapperEntry.getKey().name() + " Arguments: " + actionTypeActionWrapperEntry.getValue().arguments());
             }
             return actionWrappers;
         }
@@ -444,6 +455,10 @@ public interface MenuConfigTransformer {
                 element.add(size);
                 RuntimeDefinable.Type<InputHandler, OpenedMenu> type = new RuntimeDefinable.Impl.Type<>(InputHandler.class, OpenedMenu::inputHandler);
                 element.add(type);
+                Map<Interactable.ActionType, ActionWrapper> actionWrappers = Impl.action(section);
+                if (actionWrappers != null) {
+                    actionWrappers.forEach(element::action);
+                }
                 return element;
             }
 

@@ -1,7 +1,8 @@
 package me.combimagnetron.sunscreen.element.impl;
 
 import me.combimagnetron.sunscreen.image.Canvas;
-import me.combimagnetron.sunscreen.menu.OpenedMenu;
+import me.combimagnetron.sunscreen.logic.action.Action;
+import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
@@ -16,12 +17,13 @@ import me.combimagnetron.sunscreen.menu.timing.TickFailException;
 import me.combimagnetron.sunscreen.menu.timing.Tickable;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2d;
 
-import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
-public class TextInputElement extends SimpleBufferedElement implements Tickable, Interactable{
+public class TextInputElement extends SimpleBufferedElement implements Tickable, Interactable {
+    private final Map<ActionType, ActionWrapper> actions = new HashMap<>();
     private InputHandler inputHandler;
     private Style style = Style.SIMPLE;
     private String result;
@@ -66,6 +68,11 @@ public class TextInputElement extends SimpleBufferedElement implements Tickable,
             canvas.text(Text.text("Click to edit"), Vec2d.of(1, 8), EditorMenu.Colors.PrimaryText);
         }
         return canvas;
+    }
+
+    @Override
+    public Map<ActionType, ActionWrapper> actions() {
+        return actions;
     }
 
     private Canvas bordered() {

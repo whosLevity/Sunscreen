@@ -17,6 +17,7 @@ import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
+import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.session.Session;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
@@ -133,7 +134,7 @@ public class UserImpl implements SunscreenUser<Player> {
 
     @Override
     public Session open(MenuTemplate template) {
-        OpenedMenu.Float menu = new OpenedMenu.Float(this, template);
+        OpenedMenu.FloatImpl menu = new OpenedMenu.Float(this, template);
         SunscreenLibrary.library().menuTicker().start(menu);
         Session session = Session.session(menu, this);
         return SunscreenLibrary.library().sessionHandler().session(session);

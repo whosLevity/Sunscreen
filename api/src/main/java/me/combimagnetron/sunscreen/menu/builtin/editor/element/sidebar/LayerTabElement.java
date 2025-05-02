@@ -17,6 +17,7 @@ import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.HoverHelper;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -56,25 +57,25 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
 
     private Canvas render() {
         Canvas result = Canvas.image(size());
-        result.place(SectionElement.sectionElement(Identifier.of("_"), Position.pixel(0, 0), size()).canvas(), Vec2d.of(0, 0));
+        result.place(SectionElement.sectionElement(Identifier.of("_"), Position.pixel(0, 0), size()).canvas(), Vec2i.of(0, 0));
         int y = 1;
         for (Element<Canvas> element : elements.values()) {
-            Canvas elementCanvas = Canvas.image(Vec2d.of(size().vec2d().xi() - 2, 23));
+            Canvas elementCanvas = Canvas.image(Vec2i.of(size().vec2i().x() - 2, 23));
             if (selected.contains(element.identifier())) {
-                elementCanvas.fill(Vec2d.of(1, 1), Vec2d.of(size().vec2d().xi(), 23), Color.white());
+                elementCanvas.fill(Vec2i.of(1, 1), Vec2i.of(size().vec2i().x(), 23), Color.white());
             } else {
-                elementCanvas.fill(Vec2d.of(1, 1), Vec2d.of(size().x().pixel() - 2, 23), EditorMenu.Colors.Background);
+                elementCanvas.fill(Vec2i.of(1, 1), Vec2i.of(size().x().pixel() - 2, 23), EditorMenu.Colors.Background);
             }
-            elementCanvas.fill(Vec2d.of(2, 2), Vec2d.of(size().x().pixel() - 2, 21), EditorMenu.Colors.Secondary);
-            elementCanvas.fill(Vec2d.of(3, 3), Vec2d.of(19, 19), EditorMenu.Colors.Tertiary);
-            elementCanvas.text(Text.text(element.identifier().key().string(), Text.Font.vanilla()), Vec2d.of(24, 10), EditorMenu.Colors.PrimaryText);
-            elementCanvas.text(Text.text("1 element", Text.Font.five()), Vec2d.of(23, 17), EditorMenu.Colors.SecondaryText);
-            elementCanvas.text(Text.text(element.size().x().pixel() + "x" + element.size().y().pixel() + "px", Text.Font.five()), Vec2d.of(23, 23), EditorMenu.Colors.SecondaryText);
-            result.place(elementCanvas, Vec2d.of(1, y));
+            elementCanvas.fill(Vec2i.of(2, 2), Vec2i.of(size().x().pixel() - 2, 21), EditorMenu.Colors.Secondary);
+            elementCanvas.fill(Vec2i.of(3, 3), Vec2i.of(19, 19), EditorMenu.Colors.Tertiary);
+            elementCanvas.text(Text.text(element.identifier().key().string(), Text.Font.vanilla()), Vec2i.of(24, 10), EditorMenu.Colors.PrimaryText);
+            elementCanvas.text(Text.text("1 element", Text.Font.five()), Vec2i.of(23, 17), EditorMenu.Colors.SecondaryText);
+            elementCanvas.text(Text.text(element.size().x().pixel() + "x" + element.size().y().pixel() + "px", Text.Font.five()), Vec2i.of(23, 23), EditorMenu.Colors.SecondaryText);
+            result.place(elementCanvas, Vec2i.of(1, y));
             y += 22;
         }
-        result.fill(Vec2d.of(3, size().y().pixel() - 13), Vec2d.of(size().x().pixel() - 6, 10), EditorMenu.Colors.Secondary);
-        result.text(Text.text("Add Layer", Text.Font.vanilla()), Vec2d.of(4, size().y().pixel() - 5), EditorMenu.Colors.PrimaryText);
+        result.fill(Vec2i.of(3, size().y().pixel() - 13), Vec2i.of(size().x().pixel() - 6, 10), EditorMenu.Colors.Secondary);
+        result.text(Text.text("Add Layer", Text.Font.vanilla()), Vec2i.of(4, size().y().pixel() - 5), EditorMenu.Colors.PrimaryText);
         return result;
     }
 
@@ -99,16 +100,16 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public boolean hover(Vec2d pos) {
+    public boolean hover(Vec2i pos) {
         return false;
     }
 
     @Override
-    public boolean click(Vec2d pos) {
+    public boolean click(Vec2i pos) {
         if (pos == null) {
             return false;
         }
-        if (HoverHelper.isHovered(pos, Vec2d.of(3, size().y().pixel() - 13), Vec2d.of(size().x().pixel() - 6, 10))) {
+        if (HoverHelper.isHovered(pos, Vec2i.of(3, size().y().pixel() - 13), Vec2i.of(size().x().pixel() - 6, 10))) {
             elementEventConsumer.accept(new ClickElementEvent<Element>(this, pos, new Input.Type.MouseClick(false)));
             return true;
         }

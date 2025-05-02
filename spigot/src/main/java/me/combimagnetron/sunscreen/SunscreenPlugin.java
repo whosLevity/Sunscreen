@@ -1,7 +1,5 @@
 package me.combimagnetron.sunscreen;
 
-
-import co.aikar.commands.MessageType;
 import co.aikar.commands.PaperCommandManager;
 import com.github.retrooper.packetevents.PacketEvents;
 import com.github.retrooper.packetevents.event.PacketListenerPriority;
@@ -54,7 +52,7 @@ public class SunscreenPlugin extends JavaPlugin {
         manager.getCommandCompletions().registerAsyncCompletion("menus", (bukkitCommandCompletionContext) -> library.menuRegistry().all().stream().map(menu -> menu.identifier().string()).filter(name -> name.startsWith(bukkitCommandCompletionContext.getInput())).toList());
         manager.registerCommand(new SunscreenCommand());
         this.getDataFolder().mkdirs();
-        Collection<MenuTemplate> templates = library.menuConfigTransformer().read(getDataPath().resolve(Path.of("menus")));
+        Collection<MenuTemplate> templates = library.menuConfigTransformer().read(getDataFolder().toPath().resolve(Path.of("menus")));
         library.logger().info("Loaded {} menu(s).", templates.size());
         for (MenuTemplate template : templates) {
             library.menuRegistry().register(template);

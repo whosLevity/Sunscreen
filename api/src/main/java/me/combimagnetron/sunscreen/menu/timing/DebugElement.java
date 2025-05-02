@@ -13,6 +13,7 @@ import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 public class DebugElement extends SimpleBufferedElement implements Tickable {
     private final SunscreenUser<?> user;
@@ -37,10 +38,10 @@ public class DebugElement extends SimpleBufferedElement implements Tickable {
             return Canvas.image(size());
         }
         Canvas canvas = Canvas.image(size());
-        canvas.fill(Vec2d.of(0, 0), size().vec2d(), EditorMenu.Colors.Background);
-        canvas.fill(Vec2d.of(1, 1), size().vec2d().sub(1, 1), EditorMenu.Colors.Secondary);
-        canvas.text(Text.text("Time: " + executingTickable.time() + "ms", Text.Font.vanilla()), Vec2d.of(3, 2), EditorMenu.Colors.PrimaryText);
-        canvas.text(Text.text("Time since last tick: " + executingTickable.timeSinceLastTick() + "ms", Text.Font.vanilla()), Vec2d.of(3, 10), EditorMenu.Colors.PrimaryText);
+        canvas.fill(Vec2i.of(0, 0), size().vec2i(), EditorMenu.Colors.Background);
+        canvas.fill(Vec2i.of(1, 1), size().vec2i().sub(1, 1), EditorMenu.Colors.Secondary);
+        canvas.text(Text.text("Time: " + executingTickable.time() + "ms", Text.Font.vanilla()), Vec2i.of(3, 2), EditorMenu.Colors.PrimaryText);
+        canvas.text(Text.text("Time since last tick: " + executingTickable.timeSinceLastTick() + "ms", Text.Font.vanilla()), Vec2i.of(3, 10), EditorMenu.Colors.PrimaryText);
         return canvas;
     }
 

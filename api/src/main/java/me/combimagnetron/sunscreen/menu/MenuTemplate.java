@@ -55,9 +55,13 @@ public interface MenuTemplate {
             HashMap<Identifier, Div<?>> divs = new HashMap<>();
             for (CachedConfigDiv div : divHashMap.values()) {
                 Div<?> d = Div.div(div.identifier());
+                d.order(div.order());
                 for (Section element : div.elements()) {
                     Element e = MenuConfigTransformer.ElementTransformer.transform(element, identifier.string());
                     d.add(e);
+                }
+                if (div.condition() != null) {
+                    d.condition(div.condition());
                 }
                 for (RuntimeDefinableGeometry.GeometryBuilder<?> geometry : div.geometry()) {
                     d.geometry(geometry);

@@ -31,11 +31,11 @@ public class RunCommandAction extends Action.AbstractAction {
         String command = (String) arguments[0].value();
         boolean console = arguments.length == 2 && (Boolean) arguments[1].value();
         if (console) {
-            Bukkit.getScheduler().runTask((JavaPlugin) SunscreenLibrary.library().plugin(), () -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command));
+            Bukkit.getGlobalRegionScheduler().run((JavaPlugin) SunscreenLibrary.library().plugin(), (s) -> Bukkit.dispatchCommand(Bukkit.getConsoleSender(), command));
             return;
         }
         Player player = (Player) user.platformSpecificPlayer();
-        Bukkit.getScheduler().runTask((JavaPlugin)SunscreenLibrary.library().plugin(), () -> player.chat("/" + command));
+        Bukkit.getGlobalRegionScheduler().run((JavaPlugin)SunscreenLibrary.library().plugin(), (s) -> player.chat("/" + command));
     }
 
     @Override

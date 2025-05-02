@@ -98,23 +98,33 @@ public interface CanvasRenderer {
             BufferedImage image = internalCanvas.image();
             int r = 3;
             TextComponent.Builder component = Component.text();
-            for (int x = 0; x <= image.getHeight(); x += 3) {
-                for (int y = 0; y <= image.getWidth(); y += 3) {
-                    if (x + 3 > image.getHeight() || y + 3 > image.getWidth()) {
+            int realHeight = image.getHeight() - 1;
+            int realWidth = image.getWidth() - 1;
+            for (int x = 0; x <= realHeight; x += 3) {
+                int heightAdd = 3;
+                if (x + 3 > realHeight) {
+                    heightAdd = realHeight - x;
+                }
+                for (int y = 0; y <= realWidth; y += 3) {
+                    int widthAdd = 3;
+                    if (y + 3 > realWidth) {
+                        widthAdd = realWidth - y;
+                    }
+                    if (widthAdd <= 0 || heightAdd <= 0) {
                         continue;
                     }
-                    BufferedImage section = image.getSubimage(y, x, 3, 3);
+                    BufferedImage section = image.getSubimage(y, x, widthAdd, heightAdd);
                     component.append(FontUtil.offset(-1), PixelPattern.optimize(section, r));
                 }
                 if (r == -7) {
                     r = 2;
                     component.append(Component.newline(), Component.newline(), Component.newline());
-                } else if (!(image.getHeight() -x <= 3)) {
+                } else if (!(realHeight -x < 3)) {
                     r--;
-                    component.append(FontUtil.offset(-(image.getWidth() - (image.getWidth() % 3))));
+                    component.append(FontUtil.offset(-(image.getWidth())));
                 } else {
                     r--;
-                    component.append(FontUtil.offset((image.getWidth() - (image.getWidth() % 3))));
+                    component.append(FontUtil.offset((image.getWidth())));
                 }
             }
             Component finished = component.build();
@@ -156,7 +166,7 @@ public interface CanvasRenderer {
             String find = MiniMessage.miniMessage().serialize(super.render(Canvas.image(changed)).component());
             Canvas remove = Canvas.image(canvas.size());
             for (Box box : difference.changes()) {
-                remove = remove.place(possibility.first().sub(Vec2d.of(box.size().x(), box.size().y()), Vec2d.of(box.pos().x(), box.pos().y())), Vec2d.of(box.pos().x(), box.pos().y()));
+                remove = remove.place(possibility.first().sub(Vec2i.of(box.size().x(), box.size().y()), Vec2i.of(box.pos().x(), box.pos().y())), Vec2i.of(box.pos().x(), box.pos().y()));
             }
             String replace = MiniMessage.miniMessage().serialize(super.render(remove).component());
             String result = find.replaceAll(replace, find);

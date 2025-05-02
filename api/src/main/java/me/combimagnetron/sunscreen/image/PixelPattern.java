@@ -1583,8 +1583,8 @@ public interface PixelPattern {
 
     static Component optimize(BufferedImage section, int font) {
         LinkedHashMap<java.awt.Color, ColorGroup> colorGroups = new LinkedHashMap<>();
-        for (int y = 0; y < section.getWidth(); y++) {
-            for (int x = 0; x < section.getHeight(); x++) {
+        for (int y = 0; y < section.getHeight(); y++) {
+            for (int x = 0; x < section.getWidth(); x++) {
                 int rgb = section.getRGB(x, y);
                 java.awt.Color color = new java.awt.Color(rgb);
                 colorGroups.computeIfAbsent(color, c -> new ColorGroup());

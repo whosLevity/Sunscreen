@@ -12,12 +12,14 @@ import java.util.Map;
 
 public class LunarClientSunscreenHook implements SunscreenHook, ClientHook {
     private final static String CHANNEL = "apollo:json";
-    private final static Map<String, Boolean> MODS_DISABLE = Map.of("menu-blur", false,
+    private final static Map<String, Boolean> MODS_DISABLE = Map.of(
+            "menu-blur", false,
             "direction-hud", false,
             "freelook", false,
             "minimap", false,
             "coordinates", false);
-    private final static Map<String, Boolean> MODS_ENABLE = Map.of("menu-blur", true,
+    private final static Map<String, Boolean> MODS_ENABLE = Map.of(
+            "menu-blur", true,
             "direction-hud", true,
             "freelook", true,
             "minimap", true,

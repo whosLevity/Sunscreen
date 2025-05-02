@@ -18,6 +18,8 @@ public interface RuntimeDefinable<T, B extends RuntimeDefinable.Type, V> {
 
     interface Type<T, V> {
 
+        int priority();
+
         Class<?> type();
 
         T finish(V v);
@@ -65,6 +67,11 @@ public interface RuntimeDefinable<T, B extends RuntimeDefinable.Type, V> {
             public Type(Class<?> type, Function<V, T> function) {
                 this.type = type;
                 this.function = function;
+            }
+
+            @Override
+            public int priority() {
+                return 0;
             }
 
             @Override

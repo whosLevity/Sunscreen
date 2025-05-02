@@ -10,6 +10,7 @@ import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 public abstract class ShapeElement extends SimpleBufferedElement {
 
@@ -68,7 +69,7 @@ public abstract class ShapeElement extends SimpleBufferedElement {
 
         @Override
         public Canvas canvas() {
-            canvas = canvas.fill(Vec2d.of(0, 0), size().vec2d(), color);
+            canvas = canvas.fill(Vec2i.of(0, 0), size().vec2i(), color);
             return canvas;
         }
     }

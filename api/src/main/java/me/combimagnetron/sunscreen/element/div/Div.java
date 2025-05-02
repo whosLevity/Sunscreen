@@ -39,7 +39,7 @@ public interface Div<T> extends Editable {
      * The size of the div.
      * @return Vec2d representing size of the div, always in rounded integers.
      */
-    Vec2d size();
+    Vec2i size();
 
     /**
      * The scale of the div.
@@ -237,13 +237,13 @@ public interface Div<T> extends Editable {
         public Canvas render(Canvas image, SunscreenUser<?> user) {
             for (Element<Canvas> element : elements.values()) {
                 for (RuntimeDefinableGeometry definable : element.definables().stream().filter(runtimeDefinable -> runtimeDefinable instanceof RuntimeDefinableGeometry).map(runtimeDefinable -> (RuntimeDefinableGeometry) runtimeDefinable).toList()) {
-                    definable.build(user.screenSize().pixel());
+                    definable.build(Pair.of(user.screenSize().pixel(), size()));
                 }
                 if (!hidden.contains(element)) {
                     if (element.canvas() == null) {
                         continue;
                     }
-                    image = image.place(element.canvas(), Vec2d.of(element.position().x().pixel(), element.position().y().pixel()));
+                    image = image.place(element.canvas(), Vec2i.of((int)element.position().x().pixel(), (int)element.position().y().pixel()));
                 }
             }
             return image;
@@ -262,27 +262,30 @@ public interface Div<T> extends Editable {
             this.isHidden = isHidden;
         }
 
-        public boolean handleClick(Vec2d pos, Input.Type.MouseClick click, SunscreenUser<?> user) {
+        public boolean handleClick(Vec2i pos, Input.Type.MouseClick click, SunscreenUser<?> user) {
             boolean update = false;
+            System.out.println("Clicking " + this.identifier.string() + " 0 " + pos.x() + " " + pos.y());
             for (Element<Canvas> element : elements.values()) {
+                System.out.println("Clicking " + this.identifier.string() + " 1 " + element.identifier().string());
                 if (element instanceof Interactable interactable && interactable.reactiveToClick()) {
+                    System.out.println("Clicking " + this.identifier.string() + " 2.5 " + element.identifier().string() + " " + element.position().x().pixel() + " " + element.position().y().pixel() + " " + element.size().x() + " " + element.size().y());
                     if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()), element.size())) {
                         boolean a = interactable.click(null);
+                        System.out.println("Clicking " + this.identifier.string() + " 2.6 " + element.identifier().string());
                         if (a) {
                             update = true;
                         }
                         continue;
                     }
-                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())), click));
+                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2i.of((int) element.position().x().pixel(), (int) element.position().y().pixel())), click));
                     boolean keep = update;
                     List<ActionWrapper> actions = interactable.actions().entrySet().stream().filter(actionTypeActionEntry -> actionTypeActionEntry.getKey() == Interactable.ActionType.CLICK).map(Map.Entry::getValue).toList();
-                    System.out.println(actions.size());
                     for (ActionWrapper actionWrapper : actions) {
                         Action action = actionWrapper.action();
-                        System.out.println(action.identifier().string());
                         action.execute(user, actionWrapper.arguments().toArray(new Argument<?>[0]));
                     }
-                    update = interactable.click(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                    System.out.println("Clicking " + this.identifier.string() + " 2 " + element.identifier().string());
+                    update = interactable.click(pos.sub(Vec2i.of((int) element.position().x().pixel(), (int) element.position().y().pixel())));
                     if (keep) {
                         update = true;
                     }
@@ -291,7 +294,7 @@ public interface Div<T> extends Editable {
             return update;
         }
 
-        public boolean handleHover(Vec2d pos, SunscreenUser<?> user) {
+        public boolean handleHover(Vec2i pos, SunscreenUser<?> user) {
             boolean update = false;
             for (Element<Canvas> element : elements.values()) {
                 if (element instanceof Interactable interactable && interactable.reactiveToHover()) {
@@ -309,7 +312,7 @@ public interface Div<T> extends Editable {
                         action.execute(user, actionWrapper.arguments().toArray(new Argument<?>[0]));
                     }
                     boolean keep = update;
-                    update = interactable.hover(pos.sub(Vec2d.of(element.position().x().pixel(), element.position().y().pixel())));
+                    update = interactable.hover(pos.sub(Vec2i.of((int) element.position().x().pixel(), (int) element.position().y().pixel())));
                     if (keep) {
                         update = true;
                     }
@@ -322,9 +325,9 @@ public interface Div<T> extends Editable {
             return render(canvas, user);
         }
 
-        Impl(Identifier identifier) {
+        public Impl(Identifier identifier) {
             this.identifier = identifier;
-            this.canvas = Canvas.image(Vec2d.of(size.x().pixel(), size.y().pixel()));
+            this.canvas = Canvas.image(Vec2i.of(size.x().pixel(), size.y().pixel()));
         }
 
         @Override
@@ -338,7 +341,7 @@ public interface Div<T> extends Editable {
         }
 
         @Override
-        public Vec2d size() {
+        public Vec2i size() {
             return canvas.size();
         }
 
@@ -374,7 +377,7 @@ public interface Div<T> extends Editable {
                 this.canvas = this.canvas.sub(size, Vec2d.of(0,0));
                 return this;
             }*/
-            this.canvas = Canvas.image(Vec2d.of(size.x().pixel(), size.y().pixel()));
+            this.canvas = Canvas.image(Vec2i.of(size.x().pixel(), size.y().pixel()));
             return this;
         }
 

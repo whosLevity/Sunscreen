@@ -4,7 +4,6 @@ import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.player.GameMode;
 import com.github.retrooper.packetevents.protocol.player.UserProfile;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
-import me.combimagnetron.passport.event.Dispatcher;
 import me.combimagnetron.passport.internal.entity.Entity;
 import me.combimagnetron.passport.internal.entity.impl.display.Display;
 import me.combimagnetron.passport.internal.entity.impl.display.TextDisplay;
@@ -14,12 +13,8 @@ import me.combimagnetron.passport.util.condition.Supplier;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.element.impl.TextInputElement;
-import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.hook.ClientHook;
 import me.combimagnetron.sunscreen.hook.SunscreenHook;
-import me.combimagnetron.sunscreen.hook.labymod.LabyModSunscreenHook;
-import me.combimagnetron.sunscreen.hook.labymod.protocol.LabyModMessage;
-import me.combimagnetron.sunscreen.hook.lunar.LunarClientSunscreenHook;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
@@ -30,7 +25,6 @@ import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
-import me.combimagnetron.sunscreen.menu.simulate.ChestMenuEmulator;
 import me.combimagnetron.sunscreen.menu.simulate.Simulator;
 import me.combimagnetron.sunscreen.renderer.div.DivRenderer;
 import me.combimagnetron.sunscreen.renderer.div.Reference;
@@ -71,9 +65,11 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
 
         public abstract void handleDamage();
 
+        public abstract void handlePing(long ping);
     }
 
     non-sealed abstract class FloatImpl extends Base implements Tickable {
+        private static final int Y_OFFSET = 8;
         private final UUID uuid = UUID.randomUUID();
         private final DivRenderer<TextDisplay> renderer = DivRenderer.font();
         private final ReferenceHolder<TextDisplay> referenceHolder = renderer.referenceHolder();
@@ -98,7 +94,6 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
             divHashMap.putAll(menuTemplate.create());
             forceDivGeometry();
-            //SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
             Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
@@ -109,27 +104,27 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         }
 
         protected void forceDivGeometry() {
-            divHashMap.forEach((identifier, div) -> {
-                for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
-                    div.geometry(definable.finish(viewer.screenSize().pixel()));
-                }
+            for (Map.Entry<Identifier, Div<?>> entry : divHashMap.entrySet()) {
+                Div<?> div = entry.getValue();
                 for (Element<?> element : div.elements()) {
-                    if (!(element instanceof SimpleBufferedElement bufferedElement)) {
+                    if (!(element instanceof SimpleBufferedElement)) {
                         continue;
                     }
-                    for (RuntimeDefinable.Type<?, ?> definable : element.definables()) {
+                    for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
+                        div.geometry(definable.finish(viewer.screenSize().pixel(), div.size()));
+                    }
+                    for (RuntimeDefinable.Type<?, ?> definable : element.definables().stream().sorted(Comparator.comparingInt(RuntimeDefinable.Type::priority)).toList()) {
                         if (definable instanceof RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
-                            element.geometry(geometry.finish(viewer.screenSize().pixel()));
+                            element.geometry(geometry.finish(div.size(), div.size()));
                         }
                         if (definable.type() == InputHandler.class) {
                             RuntimeDefinable.Type<InputHandler, OpenedMenu> inputHandler = (RuntimeDefinable.Type<InputHandler, OpenedMenu>) definable;
                             TextInputElement textInputElement = (TextInputElement) element;
                             textInputElement.inputHandler(inputHandler.finish(this));
-                            System.out.println("Found input handler");
                         }
                     }
                 }
-            });
+            }
         }
 
         @Override
@@ -201,6 +196,8 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         protected void showCursor() {
             cursorDisplay.text(Component.text("e").font(Key.key("comet:arrow")));
             cursorDisplay.backgroundColor(0);
+            cursorDisplay.transformationDuration(1);
+            cursorDisplay.teleportationDuration(1);
             cursorDisplay.billboard(Display.Billboard.CENTER);
             cursorDisplay.brightness(15, 15);
             Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, 0, -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
@@ -210,7 +207,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
 
         @Override
         public void handleRot(float yaw, float pitch) {
-            lastInput = Vec2d.of(yaw, -pitch).sub(lastInput).div(500);
+            lastInput = Vec2d.of(yaw, -pitch).sub(lastInput).div(350);
             move();
         }
 
@@ -220,8 +217,15 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         }
 
         @Override
+        public void handlePing(long ping) {
+            int offset = Math.clamp((int) Math.ceil((double) ping /50), 1, 10);
+            cursorDisplay.transformationDuration(offset);
+            cursorDisplay.teleportationDuration(offset);
+            MenuHelper.send(viewer, cursorDisplay);
+        }
+
+        @Override
         public void handleClick() {
-            Dispatcher.dispatcher().post(ClickElementEvent.create(null, ViewportHelper.toScreen(cursorDisplay.transformation().translation(), viewer.screenSize()), new Input.Type.MouseClick(false)));
             for (Reference<TextDisplay> reference : referenceHolder.references()) {
                 Div div = reference.div();
                 if (focused != null && !div.identifier().equals(focused)) {
@@ -229,16 +233,15 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 }
                 if (div instanceof Div.NonRenderDiv) continue;
                 if (div.hidden()) continue;
-                Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
+                Vec2i divPos = Vec2i.of((int) div.position().x().pixel(), (int) div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
-                Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
-                cursorPos = cursorPos.add(0, 10);
+                Vec2i cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
+                cursorPos = cursorPos.add(0, Y_OFFSET);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos, div.size())) {
                     boolean update = ((Div.Impl)div).handleClick(cursorPos.sub(divPos), new Input.Type.MouseClick(false), viewer);
                     if (!update) {
                         continue;
                     }
-
                     reference.t().text(CanvasRenderer.optimized().render(div.render(viewer)).component());
                     MenuHelper.send(viewer, reference.t());
                 }
@@ -364,10 +367,10 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 }
                 if (div.hidden()) continue;
                 if (div instanceof Div.NonRenderDiv) continue;
-                Vec2d divPos = Vec2d.of(div.position().x().pixel(), div.position().y().pixel());
+                Vec2i divPos = Vec2i.of((int) div.position().x().pixel(), (int) div.position().y().pixel());
                 Vector3d cursorTranslation = cursorDisplay.transformation().translation();
-                Vec2d cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
-                cursorPos = cursorPos.add(0, 10);
+                Vec2i cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
+                cursorPos = cursorPos.add(0, Y_OFFSET);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos.mul(ViewportHelper.fromVector3d(div.scale())), div.size().mul(ViewportHelper.fromVector3d(div.scale())))) {
                     boolean render = ((Div.Impl)div).handleHover(cursorPos.sub(divPos), viewer);
                     if (!render) {
@@ -469,6 +472,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 user.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
                 return null;
             });
+            user.connection().send(new WrapperPlayServerSystemChatMessage(true, Component.text(" ")));
         }
 
         private void initBackground() {

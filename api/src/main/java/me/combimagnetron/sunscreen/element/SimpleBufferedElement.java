@@ -67,6 +67,7 @@ public abstract class SimpleBufferedElement implements Element<Canvas> {
         if (geometry instanceof Position) {
             this.position = (Position) geometry;
         } else if (geometry instanceof Size) {
+            this.canvas = Canvas.image((Size) geometry);
             this.size = (Size) geometry;
         }
         return this;

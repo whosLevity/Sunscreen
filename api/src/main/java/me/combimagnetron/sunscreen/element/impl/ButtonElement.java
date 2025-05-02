@@ -10,10 +10,12 @@ import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.Scheduler;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -29,6 +31,11 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
         super(size, identifier, position);
         this.click = click;
         icons.putAll(icon);
+        if (icon.containsKey(State.DEFAULT)) {
+            selected = icon.get(State.DEFAULT);
+        } else {
+            selected = icon.values().stream().findFirst().orElseThrow();
+        }
     }
 
     public static ButtonElement buttonElement(Size size, Identifier identifier, Position position, Map<State, Canvas> icon) {
@@ -86,15 +93,31 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
     }
 
     @Override
-    public boolean hover(Vec2d pos) {
-        return false;
+    public boolean hover(Vec2i pos) {
+        if (pos == null) {
+            if (selected != icons.get(State.DEFAULT)) {
+                selected = icons.get(State.DEFAULT);
+                return true;
+            }
+            return false;
+        }
+        if (selected == icons.get(State.HOVER) || selected == icons.get(State.CLICK)) {
+            return false;
+        }
+        selected = icons.get(State.HOVER);
+        return true;
     }
 
     @Override
-    public boolean click(Vec2d pos) {
+    public boolean click(Vec2i pos) {
         if (click != null) {
             click.accept(ClickElementEvent.create(this, pos, new Input.Type.MouseClick(false)));
         }
+        if (selected == icons.get(State.CLICK)) {
+            return false;
+        }
+        selected = icons.get(State.CLICK);
+        Scheduler.delay(() -> selected = icons.get(State.DEFAULT), 100);
         return true;
     }
 

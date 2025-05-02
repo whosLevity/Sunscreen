@@ -15,6 +15,7 @@ import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.HoverHelper;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -30,7 +31,7 @@ public class DropdownElement extends SimpleBufferedElement implements Interactab
     public DropdownElement(Size size, Identifier identifier, Position position, LinkedList<ButtonElement> buttons) {
         super(size, identifier, position);
         this.buttons = buttons;
-        this.selector = SelectorElement.selectorElement(Size.pixel(size.vec2d().sub(0, 11)), identifier, position, buttons).vertical(true).unselectable(false);
+        this.selector = SelectorElement.selectorElement(Size.pixel(size.vec2i().sub(0, 11)), identifier, position, buttons).vertical(true).unselectable(false);
     }
 
     public static DropdownElement dropdownElement(Size size, Identifier identifier, Position position, LinkedList<ButtonElement> buttons) {
@@ -59,20 +60,20 @@ public class DropdownElement extends SimpleBufferedElement implements Interactab
 
     @Override
     public Canvas canvas() {
-        Vec2d size = !folded ? this.size().vec2d() : Vec2d.of(size().x().pixel(), 11);
+        Vec2i size = !folded ? this.size().vec2i() : Vec2i.of(size().x().pixel(), 11);
         Canvas canvas = Canvas.image(size);
-        canvas.fill(Vec2d.of(0, 0), size, EditorMenu.Colors.Background);
-        canvas.fill(Vec2d.of(1, 1), size.sub(Vec2d.of(2, 2)), EditorMenu.Colors.Secondary);
-        canvas.fill(Vec2d.of(1, 1), Vec2d.of(size().x().pixel() - 2, 9), EditorMenu.Colors.Background);
+        canvas.fill(Vec2i.of(0, 0), size, EditorMenu.Colors.Background);
+        canvas.fill(Vec2i.of(1, 1), size.sub(Vec2i.of(2, 2)), EditorMenu.Colors.Secondary);
+        canvas.fill(Vec2i.of(1, 1), Vec2i.of(size().x().pixel() - 2, 9), EditorMenu.Colors.Background);
         if (selector.selected() == null) {
-            canvas.text(Text.text(defaultLabel), Vec2d.of(1, 8), EditorMenu.Colors.PrimaryText);
+            canvas.text(Text.text(defaultLabel), Vec2i.of(1, 8), EditorMenu.Colors.PrimaryText);
         } else {
-            canvas.place(selector.selected().icons().get(ButtonElement.State.CLICK), Vec2d.of(0, 0));
+            canvas.place(selector.selected().icons().get(ButtonElement.State.CLICK), Vec2i.of(0, 0));
         }
         if (folded) {
             return canvas;
         }
-        canvas.place(selector.canvas(), Vec2d.of(0, 11));
+        canvas.place(selector.canvas(), Vec2i.of(0, 11));
         return canvas;
     }
 
@@ -97,15 +98,15 @@ public class DropdownElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public boolean hover(Vec2d pos) {
-        if (HoverHelper.isHovered(pos, Vec2d.of(0, 0), Vec2d.of(size().x().pixel(), 11))) {
+    public boolean hover(Vec2i pos) {
+        if (HoverHelper.isHovered(pos, Vec2i.of(0, 0), Vec2i.of(size().x().pixel(), 11))) {
             return true;
         }
         return selector.hover(pos.sub(0, 11));
     }
 
     @Override
-    public boolean click(Vec2d pos) {
+    public boolean click(Vec2i pos) {
         if (pos == null) {
             if (!folded) {
                 folded = true;
@@ -113,7 +114,7 @@ public class DropdownElement extends SimpleBufferedElement implements Interactab
             }
             return false;
         }
-        if (HoverHelper.isHovered(pos, Vec2d.of(0, 0), Vec2d.of(size().x().pixel(), 11)))  {
+        if (HoverHelper.isHovered(pos, Vec2i.of(0, 0), Vec2i.of(size().x().pixel(), 11)))  {
             folded = !folded;
             return true;
         }

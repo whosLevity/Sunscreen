@@ -18,6 +18,7 @@ import me.combimagnetron.sunscreen.menu.timing.Tickable;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -59,13 +60,13 @@ public class TextInputElement extends SimpleBufferedElement implements Tickable,
 
     private Canvas simple() {
         Canvas canvas = Canvas.image(size());
-        canvas.fill(Vec2d.of(0, 0), size().vec2d(), EditorMenu.Colors.Tertiary);
+        canvas.fill(Vec2i.of(0, 0), size().vec2i(), EditorMenu.Colors.Tertiary);
         if (inputHandler.active()) {
-            canvas.text(Text.text(inputHandler.textInput().input()), Vec2d.of(1, 8), EditorMenu.Colors.PrimaryText);
+            canvas.text(Text.text(inputHandler.textInput().input()), Vec2i.of(1, 8), EditorMenu.Colors.PrimaryText);
         } else if (result != null) {
-            canvas.text(Text.text(result), Vec2d.of(1, 8), EditorMenu.Colors.PrimaryText);
+            canvas.text(Text.text(result), Vec2i.of(1, 8), EditorMenu.Colors.PrimaryText);
         } else {
-            canvas.text(Text.text("Click to edit"), Vec2d.of(1, 8), EditorMenu.Colors.PrimaryText);
+            canvas.text(Text.text("Click to edit"), Vec2i.of(1, 8), EditorMenu.Colors.PrimaryText);
         }
         return canvas;
     }
@@ -77,13 +78,13 @@ public class TextInputElement extends SimpleBufferedElement implements Tickable,
 
     private Canvas bordered() {
         Canvas canvas = Canvas.image(size());
-        canvas.fill(Vec2d.of(0, 0), size().vec2d(), EditorMenu.Colors.Background);
-        canvas.fill(Vec2d.of(1, 1), size().vec2d().sub(Vec2d.of(2, 2)), EditorMenu.Colors.Secondary);
-        canvas.fill(Vec2d.of(2, 2), size().vec2d().sub(Vec2d.of(4, 4)), EditorMenu.Colors.Background);
+        canvas.fill(Vec2i.of(0, 0), size().vec2i(), EditorMenu.Colors.Background);
+        canvas.fill(Vec2i.of(1, 1), size().vec2i().sub(Vec2i.of(2, 2)), EditorMenu.Colors.Secondary);
+        canvas.fill(Vec2i.of(2, 2), size().vec2i().sub(Vec2i.of(4, 4)), EditorMenu.Colors.Background);
         if (inputHandler.active()) {
-            canvas.text(Text.text(inputHandler.textInput().input()), Vec2d.of(3, 10), EditorMenu.Colors.PrimaryText);
+            canvas.text(Text.text(inputHandler.textInput().input()), Vec2i.of(3, 10), EditorMenu.Colors.PrimaryText);
         } else if (result != null) {
-            canvas.text(Text.text(inputHandler.textInput().input()), Vec2d.of(3, 10), EditorMenu.Colors.PrimaryText);
+            canvas.text(Text.text(inputHandler.textInput().input()), Vec2i.of(3, 10), EditorMenu.Colors.PrimaryText);
         }
         return canvas;
     }
@@ -121,12 +122,12 @@ public class TextInputElement extends SimpleBufferedElement implements Tickable,
     }
 
     @Override
-    public boolean hover(Vec2d pos) {
+    public boolean hover(Vec2i pos) {
         return false;
     }
 
     @Override
-    public boolean click(Vec2d pos) {
+    public boolean click(Vec2i pos) {
         if (pos == null) {
             return false;
         }

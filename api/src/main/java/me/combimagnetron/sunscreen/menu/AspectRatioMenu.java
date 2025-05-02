@@ -28,6 +28,7 @@ import me.combimagnetron.sunscreen.element.impl.ImageElement;
 import me.combimagnetron.sunscreen.element.impl.TextElement;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.menu.simulate.Simulator;
+import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
@@ -67,11 +68,12 @@ public final class AspectRatioMenu implements OpenedMenu {
         cursorDisplay = TextDisplay.textDisplay(viewer.position());
         instructionDisplay = TextDisplay.textDisplay(viewer.position());
         selectedAreaDisplay = TextDisplay.textDisplay(viewer.position());
-        cameraDisplay = TextDisplay.textDisplay(viewer.position());
+        cameraDisplay = TextDisplay.textDisplay(viewer.position().add(Vector3d.vec3(0, 1.7, 0)));
         temp = TextDisplay.textDisplay(viewer.position());
         build();
         hideCursor();
         open(viewer);
+        SunscreenLibrary.library().sessionHandler().session(Session.session(this, viewer));
     }
 
     private void build() {
@@ -88,8 +90,8 @@ public final class AspectRatioMenu implements OpenedMenu {
                 //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(lowerRight);
         Div<Canvas> center = Div.div(Identifier.of("center")).size(Size.pixel(114, 140))
-                .add(ImageElement.imageElement(spriteSheet.sub(Vec2d.of(114, 140), Vec2d.of(594, 0)), Identifier.of("center", "bg"), Position.pixel(0, 0)))
-                .add(ImageElement.imageElement(spriteSheet.sub(Vec2d.of(101, 12), Vec2d.of(115, 194)), Identifier.of("center", "button"), Position.pixel(3, 125)))
+                .add(ImageElement.imageElement(spriteSheet.sub(Vec2i.of(114, 140), Vec2i.of(594, 0)), Identifier.of("center", "bg"), Position.pixel(0, 0)))
+                .add(ImageElement.imageElement(spriteSheet.sub(Vec2i.of(101, 12), Vec2i.of(115, 194)), Identifier.of("center", "button"), Position.pixel(3, 125)))
                 .add(TextElement.textElement(Identifier.of("center", "button_label"), Position.pixel(13, 127), Text.text("Sneak to continue", Text.Font.vanilla()))
                         .style(Style.color(), Color.of(155, 171, 178)))
                 .add(TextElement.textElement(Identifier.of("center", "label"), Position.pixel(3, 3), Text.text("Move the arrows to\nthe corner of your\nscreen by moving\nyour mouse.", Text.Font.vanilla()))
@@ -121,6 +123,7 @@ public final class AspectRatioMenu implements OpenedMenu {
         viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), selectedAreaDisplay.id().intValue(), cameraDisplay.id().intValue()));
         divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
+        SunscreenLibrary.library().sessionHandler().session(Session.session(null, viewer));
     }
 
     private void initListener() {
@@ -131,7 +134,7 @@ public final class AspectRatioMenu implements OpenedMenu {
                     WrapperPlayClientPlayerRotation packet = new WrapperPlayClientPlayerRotation(event);
                     float yaw = packet.getYaw();
                     float pitch = -packet.getPitch();
-                    lastInput = Vec2d.of(yaw, pitch).sub(lastInput).div(500);
+                    lastInput = Vec2d.of(yaw, pitch).sub(lastInput).div(250);
                     move();
                 } else if (event.getPacketType() == PacketType.Play.Client.ENTITY_ACTION) {
                     WrapperPlayClientEntityAction packet = new WrapperPlayClientEntityAction(event);
@@ -141,7 +144,7 @@ public final class AspectRatioMenu implements OpenedMenu {
                         final double add = (8.5)*PixelFactor;
                         begin = begin.add(Vector3d.vec3(-add, add, 0));
                         end = end.add(Vector3d.vec3(add, -add, 0));
-                        Vec2d screenSize = Vec2d.of((end.x() - begin.x())*40.75*24 + 17*((double) 960 /978), (end.y() - begin.y())*40.75*24 + 17*((double) 960 /978));
+                        Vec2i screenSize = Vec2i.of((int)((end.x() - begin.x())*40.75*24 - 17*((double) 960 /978)), (int)((end.y() - begin.y())*40.75*24 - 17*((double) 960 /978)));
                         ScreenSize actual = ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y())));
                         viewer.screenSize(actual);
                         final Path data = SunscreenLibrary.library().path().resolve("data.dt");
@@ -212,9 +215,9 @@ public final class AspectRatioMenu implements OpenedMenu {
     }
 
     public void open(SunscreenUser<?> user) {
+        Vector3d rotation = Vector3d.vec3(user.rotation().y(), user.rotation().x(), user.rotation().z());
         user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
         initListener();
-        Vector3d rotation = Vector3d.vec3(user.rotation().y(), user.rotation().x(), user.rotation().z());
         cameraDisplay.rotation(rotation);
         user.show(cameraDisplay);
         if (SunscreenLibrary.library().config().forceShaderFov()) {
@@ -255,7 +258,7 @@ public final class AspectRatioMenu implements OpenedMenu {
         TextDisplay display = TextDisplay.textDisplay(user.position());
         display.billboard(Display.Billboard.CENTER);
         Div<Canvas> divDisplay = (Div<Canvas>) div;
-        double yOffset = divDisplay.canvas().size().mul(PixelFactor).mul(0.5).y();
+        double yOffset = divDisplay.canvas().size().y() * PixelFactor * (0.5);
         Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -yOffset, -0.25)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
         display.transformation(transformation);
         Component component = Component.text(" ");

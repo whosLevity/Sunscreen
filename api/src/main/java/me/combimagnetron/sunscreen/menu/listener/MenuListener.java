@@ -55,8 +55,23 @@ public class MenuListener implements PacketListener {
             case PacketType.Play.Client.INTERACT_ENTITY:
                 handleInteractEntity(event, user);
                 break;
+            case PacketType.Play.Client.DEBUG_PING:
+                handleDebugPing(event, user);
+                break;
             default:
                 break;
+        }
+    }
+
+    private void handleDebugPing(PacketReceiveEvent event, SunscreenUser<?> user) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
+            return;
+        }
+        WrapperPlayClientDebugPing wrapperPlayClientDebugPing = new WrapperPlayClientDebugPing(event);
+        long ping = System.currentTimeMillis() - wrapperPlayClientDebugPing.getTimestamp();
+        if (openedMenu instanceof OpenedMenu.Base base) {
+            base.handlePing(ping);
         }
     }
 
@@ -66,12 +81,10 @@ public class MenuListener implements PacketListener {
             return;
         }
         WrapperPlayClientInteractEntity wrapperPlayClientInteractEntity = new WrapperPlayClientInteractEntity(event);
-        if (openedMenu instanceof OpenedMenu.Base base) {
-            if (wrapperPlayClientInteractEntity.getEntityId() != user.entityId()) {
-                return;
-            }
-            event.setCancelled(true);
+        if (wrapperPlayClientInteractEntity.getEntityId() != user.entityId()) {
+            return;
         }
+        event.setCancelled(true);
     }
 
     private void handleHeldItemChange(WrapperPlayClientHeldItemChange wrapperPlayClientHeldItemChange, SunscreenUser<?> user) {

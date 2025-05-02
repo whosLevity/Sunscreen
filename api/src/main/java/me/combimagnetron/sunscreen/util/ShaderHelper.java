@@ -6,7 +6,7 @@ import me.combimagnetron.sunscreen.user.SunscreenUser;
 public class ShaderHelper {
 
     public static int encode(Position position, SunscreenUser<?> user) {
-        Vec2d screenSize = user.screenSize().pixel();
+        Vec2i screenSize = user.screenSize().pixel();
         int x = decimals(position.x().pixel()/screenSize.x());
         int y = decimals(position.y().pixel()/screenSize.y());
         x = Math.max(0, Math.min(153, x));

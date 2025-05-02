@@ -3,11 +3,11 @@ package me.combimagnetron.sunscreen.util;
 public record Vec2d(double x, double y) {
 
     public int xi() {
-        return (int) x;
+        return Math.round((float)x);
     }
 
     public int yi() {
-        return (int) y;
+        return Math.round((float) y);
     }
 
     public static Vec2d of(double x, double y) {

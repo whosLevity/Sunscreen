@@ -2,7 +2,9 @@ package me.combimagnetron.sunscreen.menu;
 
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
+import me.combimagnetron.sunscreen.util.Pair;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
 
@@ -10,11 +12,11 @@ public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
         return new SizeBuilder();
     }
 
-    static Size pixel(double x, double y) {
+    static Size pixel(int x, int y) {
         return new Impl(RuntimeDefinableGeometry.CoordType.pixel(x), RuntimeDefinableGeometry.CoordType.pixel(y));
     }
 
-    static Size pixel(Vec2d size) {
+    static Size pixel(Vec2i size) {
         return new Impl(RuntimeDefinableGeometry.CoordType.pixel(size.x()), RuntimeDefinableGeometry.CoordType.pixel(size.y()));
     }
 
@@ -29,7 +31,7 @@ public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
         return builder;
     }
 
-    Vec2d vec2d();
+    Vec2i vec2i();
 
     final class SizeBuilder extends RuntimeDefinableGeometry.GeometryBuilder<Size> {
 
@@ -42,29 +44,40 @@ public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
         }
 
         @Override
+        public Size finish(Vec2i size, Vec2i div) {
+            return new Impl(finalise(x(), true, size, div), finalise(y(), false, size, size));
+
+        }
+
+        @Override
+        public int priority() {
+            return 0;
+        }
+
+        @Override
         public Class<?> type() {
             return Size.class;
         }
 
         @Override
-        public Size finish(Vec2d size) {
-            return new Impl(finalise(x(), true, size), finalise(y(), false, size));
+        public Size finish(Pair<Vec2i, Vec2i> vec2dVec2dPair) {
+            return finish(vec2dVec2dPair.k(), vec2dVec2dPair.v());
         }
 
     }
 
     final class Impl implements Size {
-        private final CoordType x;
-        private final CoordType y;
+        private final CoordType<Integer> x;
+        private final CoordType<Integer> y;
         private SizeBuilder builder;
 
-        public Impl(CoordType x, CoordType y) {
+        public Impl(CoordType<Integer> x, CoordType<Integer> y) {
             this.x = x;
             this.y = y;
         }
 
         @Override
-        public Geometry build(Vec2d var) {
+        public Geometry build(Pair<Vec2i, Vec2i> var) {
             return builder.finish(var);
         }
 
@@ -82,18 +95,19 @@ public non-sealed interface Size extends RuntimeDefinableGeometry, Geometry {
             }
         }
 
-        public CoordType x() {
+        public CoordType<Integer> x() {
             return x;
         }
 
-        public CoordType y() {
+        public CoordType<Integer> y() {
             return y;
         }
 
         @Override
-        public Vec2d vec2d() {
-            return Vec2d.of(x.pixel(), y.pixel());
+        public Vec2i vec2i() {
+            return Vec2i.of((int) x.pixel(), (int) y.pixel());
         }
+
     }
 
 }

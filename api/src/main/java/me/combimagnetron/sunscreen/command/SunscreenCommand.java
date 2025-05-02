@@ -3,11 +3,6 @@ package me.combimagnetron.sunscreen.command;
 import co.aikar.commands.BaseCommand;
 import co.aikar.commands.CommandIssuer;
 import co.aikar.commands.annotation.*;
-import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
-import me.combimagnetron.generated.R1_21_4.item.Material_1_21_4;
-import me.combimagnetron.passport.internal.entity.impl.block.ItemFrame;
-import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
-import me.combimagnetron.passport.internal.item.Item;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
 import me.combimagnetron.sunscreen.menu.*;
@@ -132,19 +127,21 @@ public class SunscreenCommand extends BaseCommand {
         Session session = Session.session(menu, sunscreenUser);
         SunscreenLibrary.library().sessionHandler().session(session);
     }
-
+    
     @Subcommand("list")
     public void list(CommandIssuer actor) {
         SunscreenUser<Audience> sunscreenUser = sunscreenUser(actor);
         MenuRegistry menuRegistry = SunscreenLibrary.library().menuRegistry();
+        final Component line = Component.text("-".repeat(15), Style.style(TextColor.color(230, 144, 78), TextDecoration.STRIKETHROUGH));
         ComponentBuilder<TextComponent, TextComponent.Builder> builder = Component.text();
+        builder.append(Component.text(menuRegistry.all().size() + " menu(s) loaded.").style(Style.style().decoration(TextDecoration.BOLD, true)).color(TextColor.color(143, 211, 255)), Component.newline(), line);
         for (MenuTemplate template : menuRegistry.all()) {
-            builder.append(Component.newline()).append(Component.text(template.identifier().string(), TextColor.color(143, 211, 255))
+            builder.append(Component.newline()).append(Component.text(template.identifier().string())
                     .style(Style.style().decorate(TextDecoration.UNDERLINED).color(TextColor.color(77, 155, 230))
                             .clickEvent(ClickEvent.runCommand("/sunscreen open " + template.identifier().string()))
                             .hoverEvent(HoverEvent.showText(Component.text("Click to open").color(NamedTextColor.GRAY)))));
         }
-        builder.append(Component.text(menuRegistry.all().size() + " menu(s) loaded."));
+        builder.append(Component.newline(), line, Component.newline(), Component.text("Open overview of all menus.", Style.style(TextColor.color(205, 104, 61), TextDecoration.UNDERLINED).hoverEvent(HoverEvent.showText(Component.text("Click to open").color(NamedTextColor.GRAY))).clickEvent(ClickEvent.runCommand("/sunscreen overview"))));
         sunscreenUser.message(builder.build());
     }
 

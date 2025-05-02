@@ -10,6 +10,7 @@ import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 public class SectionElement extends SimpleBufferedElement {
     public SectionElement(Size size, Identifier identifier, Position position) {
@@ -28,9 +29,9 @@ public class SectionElement extends SimpleBufferedElement {
 
     @Override
     public Canvas canvas() {
-        canvas = canvas.fill(Vec2d.of(0,0), size().vec2d(), EditorMenu.Colors.Background);
-        canvas = canvas.fill(Vec2d.of(1,1), Vec2d.of(size().x().pixel() - 2, size().y().pixel() - 2), EditorMenu.Colors.Secondary);
-        canvas = canvas.fill(Vec2d.of(2,2), Vec2d.of(size().x().pixel() - 4, size().y().pixel() - 4), EditorMenu.Colors.Background);
+        canvas = canvas.fill(Vec2i.of(0,0), size().vec2i(), EditorMenu.Colors.Background);
+        canvas = canvas.fill(Vec2i.of(1,1), Vec2i.of(size().x().pixel() - 2, size().y().pixel() - 2), EditorMenu.Colors.Secondary);
+        canvas = canvas.fill(Vec2i.of(2,2), Vec2i.of(size().x().pixel() - 4, size().y().pixel() - 4), EditorMenu.Colors.Background);
         return canvas;
     }
 

@@ -2,7 +2,9 @@ package me.combimagnetron.sunscreen.menu;
 
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
+import me.combimagnetron.sunscreen.util.Pair;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry {
 
@@ -10,8 +12,8 @@ public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry 
         return new PositionBuilder();
     }
 
-    static Position pixel(double x, double y) {
-        return new Impl(RuntimeDefinableGeometry.CoordType.pixel(x), RuntimeDefinableGeometry.CoordType.pixel(y));
+    static Position pixel(int x, int y) {
+        return new Impl(CoordType.pixel(x), CoordType.pixel(y));
     }
 
     static PositionBuilder config(Section section) {
@@ -36,8 +38,13 @@ public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry 
         }
 
         @Override
-        public Position finish(Vec2d size) {
-            return new Impl(finalise(x(), true, size), finalise(y(), false, size));
+        public Position finish(Vec2i size, Vec2i divSize) {
+            return new Impl(finalise(x(), true, size, divSize), finalise(y(), false, size, divSize));
+        }
+
+        @Override
+        public int priority() {
+            return 1;
         }
 
         @Override
@@ -45,20 +52,25 @@ public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry 
             return Position.class;
         }
 
+        @Override
+        public Position finish(Pair<Vec2i, Vec2i> vec2dVec2dPair) {
+            return finish(vec2dVec2dPair.k(), vec2dVec2dPair.v());
+        }
+
     }
 
     final class Impl implements Position {
-        private final RuntimeDefinableGeometry.CoordType x;
-        private final RuntimeDefinableGeometry.CoordType y;
+        private final CoordType<Integer> x;
+        private final CoordType<Integer> y;
         private PositionBuilder builder;
 
-        public Impl(RuntimeDefinableGeometry.CoordType x, RuntimeDefinableGeometry.CoordType y) {
+        public Impl(CoordType<Integer> x, CoordType<Integer> y) {
             this.x = x;
             this.y = y;
         }
 
         @Override
-        public Geometry build(Vec2d var) {
+        public Geometry build(Pair<Vec2i, Vec2i> var) {
             return builder.finish(var);
         }
 
@@ -76,11 +88,11 @@ public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry 
             }
         }
 
-        public RuntimeDefinableGeometry.CoordType x() {
+        public CoordType<Integer> x() {
             return x;
         }
 
-        public RuntimeDefinableGeometry.CoordType y() {
+        public CoordType<Integer> y() {
             return y;
         }
 

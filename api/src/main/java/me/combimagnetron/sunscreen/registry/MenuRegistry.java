@@ -6,6 +6,8 @@ import me.combimagnetron.passport.util.Pair;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 
 import java.util.Collection;
+import java.util.Iterator;
+import java.util.Map;
 
 public interface MenuRegistry extends Registry<MenuTemplate> {
 
@@ -58,15 +60,19 @@ public interface MenuRegistry extends Registry<MenuTemplate> {
 
 
         @Override
-        public Collection<MenuTemplate> all() {
+        public synchronized Collection<MenuTemplate> all() {
             return ((Registry.Impl) registry).registry().values();
         }
 
         @Override
         public void clear() {
-            for (Identifier identifier : ((Registry.Impl<MenuTemplate>) registry).registry().keySet()) {
-                registry.unregister(identifier);
+            Map<Identifier, MenuTemplate> map = ((Registry.Impl<MenuTemplate>) registry).registry();
+            Iterator<Map.Entry<Identifier, MenuTemplate>> iterator = map.entrySet().iterator();
+            while (iterator.hasNext()) {
+                Identifier identifier = iterator.next().getKey();
+                map.remove(identifier);
             }
+
         }
     }
 

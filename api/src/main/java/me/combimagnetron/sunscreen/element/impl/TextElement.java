@@ -1,5 +1,7 @@
 package me.combimagnetron.sunscreen.element.impl;
 
+import me.combimagnetron.passport.util.placeholder.Placeholder;
+import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
@@ -61,6 +63,7 @@ public class TextElement extends SimpleBufferedElement {
             StringBuilder line = new StringBuilder();
             int y = 10;
             for (String word : words) {
+                //word = SunscreenLibrary.library().passport().placeholders().parse(Placeholder.of());
                 if (text.font().internal().getStringBounds(line + word, new FontRenderContext(new AffineTransform(), true, true)).getWidth() > size().x().pixel()) {
                     graphics.drawString(line.toString(), 0 , 11 * y);
                     line = new StringBuilder();

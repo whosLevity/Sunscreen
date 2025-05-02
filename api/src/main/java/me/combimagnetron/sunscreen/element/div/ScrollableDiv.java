@@ -6,10 +6,7 @@ import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
-import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.RuntimeDefinable;
-import me.combimagnetron.sunscreen.util.Vec2d;
-import me.combimagnetron.sunscreen.util.ViewportHelper;
+import me.combimagnetron.sunscreen.util.*;
 
 public interface ScrollableDiv extends Div<Canvas> {
 
@@ -17,13 +14,13 @@ public interface ScrollableDiv extends Div<Canvas> {
 
     ScrollableDiv scroll(int slot);
 
-    ScrollableDiv visibleSize(Vec2d size);
+    ScrollableDiv visibleSize(Vec2i size);
 
-    Vec2d visibleSize();
+    Vec2i visibleSize();
 
     class Impl extends Div.Impl implements ScrollableDiv {
         private final static double Multiplier = 0.1;
-        private Vec2d visibleSize = size();
+        private Vec2i visibleSize = size();
         private int lastSlot = 0;
         private double scroll = 0.0;
 
@@ -67,13 +64,13 @@ public interface ScrollableDiv extends Div<Canvas> {
         }
 
         @Override
-        public ScrollableDiv visibleSize(Vec2d size) {
+        public ScrollableDiv visibleSize(Vec2i size) {
             this.visibleSize = size;
             return this;
         }
 
         @Override
-        public Vec2d visibleSize() {
+        public Vec2i visibleSize() {
             return visibleSize;
         }
 
@@ -85,7 +82,7 @@ public interface ScrollableDiv extends Div<Canvas> {
             for (Element<Canvas> element : elements()) {
                 for (RuntimeDefinable.Type<?, ?> definable : element.definables()) {
                     if (definable instanceof RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
-                        element.geometry(geometry.finish(user.screenSize().pixel()));
+                        element.geometry(geometry.finish(Pair.of(user.screenSize().pixel(), size())));
                     }
                 }
                 if (!hiddenElements().contains(element)) {
@@ -96,11 +93,11 @@ public interface ScrollableDiv extends Div<Canvas> {
 
                 }
             }
-            if (visibleSize.add(Vec2d.of(0, scroll)).y() > canvas.size().y() || scroll < 0) {
+            if (visibleSize.add(Vec2i.of(0, (int) scroll)).y() > canvas.size().y() || scroll < 0) {
                 scroll = 0;
             }
             System.out.println("Scroll: " + scroll);
-            canvas = canvas.sub(visibleSize, Vec2d.of(0,  scroll));
+            canvas = canvas.sub(visibleSize, Vec2i.of(0, (int) scroll));
             return canvas;
         }
 

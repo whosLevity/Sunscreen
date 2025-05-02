@@ -2,6 +2,7 @@ package me.combimagnetron.sunscreen.element;
 
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import java.util.Map;
 
@@ -24,14 +25,14 @@ public interface Interactable {
      * @param pos position of the cursor.
      * @return true if the element should be rendered again.
      */
-    boolean hover(Vec2d pos);
+    boolean hover(Vec2i pos);
 
     /**
      * Indicates to the element to do click calculations with the cursor at the given Vec2d position.
      * @param pos position of the cursor.
      * @return true if the element should be rendered again.
      */
-    boolean click(Vec2d pos);
+    boolean click(Vec2i pos);
 
     Map<ActionType, ActionWrapper> actions();
 

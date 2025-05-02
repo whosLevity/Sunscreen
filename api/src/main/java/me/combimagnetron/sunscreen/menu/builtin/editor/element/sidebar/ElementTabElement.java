@@ -10,6 +10,7 @@ import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 public class ElementTabElement extends SimpleBufferedElement {
     private Position position = Position.pixel(0, 0);
@@ -29,8 +30,8 @@ public class ElementTabElement extends SimpleBufferedElement {
 
     private Canvas render() {
         Canvas result = Canvas.image(size());
-        result.place(SectionElement.sectionElement(Identifier.of("_"), Position.pixel(0, 0), size()).canvas(), Vec2d.of(0, 0));
-        result.fill(Vec2d.of(2, 2), Vec2d.of(size().x().pixel() - 4, 21), EditorMenu.Colors.Secondary);
+        result.place(SectionElement.sectionElement(Identifier.of("_"), Position.pixel(0, 0), size()).canvas(), Vec2i.of(0, 0));
+        result.fill(Vec2i.of(2, 2), Vec2i.of(size().x().pixel() - 4, 21), EditorMenu.Colors.Secondary);
         return result;
     }
 

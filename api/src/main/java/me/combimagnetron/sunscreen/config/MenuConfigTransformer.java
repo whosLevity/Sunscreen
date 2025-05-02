@@ -5,6 +5,7 @@ import me.combimagnetron.passport.config.element.ConfigElement;
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.passport.util.Pair;
+import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.element.impl.*;
@@ -19,18 +20,17 @@ import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.div.Div;
+import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.style.Text;
-import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.RuntimeDefinable;
-import me.combimagnetron.sunscreen.util.Vec2d;
-import me.combimagnetron.sunscreen.util.ViewportHelper;
+import me.combimagnetron.sunscreen.util.*;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("unchecked")
 public interface MenuConfigTransformer {
@@ -98,86 +98,53 @@ public interface MenuConfigTransformer {
                 if (divConfigElement instanceof Section divSection) {
                     Identifier id = Identifier.split(((Node<String>)divSection.find("identifier")).value());
                     Section elements = divSection.find("elements");
-                    List<Section> elementConfigElements = elements.elements().stream().filter(configElement -> configElement instanceof Section).map(configElement -> (Section) configElement).toList();
-                    /*for (ConfigElement elementConfigElement : elements.elements()) {
-                        if (elementConfigElement instanceof Section elementSection) {
-                            Element<?> element = ElementTransformer.transform(elementSection, fileName);
-                            div.add(element);
-                            if (element instanceof Interactable) {
-                                //Collection<ActionWrapper> action = action(elementSection);
-                            }
-                        } else {
-                            SunscreenLibrary.library().logger().error("[CR007] Invalid element \"{}\" in config file \"{}\".{}", elementConfigElement.name(), fileName, ErrorMessage);
+                    Node<Double> orderNode = divSection.find("order");
+                    double order = 0;
+                    if (orderNode != null) {
+                        if (orderNode.value() != null) {
+                            order = orderNode.value();
                         }
                     }
-                    if (divSection.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
-                        SunscreenLibrary.library().logger().error("[CR008] No position defined in config file \"{}\".{}", fileName, ErrorMessage);
+                    Collection<Section> elementConfigElements = new LinkedList<>();
+                    elements.elements().stream().filter(c -> c instanceof Section).map(c -> (Section) c).sorted(Comparator.comparing(c -> {
+                        Node<Integer> integerNode = c.find("order");
+                        if (integerNode == null) {
+                            return 0;
+                        }
+                        if (integerNode.value() == null) {
+                            return 0;
+                        }
+                        return integerNode.value();
+                    })).forEachOrdered(elementConfigElements::add);
+                    for (ConfigElement configElement : elements.elements()) {
+                        System.out.println(configElement.name());
+                        if (!(configElement instanceof Section section)) {
+                            continue;
+                        }
+                        elementConfigElements.add(section);
+                    }
+                    System.out.println(elementConfigElements.size() + " " + identifier.string());
+                    if (elementConfigElements.isEmpty()) {
+                        SunscreenLibrary.library().logger().error("[CR006] No elements found in config file \"{}\".{}", divConfigElement.name(), fileName, ErrorMessage);
                         return null;
-                    }*/
+                    }
+                    Node<String> conditionNode = divSection.find("condition");
+                    Condition condition = null;
+                    if (conditionNode != null) {
+                        if (conditionNode.value() != null) {
+                            String conditionString = conditionNode.value();
+                            condition = Condition.of(conditionString);
+                        }
+                    }
                     Section positionSection = divSection.find("position");
                     List<RuntimeDefinableGeometry.GeometryBuilder<?>> geometryBuilders = List.of(Position.config(positionSection), Size.config(divSection.find("size")));
-                    CachedConfigDiv div = new CachedConfigDiv(elementConfigElements, id, geometryBuilders);
+                    CachedConfigDiv div = new CachedConfigDiv(elementConfigElements, id, geometryBuilders, condition, order);
                     openedMenu.div(div);
                 } else {
                     SunscreenLibrary.library().logger().error("[CR006] Invalid div \"{}\" in config file \"{}\".{}", divConfigElement.name(), fileName, ErrorMessage);
                 }
             }
             return openedMenu;
-        }
-
-        protected static Map<Interactable.ActionType, ActionWrapper> action(Section elementConfigElement) {
-            if (elementConfigElement.elements().stream().noneMatch(configElement -> configElement.name().equals("actions"))) {
-                SunscreenLibrary.library().logger().error("[CR007] No action defined in config file \"{}\".{}", elementConfigElement.name(), ErrorMessage);
-                return null;
-            }
-            Section actionsSection = elementConfigElement.find("actions");
-            Map<Interactable.ActionType, ActionWrapper> actionWrappers = new HashMap<>();
-            for (ConfigElement element : actionsSection.elements()) {
-                Section elementSection = (Section) element;
-                String listen = "";
-                if (elementSection.elements().stream().anyMatch(configElement -> configElement.name().equals("listen"))) {
-                    listen = ((Node<String>)elementSection.find("listen")).value();
-                }
-                Section executeSection = ((Section)element).find("execute");
-                String actionType = ((Node<String>)executeSection.find("type")).value();
-                Action action = Action.ACTION_MAP.get(Identifier.split(actionType));
-                if (action == null) {
-                    SunscreenLibrary.library().logger().error("[CR008] Invalid action \"{}\" in config file \"{}\".{}", actionType, executeSection.name(), ErrorMessage);
-                    return null;
-                }
-                List<Argument<?>> arguments = new ArrayList<>();
-                for (ArgumentType argumentType : action.argumentType()) {
-                    String key = argumentType.name();
-                    if (executeSection.elements().stream().noneMatch(configElement -> configElement.name().equals(key))) {
-                        SunscreenLibrary.library().logger().error("[CR009] No argument \"{}\" defined in config file \"{}\".{}", key, executeSection.name(), ErrorMessage);
-                        return null;
-                    }
-                    TypeAdapter<?> typeAdapter = TypeAdapter.VALUES.stream().filter(typeAdapter1 -> typeAdapter1.type().equals(argumentType.type())).findFirst().orElse(null);
-                    if (typeAdapter == null) {
-                        SunscreenLibrary.library().logger().error("[CR010] Invalid argument type \"{}\" in config file \"{}\".{}", argumentType.type(), executeSection.name(), ErrorMessage);
-                        return null;
-                    }
-                    Object value = ((Node<?>)executeSection.find(key)).value();
-                    Argument<?> argument;
-                    System.out.println(value.getClass() + " " + argumentType.type());
-                    if (value instanceof String stringVal) {
-                        argument = Argument.of(null, key, typeAdapter.adapt(stringVal));
-                    } else if (value.getClass() == argumentType.type()) {
-                        argument = Argument.of(null, key, value);
-                    } else {
-                        SunscreenLibrary.library().logger().error("[CR011] Invalid argument \"{}\" in config file \"{}\".{}", key, executeSection.name(), ErrorMessage);
-                        return null;
-                    }
-                    arguments.add(argument);
-                }
-                System.out.println("Action: " + action.identifier().string() + " Arguments: " + arguments);
-                ActionWrapper actionWrapper = ActionWrapper.of(element.name(), null, action, arguments);
-                actionWrappers.put(Interactable.ActionType.valueOf(listen.toUpperCase()), actionWrapper);
-            }
-            for (Map.Entry<Interactable.ActionType, ActionWrapper> actionTypeActionWrapperEntry : actionWrappers.entrySet()) {
-                System.out.println("Action: " + actionTypeActionWrapperEntry.getKey().name() + " Arguments: " + actionTypeActionWrapperEntry.getValue().arguments());
-            }
-            return actionWrappers;
         }
 
     }
@@ -188,7 +155,8 @@ public interface MenuConfigTransformer {
                 "button", new ButtonElementTransformer(),
                 "text", new TextElementTransformer(),
                 "shape", new ShapeElementTransformer(),
-                "text_input", new TextInputElementTransformer()
+                "text_input", new TextInputElementTransformer(),
+                "selector", new SelectorElementTransformer()
         );
 
         static Element<?> transform(Section section, String fileName) {
@@ -212,11 +180,13 @@ public interface MenuConfigTransformer {
             String text = ((Node<String>)textSection.find("text")).value();
             Section positionSection = textSection.find("position");
             Position.PositionBuilder positionBuilder = Position.config(positionSection);
-            Position position = positionBuilder.finish(canvas.size());
-            Vec2d vec2d = ViewportHelper.fromPosition(position);
+            Position position = positionBuilder.finish(canvas.size(), canvas.size());
+            Vec2i vec2d = ViewportHelper.fromPosition(position);
             Text.Font font = Text.Fonts.stream().filter(f -> f.name().equals(((Node<String>)textSection.find("font")).value())).findFirst().orElse(Text.Font.vanilla());
             Text style = Text.text(text, font);
-            return canvas.text(style, vec2d, Color.white());
+            Section colorSection = textSection.find("color");
+            Color color = Color.of(((Node<Integer>)colorSection.find("red")).value(), ((Node<Integer>)colorSection.find("green")).value(), ((Node<Integer>)colorSection.find("blue")).value());
+            return canvas.text(style, vec2d, color);
         }
 
         static Map<String, Canvas> get(Section section) {
@@ -225,34 +195,32 @@ public interface MenuConfigTransformer {
                 SunscreenLibrary.library().logger().error("[CR008] No canvas defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
                 return canvases;
             }
-            boolean hasText = section.elements().stream().anyMatch(configElement -> configElement.name().equals("text"));
             ConfigElement canvasElement = section.elements().stream().filter(configElement -> configElement.name().equals("canvas")).findFirst().get();
+            boolean hasText;
             if (canvasElement instanceof Node canvasNode) {
                 Node<String> node = (Node<String>)canvasNode;
                 if (!node.value().startsWith("file(")) {
                     return canvases;
                 }
                 Canvas file = file(node.value().substring(5, node.value().length() - 1));
-                if (hasText) {
-                    file = text(section, file);
-                }
                 canvases.put(node.name(), file);
                 return canvases;
             } else if (canvasElement instanceof Section canvasSection) {
+                hasText = canvasSection.elements().stream().anyMatch(configElement -> configElement.name().equals("text"));
                 boolean hasSplit = canvasSection.elements().stream().anyMatch(configElement -> configElement.name().equals("split"));
                 boolean shouldSplit = hasSplit && ((Node<String>) canvasSection.find("split")).value() != null;
                 if (shouldSplit) {
                     int split = ((Node<Integer>) canvasSection.find("split")).value();
                     String image = ((Node<String>) canvasSection.find("image")).value();
                     Canvas canvas = file(image.substring(5, image.length() - 1));
-                    ArrayList<String > types = ((Node<ArrayList<String>>)canvasSection.find("order")).value();
+                    ArrayList<String> types = ((Node<ArrayList<String>>)canvasSection.find("order")).value();
                     int y = (int) (canvas.size().y() / split);
-                    for (int i = 0; i < split; i+= y) {
-                        Canvas sub = canvas.sub(Vec2d.of(canvas.size().x(), y), Vec2d.of(0, i));
+                    for (int i = 0; i < canvas.size().y(); i+= y) {
+                        Canvas sub = canvas.sub(Vec2i.of(canvas.size().x(), y), Vec2i.of(0, i));
                         if (hasText) {
-                            sub = text(section, sub);
+                            sub = text(canvasSection, sub);
                         }
-                        canvases.put(types.get(i/5), sub);
+                        canvases.put(types.get(i/y), sub);
                     }
                     return canvases;
                 }
@@ -262,11 +230,23 @@ public interface MenuConfigTransformer {
                             if (node.value().startsWith("file(")) {
                                 Canvas file = file(node.value().substring(5, node.value().length() - 1));
                                 if (hasText) {
-                                    file = text(section, file);
+                                    file = text(canvasSection, file);
                                 }
                                 canvases.put(node.name(), file);
                             }
                             return canvases;
+                        } else if (element instanceof Section canvasNode) {
+                            Section canvasSection1 = (Section) element;
+                            if (canvasSection1.elements().stream().noneMatch(configElement -> configElement.name().equals("file"))) {
+                                SunscreenLibrary.library().logger().error("[CR008] No file defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                                return canvases;
+                            }
+                            String fileName = ((Node<String>)canvasSection1.find("canvas")).value();
+                            Canvas file = file(fileName.substring(5, fileName.length() - 1));
+                            if (hasText) {
+                                file = text(canvasSection, file);
+                            }
+                            canvases.put(canvasNode.name(), file);
                         }
                 }
                 return canvases;
@@ -455,13 +435,50 @@ public interface MenuConfigTransformer {
                 element.add(size);
                 RuntimeDefinable.Type<InputHandler, OpenedMenu> type = new RuntimeDefinable.Impl.Type<>(InputHandler.class, OpenedMenu::inputHandler);
                 element.add(type);
-                Map<Interactable.ActionType, ActionWrapper> actionWrappers = Impl.action(section);
+                Map<Interactable.ActionType, ActionWrapper> actionWrappers = Map.of();//Impl.action(section);
                 if (actionWrappers != null) {
                     actionWrappers.forEach(element::action);
                 }
                 return element;
             }
 
+        }
+
+        class SelectorElementTransformer implements ElementTransformer {
+            @Override
+            public Element<?> transform(Section section) {
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("identifier"))) {
+                    SunscreenLibrary.library().logger().error("[CR022] No identifier defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Identifier identifier = Identifier.split(((Node<String>)section.find("identifier")).value());
+                if (section.elements().stream().noneMatch(configElement -> configElement.name().equals("position"))) {
+                    SunscreenLibrary.library().logger().error("[CR023] No position defined in config file \"{}\".{}", section.name(), Impl.ErrorMessage);
+                    return null;
+                }
+                Section positionSection = section.find("position");
+                Position.PositionBuilder position = Position.config(positionSection);
+                SelectorElement.Builder selectorElement = SelectorElement.selectorElement(null, identifier, null);
+                Section entries = section.find("entries");
+                selectorElement.spacing(0);
+                Size size = null;
+                for (ConfigElement element : entries.elements()) {
+                    Map<ButtonElement.State, Canvas> canvases1 = get((Section) element).entrySet().stream().map(entry -> {
+                        ButtonElement.State state = ButtonElement.State.valueOf(entry.getKey().toUpperCase());
+                        Canvas canvas = entry.getValue();
+                        return Map.entry(state, canvas);
+                    }).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+                    ButtonElement buttonElement = ButtonElement.buttonElement(Size.pixel(canvases1.values().stream().findAny().get().size()), null, Position.pixel(0, 0), canvases1);
+                    selectorElement.button(buttonElement);
+                    if (size == null) {
+                        size = buttonElement.size();
+                    }
+                }
+                selectorElement.size(size);
+                SelectorElement element = selectorElement.build();
+                element.geometry(position);
+                return element;
+            }
         }
 
     }

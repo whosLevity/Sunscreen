@@ -5,9 +5,9 @@ import java.util.Map;
 
 public interface Operator {
 
-    Map<String, Class<? extends Operator>> operators = Map.of(
-            "+", AdditionOperator.class, "-", SubtractionOperator.class, "*", MultiplicationOperator.class,
-            "/", DivisionOperator.class, "%", ModuloOperator.class
+    Map<String, Operator> operators = Map.of(
+            "+", new AdditionOperator(), "-", new SubtractionOperator(), "*", new MultiplicationOperator(),
+            "/", new DivisionOperator(), "%", new ModuloOperator()
     );
 
     String operator();
@@ -19,19 +19,14 @@ public interface Operator {
     double calc(double a, double b);
 
     static Operator find(String string) {
-        try {
-            return operators.get(string.split(" ")[1]).getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
+        if (string.split(" ").length < 2) {
+            return operators.get("+");
         }
+        return operators.get(string.split(" ")[1]);
     }
 
     static Operator get(String operator) {
-        try {
-            return operators.get(operator).getDeclaredConstructor().newInstance();
-        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        return operators.get(operator.trim());
     }
 
     class AdditionOperator implements Operator {

@@ -3,6 +3,7 @@ package me.combimagnetron.sunscreen.resourcepack.sprite;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.image.Canvas;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -12,14 +13,14 @@ import java.util.Map;
 
 public class SpriteSheet {
     private final Canvas raster;
-    private final Vec2d tileSize;
+    private final Vec2i tileSize;
     private final Map<Identifier, Sprite> sprites = new LinkedHashMap<>();
 
-    public static SpriteSheet of(Canvas raster, BufferedImage dataImage, Vec2d tileSize) {
+    public static SpriteSheet of(Canvas raster, BufferedImage dataImage, Vec2i tileSize) {
         return new SpriteSheet(raster, dataImage, tileSize);
     }
 
-    protected SpriteSheet(Canvas raster, BufferedImage dataImage, Vec2d tileSize) {
+    protected SpriteSheet(Canvas raster, BufferedImage dataImage, Vec2i tileSize) {
         this.raster = raster;
         this.tileSize = tileSize;
         if (raster.size().x() % tileSize.x() != 0 || raster.size().y() % tileSize.y() != 0)
@@ -28,7 +29,7 @@ public class SpriteSheet {
         int ySize = (int) ((raster.size().y() / tileSize.y()) - 1);
         for (int x = 0; x < xSize; x++) {
             for (int y = 0; y < ySize; y++) {
-                raster.sub(tileSize, Vec2d.of(x, y));
+                raster.sub(tileSize, Vec2i.of(x, y));
                 TileType type = TileType.byColor(new Color(dataImage.getRGB(x, y)));
                 sprites.put(Identifier.of("sprite_sheet", type.name().toLowerCase()), null);
             }

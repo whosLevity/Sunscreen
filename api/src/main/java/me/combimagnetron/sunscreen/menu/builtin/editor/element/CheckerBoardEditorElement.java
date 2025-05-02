@@ -23,9 +23,9 @@ import java.util.Map;
 
 public class CheckerBoardEditorElement extends SimpleBufferedElement implements Interactable {
     private final LinkedHashMap<Identifier, Pair<Element<Canvas>, Boolean>> elements = new LinkedHashMap<>();
-    private final Vec2d tileSize;
+    private final Vec2i tileSize;
 
-    public static CheckerBoardEditorElement of(Size size, Identifier identifier, Position position, Vec2d tileSize) {
+    public static CheckerBoardEditorElement of(Size size, Identifier identifier, Position position, Vec2i tileSize) {
         return new CheckerBoardEditorElement(size, identifier, position, tileSize);
     }
 
@@ -33,7 +33,7 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
         elements.put(element.identifier(), Pair.of(element, false));
     }
 
-    CheckerBoardEditorElement(Size size, Identifier identifier, Position position, Vec2d tileSize) {
+    CheckerBoardEditorElement(Size size, Identifier identifier, Position position, Vec2i tileSize) {
         super(size, identifier, position);
         this.tileSize = tileSize;
     }
@@ -45,11 +45,11 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
 
     private Canvas render() {
         Canvas result = Canvas.image(size());
-        result.fill(Vec2d.of(0, 0), size().vec2d(), Color.lightGray());
+        result.fill(Vec2i.of(0, 0), size().vec2i(), Color.lightGray());
         for (int x = 0; x < size().x().pixel(); x++) {
             for (int y = 0; y < size().y().pixel(); y++) {
                 if ((x + y) % 2 == 0) {
-                    result.fill(Vec2d.of(x, y).mul(tileSize), tileSize, Color.white());
+                    result.fill(Vec2i.of(x, y).mul(tileSize), tileSize, Color.white());
                 }
             }
         }
@@ -85,7 +85,7 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
     }
 
     @Override
-    public boolean hover(Vec2d pos) {
+    public boolean hover(Vec2i pos) {
         /*for (Element element : elements.values()) {
             if (element.identifier().key().string().equals("hover_262") && !HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()).mul(EditorMenu.PreviewScale), element.size())) {
                 System.out.println(element.identifier() + " true");
@@ -105,9 +105,9 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
                 )
                 .add(
                         ButtonElement.buttonElement(Size.pixel(55, 17), Identifier.of("toolbar", "ai_assistant"), Position.pixel(0, 0))
-                                .standard(Canvas.image(Vec2d.of(55, 17)).fill(Vec2d.of(0, 0), Vec2d.of(55, 17), Color.of(255, 255, 255)).text(Text.text("Assist", Text.Font.vanilla()), Vec2d.of(19, 5)))
-                                .hover(Canvas.image(Vec2d.of(55, 17)).fill(Vec2d.of(0, 0), Vec2d.of(55, 17), Color.of(255, 255, 255)))
-                                .click(Canvas.image(Vec2d.of(55, 17)).fill(Vec2d.of(0, 0), Vec2d.of(55, 17), Color.of(255, 255, 255)))
+                                .standard(Canvas.image(Vec2i.of(55, 17)).fill(Vec2i.of(0, 0), Vec2i.of(55, 17), Color.of(255, 255, 255)).text(Text.text("Assist", Text.Font.vanilla()), Vec2i.of(19, 5)))
+                                .hover(Canvas.image(Vec2i.of(55, 17)).fill(Vec2i.of(0, 0), Vec2i.of(55, 17), Color.of(255, 255, 255)))
+                                .click(Canvas.image(Vec2i.of(55, 17)).fill(Vec2i.of(0, 0), Vec2i.of(55, 17), Color.of(255, 255, 255)))
                                 .build()
                 );
 
@@ -115,7 +115,7 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
     }
 
     @Override
-    public boolean click(Vec2d pos) {
+    public boolean click(Vec2i pos) {
         boolean update = false;
         for (Pair<Element<Canvas>, Boolean> element : elements.values()) {
             if (element == null) {
@@ -126,18 +126,18 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
                 elements.remove(Identifier.of("toolbar_internal263", "hover_263"));
                 update = true;
             }
-            if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.k().position()).mul(EditorMenu.PreviewScale), element.k().size().vec2d().mul(EditorMenu.PreviewScale))) {
+            if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.k().position()).mul((int) EditorMenu.PreviewScale), element.k().size().vec2i().mul((int) EditorMenu.PreviewScale))) {
                 continue;
             }
-            Canvas canvas1 = Canvas.image(element.k().size().vec2d().add(4, 4));
-            canvas1.fill(Vec2d.of(1, 1), Vec2d.of(element.k().size().x().pixel(), 1), Color.of(77, 155, 230));
-            canvas1.fill(Vec2d.of(element.k().size().x().pixel() + 1, 1), Vec2d.of(1, element.k().size().y().pixel()), Color.of(77, 155, 230));
-            canvas1.fill(Vec2d.of(1, element.k().size().y().pixel() + 1), Vec2d.of(element.k().size().x().pixel(), 1), Color.of(77, 155, 230));
-            canvas1.fill(Vec2d.of(1, 1), Vec2d.of(1, element.k().size().y().pixel()), Color.of(77, 155, 230));
-            canvas1.fill(Vec2d.of(0, 0), Vec2d.of(2, 2), Color.of(72, 74, 119));
-            canvas1.fill(Vec2d.of(element.k().size().x().pixel() + 1, 0), Vec2d.of(2, 2), Color.of(72, 74, 119));
-            canvas1.fill(Vec2d.of(0, element.k().size().y().pixel() + 1), Vec2d.of(2, 2), Color.of(72, 74, 119));
-            canvas1.fill(Vec2d.of(element.k().size().x().pixel() + 1, element.k().size().y().pixel() + 1), Vec2d.of(2, 2), Color.of(72, 74, 119));
+            Canvas canvas1 = Canvas.image(element.k().size().vec2i().add(4, 4));
+            canvas1.fill(Vec2i.of(1, 1), Vec2i.of(element.k().size().x().pixel(), 1), Color.of(77, 155, 230));
+            canvas1.fill(Vec2i.of(element.k().size().x().pixel() + 1, 1), Vec2i.of(1, element.k().size().y().pixel()), Color.of(77, 155, 230));
+            canvas1.fill(Vec2i.of(1, element.k().size().y().pixel() + 1), Vec2i.of(element.k().size().x().pixel(), 1), Color.of(77, 155, 230));
+            canvas1.fill(Vec2i.of(1, 1), Vec2i.of(1, element.k().size().y().pixel()), Color.of(77, 155, 230));
+            canvas1.fill(Vec2i.of(0, 0), Vec2i.of(2, 2), Color.of(72, 74, 119));
+            canvas1.fill(Vec2i.of(element.k().size().x().pixel() + 1, 0), Vec2i.of(2, 2), Color.of(72, 74, 119));
+            canvas1.fill(Vec2i.of(0, element.k().size().y().pixel() + 1), Vec2i.of(2, 2), Color.of(72, 74, 119));
+            canvas1.fill(Vec2i.of(element.k().size().x().pixel() + 1, element.k().size().y().pixel() + 1), Vec2i.of(2, 2), Color.of(72, 74, 119));
             ImageElement imageElement = ImageElement.imageElement(canvas1, Identifier.of(element.k().identifier().key().string(), "hover_262"), Position.pixel(element.k().position().x().pixel() - 2, element.k().position().y().pixel() - 2));
             ImageElement toolBar = ImageElement.imageElement(generateToolBar(), Identifier.of("toolbar_internal263", "hover_263"), Position.pixel(element.k().position().x().pixel(), element.k().position().y().pixel() - 25));
             elements.put(Identifier.of(element.k().identifier().key().string(), "hover_262"), Pair.of(imageElement, true));

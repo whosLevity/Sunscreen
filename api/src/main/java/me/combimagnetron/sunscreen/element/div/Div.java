@@ -264,28 +264,23 @@ public interface Div<T> extends Editable {
 
         public boolean handleClick(Vec2i pos, Input.Type.MouseClick click, SunscreenUser<?> user) {
             boolean update = false;
-            System.out.println("Clicking " + this.identifier.string() + " 0 " + pos.x() + " " + pos.y());
             for (Element<Canvas> element : elements.values()) {
-                System.out.println("Clicking " + this.identifier.string() + " 1 " + element.identifier().string());
                 if (element instanceof Interactable interactable && interactable.reactiveToClick()) {
-                    System.out.println("Clicking " + this.identifier.string() + " 2.5 " + element.identifier().string() + " " + element.position().x().pixel() + " " + element.position().y().pixel() + " " + element.size().x() + " " + element.size().y());
                     if (!HoverHelper.isHovered(pos, ViewportHelper.fromPosition(element.position()), element.size())) {
                         boolean a = interactable.click(null);
-                        System.out.println("Clicking " + this.identifier.string() + " 2.6 " + element.identifier().string());
                         if (a) {
                             update = true;
                         }
                         continue;
                     }
-                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2i.of((int) element.position().x().pixel(), (int) element.position().y().pixel())), click));
+                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2i.of(element.position().x().pixel(), element.position().y().pixel())), click));
                     boolean keep = update;
                     List<ActionWrapper> actions = interactable.actions().entrySet().stream().filter(actionTypeActionEntry -> actionTypeActionEntry.getKey() == Interactable.ActionType.CLICK).map(Map.Entry::getValue).toList();
                     for (ActionWrapper actionWrapper : actions) {
                         Action action = actionWrapper.action();
                         action.execute(user, actionWrapper.arguments().toArray(new Argument<?>[0]));
                     }
-                    System.out.println("Clicking " + this.identifier.string() + " 2 " + element.identifier().string());
-                    update = interactable.click(pos.sub(Vec2i.of((int) element.position().x().pixel(), (int) element.position().y().pixel())));
+                    update = interactable.click(pos.sub(Vec2i.of(element.position().x().pixel(), element.position().y().pixel())));
                     if (keep) {
                         update = true;
                     }
@@ -312,7 +307,7 @@ public interface Div<T> extends Editable {
                         action.execute(user, actionWrapper.arguments().toArray(new Argument<?>[0]));
                     }
                     boolean keep = update;
-                    update = interactable.hover(pos.sub(Vec2i.of((int) element.position().x().pixel(), (int) element.position().y().pixel())));
+                    update = interactable.hover(pos.sub(Vec2i.of(element.position().x().pixel(), element.position().y().pixel())));
                     if (keep) {
                         update = true;
                     }

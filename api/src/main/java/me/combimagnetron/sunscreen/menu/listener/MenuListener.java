@@ -178,7 +178,7 @@ public class MenuListener implements PacketListener {
                 handleSystemChatMessageSend(event, user);
                 break;
             case PacketType.Play.Server.BOSS_BAR:
-                handleBossBarSend(event, user);
+                //handleBossBarSend(event, user);
                 break;
             case PacketType.Play.Server.CHAT_MESSAGE:
                 handleChatMessageSend(event, user);

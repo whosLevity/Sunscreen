@@ -17,6 +17,7 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven("https://mvn.lumine.io/repository/maven-public/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://jitpack.io")
     maven("https://repo.combimagnetron.xyz/releases/")
@@ -80,15 +81,22 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("-parameters")
 }
 
+val betterHudVersion = "1.12.2"
+val adventureVersion = "4.20.0"
+
 dependencies {
     implementation(project(":api"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
     compileOnly("me.clip:placeholderapi:2.11.6")
-    compileOnly("net.kyori:adventure-api:4.14.0")
-    compileOnly("net.kyori:adventure-text-serializer-gson:4.14.0")
+    compileOnly("net.kyori:adventure-api:${adventureVersion}")
+    compileOnly("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
+    compileOnly("io.lumine.mythichud:api:1.2.3-20250425.220049-1")
+    compileOnly("io.github.toxicity188:BetterHud-standard-api:${betterHudVersion}")
+    compileOnly("io.github.toxicity188:BetterHud-bukkit-api:${betterHudVersion}")
+    compileOnly("io.github.toxicity188:BetterCommand:1.4.3")
 }
 
 bukkit {
@@ -110,5 +118,6 @@ bukkit {
 
     dependencies {
         depend = listOf("packetevents")
+        softDepend = listOf("MythicHUD", "BetterHud")
     }
 }

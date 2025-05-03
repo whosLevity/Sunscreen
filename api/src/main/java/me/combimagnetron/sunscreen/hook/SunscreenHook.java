@@ -5,11 +5,15 @@ import me.combimagnetron.sunscreen.hook.lunar.LunarClientSunscreenHook;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
 public interface SunscreenHook {
-    Collection<SunscreenHook> HOOKS = List.of(new LabyModSunscreenHook(), new LunarClientSunscreenHook());
+    Collection<SunscreenHook> HOOKS = new ArrayList<>(List.of(
+            new LabyModSunscreenHook(),
+            new LunarClientSunscreenHook()
+    ));
 
     boolean canRun();
 

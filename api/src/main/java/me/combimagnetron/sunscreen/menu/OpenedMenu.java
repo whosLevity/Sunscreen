@@ -96,7 +96,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             forceDivGeometry();
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
-            Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
+            Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).toList();
             for (SunscreenHook hook : hooks) {
                 hook.onMenuEnter(viewer, this);
             }
@@ -391,7 +391,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             leave();
             SunscreenLibrary.library().menuTicker().stop(this);
             viewer.resendInv();
-            Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(sunscreenHook -> sunscreenHook instanceof ClientHook && sunscreenHook.canRun()).toList();
+            Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).toList();
             for (SunscreenHook hook : hooks) {
                 hook.onMenuLeave(viewer, this);
             }

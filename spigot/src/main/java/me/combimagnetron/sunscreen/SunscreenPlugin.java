@@ -7,6 +7,9 @@ import io.github.retrooper.packetevents.factory.spigot.SpigotPacketEventsBuilder
 import me.combimagnetron.passport.Passport;
 import me.combimagnetron.sunscreen.action.RunCommandAction;
 import me.combimagnetron.sunscreen.command.SunscreenCommand;
+import me.combimagnetron.sunscreen.hook.SunscreenHook;
+import me.combimagnetron.sunscreen.hook.betterhud.BetterHudSunscreenHook;
+import me.combimagnetron.sunscreen.hook.mythichud.MythicHudSunscreenHook;
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.listener.AnvilListener;
@@ -40,7 +43,28 @@ public class SunscreenPlugin extends JavaPlugin {
         SunscreenLibrary.Holder.INSTANCE = library;
         Passport.Holder.INSTANCE = library.passport();
         this.userManager = new UserManager(this);
+        commands();
+        menus();
+        platformSpecific();
+    }
+
+    private void platformSpecific() {
         Action.ACTION_MAP.put(RunCommandAction.ActionIdentifier, new RunCommandAction());
+        SunscreenHook.HOOKS.add(new MythicHudSunscreenHook());
+        SunscreenHook.HOOKS.add(new BetterHudSunscreenHook());
+        library.passport().placeholders().register(new PapiPlaceholderProvider());
+    }
+
+    private void menus() {
+        this.getDataFolder().mkdirs();
+        Collection<MenuTemplate> templates = library.menuConfigTransformer().read(getDataFolder().toPath().resolve(Path.of("menus")));
+        library.logger().info("Loaded {} menu(s).", templates.size());
+        for (MenuTemplate template : templates) {
+            library.menuRegistry().register(template);
+        }
+    }
+
+    private void commands() {
         PaperCommandManager manager = new PaperCommandManager(this);
         manager.getCommandContexts().registerContext(Identifier.class, (bukkitCommandExecutionContext -> Identifier.split(bukkitCommandExecutionContext.popFirstArg())));
         manager.getCommandContexts().registerContext(SunscreenUser.class, (bukkitCommandExecutionContext) -> {
@@ -51,13 +75,6 @@ public class SunscreenPlugin extends JavaPlugin {
         manager.getCommandCompletions().registerAsyncCompletion("users", (bukkitCommandCompletionContext) -> userManager.users().stream().map(SunscreenUser::name).filter(name -> name.startsWith(bukkitCommandCompletionContext.getInput())).toList());
         manager.getCommandCompletions().registerAsyncCompletion("menus", (bukkitCommandCompletionContext) -> library.menuRegistry().all().stream().map(menu -> menu.identifier().string()).filter(name -> name.startsWith(bukkitCommandCompletionContext.getInput())).toList());
         manager.registerCommand(new SunscreenCommand());
-        this.getDataFolder().mkdirs();
-        Collection<MenuTemplate> templates = library.menuConfigTransformer().read(getDataFolder().toPath().resolve(Path.of("menus")));
-        library.logger().info("Loaded {} menu(s).", templates.size());
-        for (MenuTemplate template : templates) {
-            library.menuRegistry().register(template);
-        }
-        library.passport().placeholders().register(new PapiPlaceholderProvider());
     }
 
     @Override

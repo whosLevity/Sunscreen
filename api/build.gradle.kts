@@ -14,7 +14,6 @@ repositories {
     maven("https://repo.codemc.io/repository/maven-releases/")
     maven("https://repo.codemc.io/repository/maven-snapshots/")
     maven("https://repo.aikar.co/content/groups/aikar/")
-    maven("https://mvn.lumine.io/repository/maven-releases/")
 }
 
 java {
@@ -27,7 +26,6 @@ dependencies {
     implementation("net.kyori:adventure-text-serializer-plain:4.20.0")
     implementation("com.typesafe:config:1.4.2")
     implementation("co.aikar:acf-core:0.5.1-SNAPSHOT")
-    //compileOnly("io.lumine.mythichud:api:1.2.2-SNAPSHOT")
     compileOnly("me.combimagnetron:Passport:1.0-SNAPSHOT")
     compileOnly("com.google.guava:guava:31.1-jre")
     compileOnly("org.apache.commons:commons-lang3:3.17.0")

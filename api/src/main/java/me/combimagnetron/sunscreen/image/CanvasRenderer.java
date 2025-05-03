@@ -100,6 +100,7 @@ public interface CanvasRenderer {
             TextComponent.Builder component = Component.text();
             int realHeight = image.getHeight() - 1;
             int realWidth = image.getWidth() - 1;
+            boolean isPerfect = image.getWidth() % 3 == 0;
             for (int x = 0; x <= realHeight; x += 3) {
                 int heightAdd = 3;
                 if (x + 3 > realHeight) {
@@ -114,7 +115,10 @@ public interface CanvasRenderer {
                         continue;
                     }
                     BufferedImage section = image.getSubimage(y, x, widthAdd, heightAdd);
-                    component.append(FontUtil.offset(-1), PixelPattern.optimize(section, r));
+                    if (y != 0) {
+                        component.append(FontUtil.offset(-1));
+                    }
+                    component.append(PixelPattern.optimize(section, r));
                 }
                 if (r == -7) {
                     r = 2;

@@ -7,8 +7,8 @@ public class ShaderHelper {
 
     public static int encode(Position position, SunscreenUser<?> user) {
         Vec2i screenSize = user.screenSize().pixel();
-        int x = decimals(position.x().pixel()/screenSize.x());
-        int y = decimals(position.y().pixel()/screenSize.y());
+        int x = decimals((double) position.x().pixel() /screenSize.x());
+        int y = decimals((double) position.y().pixel() /screenSize.y());
         x = Math.max(0, Math.min(153, x));
         y = Math.max(0, Math.min(153, y));
         return x * 154 + y;

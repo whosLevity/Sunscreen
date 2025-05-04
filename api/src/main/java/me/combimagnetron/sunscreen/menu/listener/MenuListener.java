@@ -177,9 +177,6 @@ public class MenuListener implements PacketListener {
             case PacketType.Play.Server.SYSTEM_CHAT_MESSAGE:
                 handleSystemChatMessageSend(event, user);
                 break;
-            case PacketType.Play.Server.BOSS_BAR:
-                //handleBossBarSend(event, user);
-                break;
             case PacketType.Play.Server.CHAT_MESSAGE:
                 handleChatMessageSend(event, user);
                 break;
@@ -228,14 +225,6 @@ public class MenuListener implements PacketListener {
         }
         WrapperPlayServerTimeUpdate packet = new WrapperPlayServerTimeUpdate(event);
         packet.setWorldAge(-1000);
-    }
-
-    private void handleBossBarSend(PacketSendEvent event, SunscreenUser<?> user) {
-        OpenedMenu openedMenu = menu(user);
-        if (openedMenu == null) {
-            return;
-        }
-        event.setCancelled(true);
     }
 
     private void handleChatMessageSend(PacketSendEvent event, SunscreenUser<?> user) {

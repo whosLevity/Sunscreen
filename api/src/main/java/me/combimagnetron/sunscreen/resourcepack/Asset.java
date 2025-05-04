@@ -7,8 +7,6 @@ public interface Asset {
 
     Identifier identifier();
 
-    Sprite sprite();
-
     ResourcePackPath path();
 
 }

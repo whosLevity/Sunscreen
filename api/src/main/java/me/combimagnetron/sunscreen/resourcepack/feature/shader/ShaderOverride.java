@@ -6,10 +6,14 @@ public interface ShaderOverride {
 
     CodeBlock codeBlock();
 
-    String before();
-
-    String after();
-
     String target();
+
+    OverrideType type();
+
+    enum OverrideType {
+        BEFORE,
+        AFTER,
+        REPLACE
+    }
 
 }

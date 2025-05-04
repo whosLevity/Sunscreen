@@ -5,7 +5,7 @@ import me.combimagnetron.sunscreen.util.Identifier;
 
 import java.util.Collection;
 
-public interface FontFeature extends ResourcePackFeature<FontFeature> {
+public interface FontFeature extends ResourcePackFeature<FontFeature, Font> {
 
     Identifier identifier();
 

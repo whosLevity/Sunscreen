@@ -10,6 +10,7 @@ import me.combimagnetron.sunscreen.command.SunscreenCommand;
 import me.combimagnetron.sunscreen.hook.SunscreenHook;
 import me.combimagnetron.sunscreen.hook.betterhud.BetterHudSunscreenHook;
 import me.combimagnetron.sunscreen.hook.mythichud.MythicHudSunscreenHook;
+import me.combimagnetron.sunscreen.hook.tab.TABSunscreenHook;
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.listener.AnvilListener;
@@ -52,6 +53,7 @@ public class SunscreenPlugin extends JavaPlugin {
         Action.ACTION_MAP.put(RunCommandAction.ActionIdentifier, new RunCommandAction());
         SunscreenHook.HOOKS.add(new MythicHudSunscreenHook());
         SunscreenHook.HOOKS.add(new BetterHudSunscreenHook());
+        SunscreenHook.HOOKS.add(new TABSunscreenHook());
         library.passport().placeholders().register(new PapiPlaceholderProvider());
     }
 

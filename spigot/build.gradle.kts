@@ -26,6 +26,7 @@ repositories {
     maven("https://repo.codemc.io/repository/maven-snapshots/")
     maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.aikar.co/content/groups/aikar/")
+    maven("https://jitpack.io")
 }
 
 private val configuration : String = "reobf"
@@ -97,6 +98,7 @@ dependencies {
     compileOnly("io.github.toxicity188:BetterHud-standard-api:${betterHudVersion}")
     compileOnly("io.github.toxicity188:BetterHud-bukkit-api:${betterHudVersion}")
     compileOnly("io.github.toxicity188:BetterCommand:1.4.3")
+    compileOnly("com.github.NEZNAMY:TAB-API:5.2.0")
 }
 
 bukkit {
@@ -118,6 +120,6 @@ bukkit {
 
     dependencies {
         depend = listOf("packetevents")
-        softDepend = listOf("MythicHUD", "BetterHud")
+        softDepend = listOf("MythicHUD", "BetterHud", "TAB")
     }
 }

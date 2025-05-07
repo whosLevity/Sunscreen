@@ -27,6 +27,7 @@ repositories {
     maven("https://repo.extendedclip.com/releases/")
     maven("https://repo.aikar.co/content/groups/aikar/")
     maven("https://jitpack.io")
+    maven("https://repo.nexomc.com/releases")
 }
 
 private val configuration : String = "reobf"
@@ -89,6 +90,7 @@ dependencies {
     implementation(project(":api"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
+    compileOnly("commons-io:commons-io:2.18.0")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("net.kyori:adventure-api:${adventureVersion}")
     compileOnly("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
@@ -99,6 +101,9 @@ dependencies {
     compileOnly("io.github.toxicity188:BetterHud-bukkit-api:${betterHudVersion}")
     compileOnly("io.github.toxicity188:BetterCommand:1.4.3")
     compileOnly("com.github.NEZNAMY:TAB-API:5.2.0")
+    compileOnly("com.nexomc:nexo:1.5.0")
+    compileOnly("team.unnamed:creative-api:1.7.3")
+    compileOnly("team.unnamed:creative-serializer-minecraft:1.7.3")
 }
 
 bukkit {
@@ -114,7 +119,6 @@ bukkit {
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.22",
         "commons-io:commons-io:2.18.0",
         "com.github.ben-manes.caffeine:caffeine:3.2.0",
-        "org.apache.commons:commons-lang3:3.17.0"
         )
     website = "https://combimagnetron.me"
 

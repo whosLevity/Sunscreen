@@ -75,7 +75,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
                 .add(
                         editorElement
                 );
-        editorElements.put(Identifier.of("editor", "image"), ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/editor/island.png"))), Identifier.of("editor", "image"), Position.position().x().percentage(50).back().x().percentage(50).back()));
+        //editorElements.put(Identifier.of("editor", "image"), ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/editor/island.png"))), Identifier.of("editor", "image"), Position.position().x().percentage(50).back().x().percentage(50).back()));
         editorElements.put(Identifier.of("editor","shape"), ShapeElement.rectangle(Size.pixel(100, 100), Identifier.of("editor", "shape"), Position.pixel(100, 100), Color.of(255, 0, 0)));
         editorElements.values().forEach(editorElement::element);
         Map<Identifier, Div<Canvas>> divs = new LinkedHashMap<>();

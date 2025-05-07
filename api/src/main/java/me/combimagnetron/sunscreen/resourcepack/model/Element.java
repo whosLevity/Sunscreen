@@ -1,0 +1,4 @@
+package me.combimagnetron.sunscreen.resourcepack.model;
+
+public interface Element {
+}

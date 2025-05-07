@@ -1,6 +1,7 @@
 package me.combimagnetron.sunscreen.resourcepack.feature.shader;
 
 import me.combimagnetron.sunscreen.resourcepack.FeatureWriter;
+import me.combimagnetron.sunscreen.resourcepack.PackSection;
 import me.combimagnetron.sunscreen.resourcepack.ResourcePackFeature;
 import org.jetbrains.annotations.NotNull;
 
@@ -21,6 +22,11 @@ public class ShaderFeature implements ResourcePackFeature<ShaderFeature, Shader>
     }
 
     @Override
+    public Class<Shader> assetClass() {
+        return Shader.class;
+    }
+
+    @Override
     public Collection<Shader> assets() {
         return shaders;
     }
@@ -29,4 +35,11 @@ public class ShaderFeature implements ResourcePackFeature<ShaderFeature, Shader>
     public FeatureWriter<ShaderFeature> writer() {
         return WRITER;
     }
+
+
+    @Override
+    public PackSection write() {
+        return WRITER.write(this, null, null);
+    }
+
 }

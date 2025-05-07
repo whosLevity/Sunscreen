@@ -28,33 +28,33 @@ public interface Shader extends Asset {
 
     interface Section {
 
-        static Section mojang(CodeBlock main, CodeBlock imports, CodeBlock uniforms, CodeBlock functions) {
+        static Section mojang(CodeBlock<String> main, CodeBlock<String> imports, CodeBlock<String> uniforms, CodeBlock<String> functions) {
             return MojangSpec.of(main, imports, uniforms, functions);
         }
 
-        static Section custom(CodeBlock main, CodeBlock imports, String name) {
-            return CustomSpec.of(main, imports, name);
+        static Section custom(CodeBlock<String> main, CodeBlock<String> imports, String name, ShaderOverride.OverrideType type, String target) {
+            return CustomSpec.of(main, imports, name, type, target);
         }
 
         interface MojangSpec extends Section {
 
-            static Section of(CodeBlock main, CodeBlock imports, CodeBlock uniforms, CodeBlock functions) {
+            static Section of(CodeBlock<String> main, CodeBlock<String> imports, CodeBlock<String> uniforms, CodeBlock<String> functions) {
                 return new Impl(main, imports, uniforms, functions);
             }
 
-            CodeBlock main();
+            CodeBlock<String> main();
 
-            CodeBlock imports();
+            CodeBlock<String> imports();
 
-            CodeBlock uniforms();
+            CodeBlock<String> uniforms();
 
-            CodeBlock functions();
+            CodeBlock<String> functions();
 
-            default CodeBlock all() {
+            default CodeBlock<String> all() {
                 return CodeBlock.all(main(), imports(), uniforms(), functions());
             }
 
-            record Impl(CodeBlock main, CodeBlock imports, CodeBlock uniforms, CodeBlock functions) implements MojangSpec {
+            record Impl(CodeBlock<String> main, CodeBlock<String> imports, CodeBlock<String> uniforms, CodeBlock<String> functions) implements MojangSpec {
 
             }
 
@@ -62,28 +62,36 @@ public interface Shader extends Asset {
 
         interface CustomSpec extends Section {
 
-            static Section of(CodeBlock main, CodeBlock imports, String name) {
-                return new Impl(main, imports, name);
+            static Section of(CodeBlock<String> main, CodeBlock<String> imports, String name, ShaderOverride.OverrideType type, String target) {
+                return new Impl(main, imports, name, type, target);
             }
 
             String name();
 
-            CodeBlock main();
+            CodeBlock<String> main();
 
-            CodeBlock imports();
+            CodeBlock<String> imports();
 
-            default CodeBlock all() {
+            ShaderOverride.OverrideType override();
+
+            String target();
+
+            default CodeBlock<String> all() {
                 return CodeBlock.all(main(), imports());
             }
 
-            record Impl(CodeBlock main, CodeBlock imports, String name) implements CustomSpec {
+            default ShaderOverride get() {
+                return new ShaderOverride.Impl(CodeBlock.shader().line("#moj_import <include/" + name() + ".glsl>"), target(), override());
+            }
+
+            record Impl(CodeBlock<String> main, CodeBlock<String> imports, String name, ShaderOverride.OverrideType override, String target) implements CustomSpec {
 
             }
 
         }
 
 
-        CodeBlock all();
+        CodeBlock<String> all();
 
         default String content() {
             return all().content().stream().reduce("", (a, b) -> a + "\n" + b);

@@ -7,7 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
 
-public interface ResourcePackFeature<F extends ResourcePackFeature<F, A>, A extends Asset> {
+public interface ResourcePackFeature<F extends ResourcePackFeature<F, A>, A extends Asset> extends Writable<PackSection> {
     Path ASSETS_FOLDER = Path.of("assets/sunscreen/");
 
     default void write(Path path, Collection<String> content) {
@@ -17,6 +17,8 @@ public interface ResourcePackFeature<F extends ResourcePackFeature<F, A>, A exte
             throw new RuntimeException(e);
         }
     };
+
+    Class<A> assetClass();
 
     ResourcePackFeature<F, A> asset(A asset);
 

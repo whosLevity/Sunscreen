@@ -1,4 +1,4 @@
-package me.combimagnetron.sunscreen.resourcepack.overlay;
+package me.combimagnetron.sunscreen.resourcepack.feature.overlay;
 
 import me.combimagnetron.sunscreen.resourcepack.Asset;
 import me.combimagnetron.sunscreen.resourcepack.PackSection;
@@ -8,7 +8,7 @@ import me.combimagnetron.sunscreen.resourcepack.meta.PackVersion;
 
 import java.util.Collection;
 
-public interface Overlay {
+public interface Overlay extends Asset {
 
     PackVersion version();
 

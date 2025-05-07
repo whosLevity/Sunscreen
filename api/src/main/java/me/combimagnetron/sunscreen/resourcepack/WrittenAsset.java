@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.Objects;
 
 public interface WrittenAsset {
 
@@ -44,8 +45,8 @@ public interface WrittenAsset {
 
             void write() {
                 try (FileWriter writer = new FileWriter(path.toFile())) {
-                    for (String string : content.content()) {
-                        writer.write(string);
+                    for (Object string : content.content()) {
+                        //writer.write(string);
                     }
                     writer.flush();
                 } catch (Exception e) {

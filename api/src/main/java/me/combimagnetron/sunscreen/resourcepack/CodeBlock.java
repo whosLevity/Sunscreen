@@ -1,38 +1,68 @@
 package me.combimagnetron.sunscreen.resourcepack;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Map;
 
-public interface CodeBlock {
+public interface CodeBlock<T> {
 
-    Collection<String> content();
+    Collection<T> content();
 
-    CodeBlock line(String line);
+    CodeBlock<T> line(T line);
 
     Language language();
 
-    static CodeBlock shader() {
-        return new Impl(new ArrayList<>(), Language.GLSL);
+    static CodeBlock<String> shader() {
+        return new Impl<>(new ArrayList<>(), Language.GLSL);
     }
 
-    static CodeBlock json() {
-        return new Impl(new ArrayList<>(), Language.JSON);
+    static JsonCodeBlock json() {
+        return new JsonCodeBlock();
     }
 
-    static CodeBlock all(CodeBlock... blocks) {
-        Collection<String> content = new ArrayList<>();
+    @SafeVarargs
+    static <T> CodeBlock<T> all(CodeBlock<T>... blocks) {
+        Collection<T> content = new ArrayList<>();
         Language language = Language.GLSL;
-        for (CodeBlock block : blocks) {
+        for (CodeBlock<T> block : blocks) {
             content.addAll(block.content());
             language = block.language();
         }
-        return new Impl(content, language);
+        return new Impl<>(content, language);
     }
 
-    record Impl(Collection<String> content, Language language) implements CodeBlock {
+    class JsonCodeBlock implements CodeBlock<JsonElement> {
+        JsonObject jsonObject = new JsonObject();
 
         @Override
-        public CodeBlock line(String line) {
+        public Collection<JsonElement> content() {
+            return jsonObject.entrySet().stream().map(Map.Entry::getValue).toList();
+        }
+
+        @Override
+        public JsonCodeBlock line(JsonElement line) {
+            jsonObject.add(line.getAsString(), line);
+            return this;
+        }
+
+        public JsonCodeBlock line(String key, JsonElement value) {
+            jsonObject.add(key, value);
+            return this;
+        }
+
+        @Override
+        public Language language() {
+            return Language.JSON;
+        }
+    }
+
+    record Impl<T>(Collection<T> content, Language language) implements CodeBlock<T> {
+
+        @Override
+        public CodeBlock<T> line(T line) {
             content.add(line);
             return this;
         }

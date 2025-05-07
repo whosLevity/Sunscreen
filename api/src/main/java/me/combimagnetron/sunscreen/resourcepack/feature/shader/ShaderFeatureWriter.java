@@ -14,7 +14,7 @@ import java.util.List;
 public class ShaderFeatureWriter implements FeatureWriter<ShaderFeature> {
 
     @Override
-    public PackSection write(ShaderFeature feature, ResourcePack pack, @Nullable PackVersion version) {
+    public PackSection write(ShaderFeature feature, @Nullable ResourcePack pack, @Nullable PackVersion version) {
         if (version == null) {
             version = pack.fallback();
         }
@@ -47,6 +47,16 @@ public class ShaderFeatureWriter implements FeatureWriter<ShaderFeature> {
                 shader.path().path().resolve(shader.name() + ".vsh"),
                 vertex.all()
         );
+        List.of(shader.vertex(), shader.fragment(), shader.customVertex(), shader.customFragment()).forEach(shaderEntry -> {
+            switch (shaderEntry) {
+                case null -> {}
+                case Shader.Section.CustomSpec customSpec -> shader.shaderOverrides().add(customSpec.get());
+                case Shader.Section.MojangSpec mojangSpec -> insert(shader.shaderOverrides(), mojangSpec);
+                default -> {
+                }
+            }
+
+        });
         return PackSection.of(
                 List.of(customFragment, customVertex, mojangFragment, mojangVertex),
                 shader.path()
@@ -54,10 +64,13 @@ public class ShaderFeatureWriter implements FeatureWriter<ShaderFeature> {
     }
 
     private void insert(Collection<ShaderOverride> shaderOverrides, Shader.Section.MojangSpec fragment) {
+        if (fragment == null) {
+            return;
+        }
         for (ShaderOverride shaderOverride : shaderOverrides) {
             ShaderOverride.OverrideType type = shaderOverride.type();
             String target = shaderOverride.target();
-            ArrayList<String> content = (ArrayList<String>) fragment.all().content();
+            ArrayList<String> content = new ArrayList<>(fragment.all().content().stream().map(String::trim).toList());
             int index = content.indexOf(target);
             if (type == ShaderOverride.OverrideType.BEFORE) {
                 for (int i = 0; i < shaderOverride.codeBlock().content().size(); i++) {

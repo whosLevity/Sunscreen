@@ -117,13 +117,11 @@ public interface MenuConfigTransformer {
                         return integerNode.value();
                     })).forEachOrdered(elementConfigElements::add);
                     for (ConfigElement configElement : elements.elements()) {
-                        System.out.println(configElement.name());
                         if (!(configElement instanceof Section section)) {
                             continue;
                         }
                         elementConfigElements.add(section);
                     }
-                    System.out.println(elementConfigElements.size() + " " + identifier.string());
                     if (elementConfigElements.isEmpty()) {
                         SunscreenLibrary.library().logger().error("[CR006] No elements found in config file \"{}\".{}", divConfigElement.name(), fileName, ErrorMessage);
                         return null;

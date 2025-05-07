@@ -346,7 +346,6 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
                     TextDisplay display = divEntityIdHashMap.get(identifierDivEntry.getKey());
                     display.text(CanvasRenderer.optimized().render(div.render(viewer)).component());
                     send(viewer, display);
-                    System.out.println("Ticking " + element.identifier());
                     return true;
                 }
             }

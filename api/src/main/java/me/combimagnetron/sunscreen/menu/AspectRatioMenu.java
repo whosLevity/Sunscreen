@@ -17,6 +17,9 @@ import me.combimagnetron.passport.internal.entity.impl.display.TextDisplay;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.user.User;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
+import me.combimagnetron.sunscreen.element.animated.AnimatedElement;
+import me.combimagnetron.sunscreen.element.animated.Keyframe;
+import me.combimagnetron.sunscreen.hook.SunscreenHook;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
 import me.combimagnetron.sunscreen.image.Color;
@@ -28,6 +31,9 @@ import me.combimagnetron.sunscreen.element.impl.ImageElement;
 import me.combimagnetron.sunscreen.element.impl.TextElement;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.menu.simulate.Simulator;
+import me.combimagnetron.sunscreen.menu.timing.Tick;
+import me.combimagnetron.sunscreen.menu.timing.TickFailException;
+import me.combimagnetron.sunscreen.menu.timing.Tickable;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
@@ -38,15 +44,13 @@ import net.kyori.adventure.text.Component;
 import org.apache.commons.lang3.ArrayUtils;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 
-public final class AspectRatioMenu implements OpenedMenu {
+public final class AspectRatioMenu implements OpenedMenu, Tickable {
     private final static double PixelFactor = /*((40.75/16)*1/24)/100;*/0.0010;//0.04/24;
     private final Canvas spriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/spritesheet.png")));
+    private final Canvas animationSpriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/animation.png")));
     private final SunscreenUser<?> viewer;
     private final HashMap<Identifier, Div<?>> divHashMap = new HashMap<>();
     private final HashMap<Identifier, TextDisplay> divEntityIdHashMap = new HashMap<>();
@@ -56,11 +60,11 @@ public final class AspectRatioMenu implements OpenedMenu {
     private final TextDisplay cameraDisplay;
     private final TextDisplay temp;
     private boolean cursorLocked = false;
-    private boolean hover = false;
-    private int stage = 0;
-    private int gameMode = 0;
+    private int gameMode;
     private Vec2d lastInput = Vec2d.of(0, 0);
     private PacketListenerCommon listener;
+
+
 
     public AspectRatioMenu(SunscreenUser<?> viewer) {
         this.viewer = viewer;
@@ -89,15 +93,21 @@ public final class AspectRatioMenu implements OpenedMenu {
         Div<Canvas> lowerRight = Div.nonRender(Identifier.of("lower_right"));
                 //.add(ImageElement.imageElement(Canvas.image(Canvas.ImageProvider.url("https://i.imgur.com/79sGWjB.png")), Identifier.of("arrow"), Position.pixel(0,0)));
         div(lowerRight);
+        List<Keyframe> keyframes = new ArrayList<>();
+        for (int i = 0; i < 13; i++) {
+            keyframes.add(Keyframe.of(animationSpriteSheet.sub(Vec2i.of(40, 40), Vec2i.of(i * 40, 0)), 1));
+        }
+        AnimatedElement element = AnimatedElement.of(keyframes, Position.pixel(29, 70), Size.pixel(keyframes.getFirst().canvas().size()), Identifier.of("center", "animation"));
+        element.loopMode(AnimatedElement.LoopMode.LOOP);
         Div<Canvas> center = Div.div(Identifier.of("center")).size(Size.pixel(114, 140))
                 .add(ImageElement.imageElement(spriteSheet.sub(Vec2i.of(114, 140), Vec2i.of(594, 0)), Identifier.of("center", "bg"), Position.pixel(0, 0)))
                 .add(ImageElement.imageElement(spriteSheet.sub(Vec2i.of(101, 12), Vec2i.of(115, 194)), Identifier.of("center", "button"), Position.pixel(3, 125)))
                 .add(TextElement.textElement(Identifier.of("center", "button_label"), Position.pixel(13, 127), Text.text("Sneak to continue", Text.Font.vanilla()))
                         .style(Style.color(), Color.of(155, 171, 178)))
                 .add(TextElement.textElement(Identifier.of("center", "label"), Position.pixel(3, 3), Text.text("Move the arrows to\nthe corner of your\nscreen by moving\nyour mouse.", Text.Font.vanilla()))
-                        .style(Style.color(), Color.of(155, 171, 178)));
+                        .style(Style.color(), Color.of(155, 171, 178)))
+                .add(element);
         div(center);
-        Size.SizeBuilder size = (Size.SizeBuilder) Size.size().x().pixel(20).back().y().pixel(10).back();
     }
 
     private void hideCursor() {
@@ -123,7 +133,9 @@ public final class AspectRatioMenu implements OpenedMenu {
         viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), selectedAreaDisplay.id().intValue(), cameraDisplay.id().intValue()));
         divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
+        SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).forEach(hook -> hook.onMenuLeave(viewer, this));
         SunscreenLibrary.library().sessionHandler().session(Session.session(null, viewer));
+        SunscreenLibrary.library().menuTicker().stop(this);
     }
 
     private void initListener() {
@@ -215,6 +227,7 @@ public final class AspectRatioMenu implements OpenedMenu {
     }
 
     public void open(SunscreenUser<?> user) {
+        SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).forEach(hook -> hook.onMenuEnter(user, this));
         Vector3d rotation = Vector3d.vec3(user.rotation().y(), user.rotation().x(), user.rotation().z());
         user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
         initListener();
@@ -319,4 +332,25 @@ public final class AspectRatioMenu implements OpenedMenu {
         return null;
     }
 
+    @Override
+    public boolean tick(Tick tick) throws TickFailException {
+        for (Map.Entry<Identifier, Div<?>> identifierDivEntry : divHashMap.entrySet()) {
+            Div<?> div = identifierDivEntry.getValue();
+            for (Element<?> element : div.elements()) {
+                if (element instanceof Tickable tickable) {
+
+                    boolean update = tickable.tick(tick);
+                    if (!update) {
+                        return false;
+                    }
+                    TextDisplay display = divEntityIdHashMap.get(identifierDivEntry.getKey());
+                    display.text(CanvasRenderer.optimized().render(div.render(viewer)).component());
+                    send(viewer, display);
+                    System.out.println("Ticking " + element.identifier());
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 }

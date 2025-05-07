@@ -159,7 +159,7 @@ public class SunscreenCommand extends BaseCommand {
             actor.sendMessage("You already have a menu opened.");
             return;
         }
-        new AspectRatioMenu(sunscreenUser);
+        SunscreenLibrary.library().menuTicker().start(new AspectRatioMenu(sunscreenUser));
     }
 
 }

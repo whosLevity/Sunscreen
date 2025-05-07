@@ -42,7 +42,7 @@ public class UserImpl implements SunscreenUser<Player> {
         this.connection = new PacketEventsConnectionImpl<>(player);
         Node<String> node = Config.file(SunscreenLibrary.library().path().resolve("data.dt")).reader().node(uniqueIdentifier().toString());
         if (node == null) {
-            new AspectRatioMenu(this);
+            SunscreenLibrary.library().menuTicker().start(new AspectRatioMenu(this));
             return;
         }
         this.screenSize = ScreenSize.fromString(node.value());

@@ -16,14 +16,25 @@ import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.listener.AnvilListener;
 import me.combimagnetron.sunscreen.menu.listener.MenuListener;
 import me.combimagnetron.sunscreen.placeholder.PapiPlaceholderProvider;
+import me.combimagnetron.sunscreen.resourcepack.ResourcePack;
+import me.combimagnetron.sunscreen.resourcepack.feature.shader.Shader;
+import me.combimagnetron.sunscreen.resourcepack.feature.shader.ShaderFeature;
+import me.combimagnetron.sunscreen.resourcepack.meta.PackMeta;
+import me.combimagnetron.sunscreen.resourcepack.meta.PackVersion;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.user.UserManager;
 import me.combimagnetron.sunscreen.util.Identifier;
+import me.combimagnetron.sunscreen.util.Range;
+import org.apache.commons.io.IOUtils;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.codehaus.plexus.util.IOUtil;
 
+import java.io.*;
 import java.nio.file.Path;
 import java.util.Collection;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
 
 public class SunscreenPlugin extends JavaPlugin {
     private SunscreenLibrary<SunscreenPlugin, Player> library;
@@ -43,10 +54,69 @@ public class SunscreenPlugin extends JavaPlugin {
         this.library = new SunscreenLibrarySpigot(this);
         SunscreenLibrary.Holder.INSTANCE = library;
         Passport.Holder.INSTANCE = library.passport();
+        this.getDataFolder().mkdirs();
         this.userManager = new UserManager(this);
+        unzip();
         commands();
         menus();
         platformSpecific();
+        resourcePack();
+    }
+
+    private void unzip() {
+        if (getDataFolder().toPath().resolve("menus").toFile().exists()) {
+            return;
+        }
+        File file;
+        try {
+            file = File.createTempFile("files", ".zip");
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        InputStream inputStream = this.getClass().getResourceAsStream("/files.zip");
+        if (inputStream == null) {
+            throw new RuntimeException("Resource not found");
+        }
+        try(OutputStream outputStream = new FileOutputStream(file)) {
+            IOUtils.copy(inputStream, outputStream);
+            inputStream.close();
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        ZipInputStream zipInputStream = null;
+        try {
+            zipInputStream = new ZipInputStream(new FileInputStream(file));
+            ZipEntry entry;
+            while ((entry = zipInputStream.getNextEntry()) != null) {
+                if (entry.isDirectory()) {
+                    new File(getDataFolder(), entry.getName()).mkdirs();
+                } else {
+                    File file1 = new File(getDataFolder(), entry.getName());
+                    file1.getParentFile().mkdirs();
+                    try (OutputStream outputStream = new FileOutputStream(file1)) {
+                        IOUtils.copy(zipInputStream, outputStream);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                IOUtils.close(zipInputStream);
+            } catch (IOException ignored) {
+
+            }
+        }
+    }
+
+    private void resourcePack() {
+        ResourcePack pack = ResourcePack.with(
+                PackMeta.meta(
+                        PackVersion.version(Range.of(46, 48)),
+                        "Sunscreen Resource Pack",
+                        "Sunscreen Resource Pack")
+        );
+        ShaderFeature shaderFeature = pack.feature(Shader.class);
     }
 
     private void platformSpecific() {
@@ -58,7 +128,6 @@ public class SunscreenPlugin extends JavaPlugin {
     }
 
     private void menus() {
-        this.getDataFolder().mkdirs();
         Collection<MenuTemplate> templates = library.menuConfigTransformer().read(getDataFolder().toPath().resolve(Path.of("menus")));
         library.logger().info("Loaded {} menu(s).", templates.size());
         for (MenuTemplate template : templates) {

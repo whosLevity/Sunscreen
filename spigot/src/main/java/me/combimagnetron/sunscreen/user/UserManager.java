@@ -13,6 +13,8 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.util.EulerAngle;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 
 public class UserManager implements Listener, UserHandler<Player, SunscreenUser<Player>> {
@@ -20,6 +22,21 @@ public class UserManager implements Listener, UserHandler<Player, SunscreenUser<
 
     public UserManager(SunscreenPlugin library) {
         Bukkit.getServer().getPluginManager().registerEvents(this, library);
+        checkFile(library);
+    }
+
+    private void checkFile(SunscreenPlugin library) {
+        File file = new File(library.getDataFolder(), "data.dt");
+        if (file.exists()) {
+            return;
+        }
+        try {
+            if (!file.createNewFile()) {
+                throw new IOException("Failed to create file");
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @EventHandler

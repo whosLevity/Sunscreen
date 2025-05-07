@@ -115,10 +115,13 @@ public interface CanvasRenderer {
                         continue;
                     }
                     BufferedImage section = image.getSubimage(y, x, widthAdd, heightAdd);
-                    if (y != 0) {
+                    me.combimagnetron.sunscreen.util.Pair<Component, Integer> pair = PixelPattern.optimize(section, r);
+                    if (widthAdd != 3) {
+                        component.append(FontUtil.offset(-(pair.v())));
+                    } else if (y != 0) {
                         component.append(FontUtil.offset(-1));
                     }
-                    component.append(PixelPattern.optimize(section, r));
+                    component.append(pair.k());
                 }
                 if (r == -7) {
                     r = 2;

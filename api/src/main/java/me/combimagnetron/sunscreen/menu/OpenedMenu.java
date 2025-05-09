@@ -13,7 +13,6 @@ import me.combimagnetron.passport.util.condition.Supplier;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.element.impl.TextInputElement;
-import me.combimagnetron.sunscreen.hook.ClientHook;
 import me.combimagnetron.sunscreen.hook.SunscreenHook;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.CanvasRenderer;
@@ -66,6 +65,31 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public abstract void handleDamage();
 
         public abstract void handlePing(long ping);
+
+        protected void forceDivGeometry(SunscreenUser<?> viewer) {
+            for (Map.Entry<Identifier, Div<?>> entry : divHashMap.entrySet()) {
+                Div<?> div = entry.getValue();
+                for (Element<?> element : div.elements()) {
+                    if (!(element instanceof SimpleBufferedElement)) {
+                        continue;
+                    }
+                    for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
+                        div.geometry(definable.finish(viewer.screenSize().pixel(), div.size()));
+                    }
+                    for (RuntimeDefinable.Type<?, ?> definable : element.definables().stream().sorted(Comparator.comparingInt(RuntimeDefinable.Type::priority)).toList()) {
+                        if (definable instanceof RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
+                            element.geometry(geometry.finish(div.size(), div.size()));
+                        }
+                        if (definable.type() == InputHandler.class) {
+                            RuntimeDefinable.Type<InputHandler, OpenedMenu> inputHandler = (RuntimeDefinable.Type<InputHandler, OpenedMenu>) definable;
+                            TextInputElement textInputElement = (TextInputElement) element;
+                            textInputElement.inputHandler(inputHandler.finish(this));
+                        }
+                    }
+                }
+            }
+        }
+
     }
 
     non-sealed abstract class FloatImpl extends Base implements Tickable {
@@ -93,7 +117,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             this.inputHandler = new InputHandler.Impl(viewer);
             MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
             divHashMap.putAll(menuTemplate.create());
-            forceDivGeometry();
+            forceDivGeometry(viewer);
             this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             this.background = TextDisplay.textDisplay(viewer.position());
             Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).toList();
@@ -101,30 +125,6 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 hook.onMenuEnter(viewer, this);
             }
             this.simulator = null;
-        }
-
-        protected void forceDivGeometry() {
-            for (Map.Entry<Identifier, Div<?>> entry : divHashMap.entrySet()) {
-                Div<?> div = entry.getValue();
-                for (Element<?> element : div.elements()) {
-                    if (!(element instanceof SimpleBufferedElement)) {
-                        continue;
-                    }
-                    for (RuntimeDefinableGeometry.GeometryBuilder<?> definable : div.definables()) {
-                        div.geometry(definable.finish(viewer.screenSize().pixel(), div.size()));
-                    }
-                    for (RuntimeDefinable.Type<?, ?> definable : element.definables().stream().sorted(Comparator.comparingInt(RuntimeDefinable.Type::priority)).toList()) {
-                        if (definable instanceof RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
-                            element.geometry(geometry.finish(div.size(), div.size()));
-                        }
-                        if (definable.type() == InputHandler.class) {
-                            RuntimeDefinable.Type<InputHandler, OpenedMenu> inputHandler = (RuntimeDefinable.Type<InputHandler, OpenedMenu>) definable;
-                            TextInputElement textInputElement = (TextInputElement) element;
-                            textInputElement.inputHandler(inputHandler.finish(this));
-                        }
-                    }
-                }
-            }
         }
 
         @Override
@@ -156,11 +156,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 }
                 for (Element<?> element : div.elements()) {
                     if (element instanceof Tickable tickable) {
-                        if (update) {
-                            tickable.tick(tick);
-                        } else {
-                            update = tickable.tick(tick);
-                        }
+                        update = tickable.tick(tick);
                     }
                 }
                 if (update && !div.hidden()) {
@@ -490,7 +486,6 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
     class Float extends FloatImpl {
         public Float(SunscreenUser<?> viewer, MenuTemplate template) {
             super(viewer, template);
-            open(viewer);
         }
 
         public Float(SunscreenUser<?> viewer) {
@@ -500,7 +495,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 throw new IllegalStateException("template() in Float menu isn't overridden, please change or contact devs if you did override.");
             }
             divHashMap.putAll(((MenuTemplate.Simple)template()).create());
-            forceDivGeometry();
+            forceDivGeometry(viewer);
             open(viewer);
         }
 

@@ -46,7 +46,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
         this.viewer = viewer;
         this.previewSize = Vec2i.of((int) (viewer.screenSize().pixel().x() * (PreviewScale)), (int) (viewer.screenSize().pixel().y() * (PreviewScale)));
         divHashMap.putAll((build()));
-        forceDivGeometry();
+        forceDivGeometry(viewer);
         open(viewer);
         hide(Identifier.of("editor", "preview"));
         hide(Identifier.of("editor", "creation_popup"));
@@ -198,7 +198,7 @@ public class EditorMenu extends OpenedMenu.FloatImpl {
                             .order(1);
                     divHashMap.put(previewId, previewDiv);
                     BufferedImage canvas = ((Canvas.StaticImpl)previewDiv.render(viewer)).image();
-                    forceDivGeometry();
+                    forceDivGeometry(viewer);
                     render(previewDiv);
                     add += 25;
                 }

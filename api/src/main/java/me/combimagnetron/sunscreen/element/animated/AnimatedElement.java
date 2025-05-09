@@ -12,7 +12,10 @@ import me.combimagnetron.sunscreen.menu.timing.Tickable;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.RuntimeDefinable;
+import me.combimagnetron.sunscreen.util.Vec2i;
+import org.checkerframework.checker.units.qual.A;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -48,6 +51,21 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
         return new Impl(keyframes, position, size, identifier);
     }
 
+    static AnimatedElement of(Canvas canvas, Vec2i grid, long holdTime, Position position, Size size, Identifier identifier) {
+        List<Keyframe> keyframes = new ArrayList<>();
+        for (int x = 0; x < grid.x(); x++) {
+            Vec2i section = canvas.size().div(grid.x(), grid.y());
+            for (int y = 0; y < grid.y(); y++) {
+                keyframes.add(Keyframe.of(canvas.sub(section, Vec2i.of(x * section.x(), y * section.y())), holdTime));
+            }
+        }
+        return new Impl(keyframes, position, size, identifier);
+    }
+
+    static AnimatedElement of(Canvas canvas, Vec2i grid, Position position, Size size, Identifier identifier) {
+        return of(canvas, grid, 1, position, size, identifier);
+    }
+
     class Impl implements AnimatedElement {
         private final List<Keyframe> keyframes;
         private final Position position;
@@ -57,10 +75,13 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
         private long time = 0;
         private int index = 0;
         private long totalTime = 0;
-        private LoopMode loopMode = LoopMode.NONE;
+        private LoopMode loopMode = LoopMode.LOOP;
 
         public Impl(List<Keyframe> keyframes, Position position, Size size, Identifier identifier) {
             this.keyframes = keyframes;
+            for (Keyframe keyframe : keyframes) {
+                totalTime += keyframe.holdTime();
+            }
             this.currentKeyframe = keyframes.getFirst();
             this.position = position;
             this.size = size;
@@ -74,11 +95,11 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
 
         @Override
         public void next() {
-            if (index + 1 > keyframes.size() - 1) {
+            index++;
+            if (index > keyframes.size() - 1) {
                 index = 0;
             }
-            currentKeyframe = keyframe(index + 1);
-            index++;
+            currentKeyframe = keyframe(index);
         }
 
         @Override
@@ -88,7 +109,7 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
 
         @Override
         public Keyframe keyframe(int index) {
-            return (Keyframe) keyframes.toArray()[index];
+            return keyframes.get(index);
         }
 
         @Override
@@ -194,6 +215,7 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
 
         @Override
         public boolean tick(Tick tick) throws TickFailException {
+            time++;
             if (time + currentKeyframe.holdTime() > totalTime) {
                 switch (loopMode) {
                     case NONE:
@@ -203,8 +225,10 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
                         break;
                 }
             }
-            time += 1;
-            next();
+            if (time >= currentKeyframe.holdTime()) {
+                next();
+                time = 0;
+            }
             return true;
         }
     }

@@ -17,8 +17,12 @@ import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
+import me.combimagnetron.sunscreen.menu.builtin.setup.UserSetupMenu;
 import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.session.Session;
+import me.combimagnetron.sunscreen.util.Pair;
+import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 import net.kyori.adventure.inventory.Book;
 import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
@@ -30,7 +34,7 @@ import java.util.UUID;
 public class UserImpl implements SunscreenUser<Player> {
     private final Player player;
     private final Connection connection;
-    private ScreenSize screenSize;
+    private ScreenSize screenSize = ScreenSize.of(Vec2i.of(200, 200), Pair.of(Vec2d.of(-0.11083211535, -0.11083211535), Vec2d.of(0.11083211535, 0.11083211535)));
     private float fov = 70;
 
     public static UserImpl of(Player player) {
@@ -42,7 +46,13 @@ public class UserImpl implements SunscreenUser<Player> {
         this.connection = new PacketEventsConnectionImpl<>(player);
         Node<String> node = Config.file(SunscreenLibrary.library().path().resolve("data.dt")).reader().node(uniqueIdentifier().toString());
         if (node == null) {
-            SunscreenLibrary.library().menuTicker().start(new AspectRatioMenu(this));
+            AspectRatioMenu menu = new AspectRatioMenu(this);
+            SunscreenLibrary.library().menuTicker().start(menu);
+            SunscreenLibrary.library().sessionHandler().session(Session.session(menu, this));
+            return;
+        }
+        if (node.value() == null) {
+            SunscreenLibrary.library().menuTicker().start(new UserSetupMenu(this));
             return;
         }
         this.screenSize = ScreenSize.fromString(node.value());
@@ -136,6 +146,7 @@ public class UserImpl implements SunscreenUser<Player> {
     public Session open(MenuTemplate template) {
         OpenedMenu.FloatImpl menu = new OpenedMenu.Float(this, template);
         SunscreenLibrary.library().menuTicker().start(menu);
+        menu.open(this);
         Session session = Session.session(menu, this);
         return SunscreenLibrary.library().sessionHandler().session(session);
     }

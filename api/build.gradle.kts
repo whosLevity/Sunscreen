@@ -7,7 +7,7 @@ group = "me.combimagnetron"
 version = "1.0-SNAPSHOT"
 
 repositories {
-    maven("https://repo.combimagnetron.xyz/releases/")
+    maven("https://repo.tikite.ch/releases")
     mavenCentral()
     maven("https://repo.papermc.io/repository/maven-public/")
     maven("https://jitpack.io")
@@ -38,7 +38,7 @@ publishing {
     repositories {
         maven {
             name = "combimagnetron"
-            url = uri("http://repo.combimagnetron.xyz/releases/")
+            url = uri("http://repo.tikite.ch/releases/")
             credentials(PasswordCredentials::class)
             authentication {
                 create<BasicAuthentication>("basic")

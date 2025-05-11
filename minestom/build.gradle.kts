@@ -7,7 +7,7 @@ version = "0.1.0"
 
 repositories {
     mavenCentral()
-    maven("https://repo.combimagnetron.xyz/releases/")
+    maven("https://repo.tikite.ch/releases")
     maven("https://jitpack.io")
     maven("https://repo.codemc.io/repository/maven-releases/")
     maven("https://repo.aikar.co/content/groups/aikar/")

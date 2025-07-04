@@ -7,12 +7,24 @@ import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerEn
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerSpawnEntity;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerTimeUpdate;
 import me.combimagnetron.passport.PacketEventsConnectionImpl;
+import me.combimagnetron.passport.config.Config;
+import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.internal.entity.Entity;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.internal.network.Connection;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
+import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
+import me.combimagnetron.sunscreen.menu.MenuTemplate;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
+import me.combimagnetron.sunscreen.menu.builtin.setup.UserSetupMenu;
+import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.session.Session;
+import me.combimagnetron.sunscreen.util.Pair;
+import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
+import net.kyori.adventure.inventory.Book;
+import net.kyori.adventure.text.Component;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -22,7 +34,7 @@ import java.util.UUID;
 public class UserImpl implements SunscreenUser<Player> {
     private final Player player;
     private final Connection connection;
-    private ScreenSize screenSize;
+    private ScreenSize screenSize = ScreenSize.of(Vec2i.of(200, 200), Pair.of(Vec2d.of(-0.11083211535, -0.11083211535), Vec2d.of(0.11083211535, 0.11083211535)));
     private float fov = 70;
 
     public static UserImpl of(Player player) {
@@ -32,6 +44,18 @@ public class UserImpl implements SunscreenUser<Player> {
     private UserImpl(Player player) {
         this.player = player;
         this.connection = new PacketEventsConnectionImpl<>(player);
+        Node<String> node = Config.file(SunscreenLibrary.library().path().resolve("data.dt")).reader().node(uniqueIdentifier().toString());
+        if (node == null) {
+            AspectRatioMenu menu = new AspectRatioMenu(this);
+            SunscreenLibrary.library().menuTicker().start(menu);
+            SunscreenLibrary.library().sessionHandler().session(Session.session(menu, this));
+            return;
+        }
+        if (node.value() == null) {
+            SunscreenLibrary.library().menuTicker().start(new UserSetupMenu(this));
+            return;
+        }
+        this.screenSize = ScreenSize.fromString(node.value());
     }
 
     @Override
@@ -115,7 +139,26 @@ public class UserImpl implements SunscreenUser<Player> {
 
     @Override
     public Session session() {
-        return SunscreenLibrary.library().sessionHandler().session(this);
+        return SunscreenLibrary.library().sessionHandler().session(this) == null ? new Session.Impl(null, this) : SunscreenLibrary.library().sessionHandler().session(this);
+    }
+
+    @Override
+    public Session open(MenuTemplate template) {
+        OpenedMenu.FloatImpl menu = new OpenedMenu.Float(this, template);
+        SunscreenLibrary.library().menuTicker().start(menu);
+        menu.open(this);
+        Session session = Session.session(menu, this);
+        return SunscreenLibrary.library().sessionHandler().session(session);
+    }
+
+    @Override
+    public float worldTime() {
+        return player.getWorld().getTime();
+    }
+
+    @Override
+    public void resendInv() {
+        player.updateInventory();
     }
 
 }

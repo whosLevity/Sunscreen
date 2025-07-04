@@ -2,7 +2,10 @@ package me.combimagnetron.sunscreen.image;
 
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.effect.Effect;
+import me.combimagnetron.sunscreen.menu.Size;
+import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.Vec2d;
+import me.combimagnetron.sunscreen.util.Vec2i;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -14,21 +17,25 @@ import java.nio.file.Path;
 
 public interface Canvas {
 
-    Canvas sub(Vec2d size, Vec2d coords);
+    Canvas sub(Vec2i size, Vec2i coords);
 
     Canvas pixel(Pixel pixel);
 
-    Canvas place(Canvas canvas, Vec2d coords);
+    Canvas place(Canvas canvas, Vec2i coords);
 
-    Canvas fill(Vec2d coords, Vec2d size, me.combimagnetron.sunscreen.image.Color color);
+    Canvas fill(Vec2i coords, Vec2i size, me.combimagnetron.sunscreen.image.Color color);
 
     Canvas trim();
 
     Canvas scale(Vec2d scale);
 
-    Vec2d size();
+    Canvas text(Text text, Vec2i coords, Color color);
 
-    Pixel pixel(Vec2d coords);
+    Canvas text(Text text, Vec2i coords);
+
+    Vec2i size();
+
+    Pixel pixel(Vec2i coords);
 
     boolean animated();
 
@@ -40,8 +47,15 @@ public interface Canvas {
         return new StaticImpl(image);
     }
 
-    static Canvas image(Vec2d size) {
-        return new StaticImpl(new BufferedImage(size.xi(), size.yi(), 2));
+    static Canvas image(Size size) {
+        if (size == null) {
+            return new StaticImpl(new BufferedImage(256, 256, 2));
+        }
+        return new StaticImpl(new BufferedImage((int) size.x().pixel(), (int) size.y().pixel(), 2));
+    }
+
+    static Canvas image(Vec2i size) {
+        return new StaticImpl(new BufferedImage(size.x(), size.y(), 2));
     }
 
     static Canvas image(ImageProvider imageProvider) {
@@ -60,8 +74,8 @@ public interface Canvas {
         }
 
         @Override
-        public Canvas sub(Vec2d size, Vec2d coords) {
-            return new StaticImpl(image.getSubimage(coords.xi(), coords.yi(), size.xi(), size.yi()));
+        public Canvas sub(Vec2i size, Vec2i coords) {
+            return new StaticImpl(image.getSubimage(coords.x(), coords.y(), size.x(), size.y()));
         }
 
         public BufferedImage image() {
@@ -75,19 +89,19 @@ public interface Canvas {
         }
 
         @Override
-        public Canvas place(Canvas canvas, Vec2d coords) {
+        public Canvas place(Canvas canvas, Vec2i coords) {
             BufferedImage place = ((InternalCanvas) canvas).image();
             Graphics2D graphics = image.createGraphics();
-            graphics.drawImage(place, coords.xi(), coords.yi(), null);
+            graphics.drawImage(place, coords.x(), coords.y(), null);
             graphics.dispose();
             return new StaticImpl(image);
         }
 
         @Override
-        public Canvas fill(Vec2d coords, Vec2d size, me.combimagnetron.sunscreen.image.Color color) {
+        public Canvas fill(Vec2i coords, Vec2i size, me.combimagnetron.sunscreen.image.Color color) {
             Graphics2D graphics = image.createGraphics();
             graphics.setColor(new java.awt.Color(color.rgb()));
-            graphics.fillRect(coords.xi(), coords.yi(), size.xi(), size.yi());
+            graphics.fillRect(coords.x(), coords.y(), size.x(), size.y());
             graphics.dispose();
             return new StaticImpl(image);
         }
@@ -103,13 +117,28 @@ public interface Canvas {
         }
 
         @Override
-        public Vec2d size() {
-            return Vec2d.of(image.getWidth(), image.getHeight());
+        public Canvas text(Text text, Vec2i coords, Color color) {
+            Graphics2D graphics = image.createGraphics();
+            graphics.setColor(new java.awt.Color(color.rgb()));
+            graphics.setFont(text.font().internal());
+            graphics.drawString(text.content(), coords.x(), coords.y());
+            graphics.dispose();
+            return this;
         }
 
         @Override
-        public Pixel pixel(Vec2d coords) {
-            return Pixel.of(coords, me.combimagnetron.sunscreen.image.Color.of(image.getRGB(coords.xi(), coords.yi())));
+        public Canvas text(Text text, Vec2i coords) {
+            return text(text, coords, Color.white());
+        }
+
+        @Override
+        public Vec2i size() {
+            return Vec2i.of(image.getWidth(), image.getHeight());
+        }
+
+        @Override
+        public Pixel pixel(Vec2i coords) {
+            return Pixel.of(coords, me.combimagnetron.sunscreen.image.Color.of(image.getRGB(coords.x(), coords.y())));
         }
 
         @Override
@@ -176,7 +205,7 @@ public interface Canvas {
         int width = image.getWidth();
         int height = image.getHeight();
 
-        int top = 0, bottom = height - 1, left = 0, right = width - 1;
+        int top, bottom, left, right;
         boolean emptyRow;
         searchTop:
         for (top = 0; top < height; top++) {
@@ -208,7 +237,7 @@ public interface Canvas {
     private static boolean isNonEmptyPixel(BufferedImage image, int x, int y) {
         int pixel = image.getRGB(x, y);
         java.awt.Color color = new java.awt.Color(pixel, true);
-        return color.getAlpha() != 0; // Checks if the pixel is non-transparent
+        return color.getAlpha() != 0;
     }
 
 }

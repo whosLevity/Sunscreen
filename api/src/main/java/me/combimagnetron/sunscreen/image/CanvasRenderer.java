@@ -3,6 +3,8 @@ package me.combimagnetron.sunscreen.image;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.google.common.cache.CacheBuilder;
+import com.google.common.collect.BiMap;
+import com.google.common.collect.HashBiMap;
 import me.combimagnetron.passport.util.Pair;
 import me.combimagnetron.sunscreen.util.*;
 import net.kyori.adventure.text.Component;
@@ -14,10 +16,7 @@ import java.awt.image.ImageFilter;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 public interface CanvasRenderer {
     OptimizedCanvasRenderer OPTIMIZED = new OptimizedCanvasRenderer();
@@ -26,10 +25,56 @@ public interface CanvasRenderer {
 
     Frame render(Canvas canvas);
 
-    record Frame(Component component, int width, int height) {
+    record Frame(Component component, int width, int height, int r) {
 
-        public static Frame wrap(Component component, int width, int height) {
-            return new Frame(component, width, height);
+        public static Frame wrap(Component component, int width, int height, int r) {
+            return new Frame(component, width, height, r);
+        }
+
+    }
+
+    record Pattern(Collection<String> pattern, Map<String, Color> colorMap) {
+
+        public static Pattern of(Collection<String> pattern, BiMap<String, Color> colorMap) {
+            return new Pattern(pattern, colorMap);
+        }
+    }
+
+    class CanvasPattenizer {
+
+        public Pattern patternize(BufferedImage image) {
+            Collection<String> pattern = new ArrayList<>();
+            BiMap<String, Color> colorMap = HashBiMap.create();
+            for (int x = 0; x < image.getHeight(); x += 1) {
+                for (int y = 0; y < image.getWidth(); y += 1) {
+                    if (x + 1 > image.getHeight() || y + 1 > image.getWidth()) {
+                        continue;
+                    }
+                    BufferedImage section = image.getSubimage(y, x, 1, 1);
+                    String patterned = patternize(section, null);
+                    pattern.add(patterned);
+                    colorMap.put(patterned, Color.of(section.getRGB(0, 0)));
+                }
+            }
+            return Pattern.of(pattern, colorMap);
+        }
+
+        private String patternize(BufferedImage image, BiMap<String, Color> colorMap) {
+            StringBuilder builder = new StringBuilder();
+            for (int x = 0; x < image.getHeight(); x++) {
+                for (int y = 0; y < image.getWidth(); y++) {
+                    if (x + 1 > image.getHeight() || y + 1 > image.getWidth()) {
+                        continue;
+                    }
+                    Color color = Color.of(image.getRGB(y, x));
+                    if (colorMap != null && colorMap.containsValue(color)) {
+                        builder.append(colorMap.inverse().get(color));
+                    } else {
+                        builder.append(" ");
+                    }
+                }
+            }
+            return builder.toString();
         }
 
     }
@@ -53,28 +98,44 @@ public interface CanvasRenderer {
             BufferedImage image = internalCanvas.image();
             int r = 3;
             TextComponent.Builder component = Component.text();
-            for (int x = 0; x < image.getHeight(); x += 3) {
-                if (image.getHeight() -x < 3) {
-                    component.append(FontUtil.offset((image.getWidth() - (image.getWidth() % 3))));
-                    component.append(Component.newline(), Component.newline(), Component.newline());
+            int realHeight = image.getHeight() - 1;
+            int realWidth = image.getWidth() - 1;
+            boolean isPerfect = image.getWidth() % 3 == 0;
+            for (int x = 0; x <= realHeight; x += 3) {
+                int heightAdd = 3;
+                if (x + 3 > realHeight) {
+                    heightAdd = realHeight - x;
                 }
-                for (int y = 0; y < image.getWidth(); y += 3) {
-                    if (x + 3 > image.getHeight() || y + 3 > image.getWidth()) {
+                for (int y = 0; y <= realWidth; y += 3) {
+                    int widthAdd = 3;
+                    if (y + 3 > realWidth) {
+                        widthAdd = realWidth - y;
+                    }
+                    if (widthAdd <= 0 || heightAdd <= 0) {
                         continue;
                     }
-                    BufferedImage section = image.getSubimage(y, x, 3, 3);
-                    component.append(FontUtil.offset(-1), PixelPattern.optimize(section, r));
+                    BufferedImage section = image.getSubimage(y, x, widthAdd, heightAdd);
+                    me.combimagnetron.sunscreen.util.Pair<Component, Integer> pair = PixelPattern.optimize(section, r);
+                    if (widthAdd != 3) {
+                        component.append(FontUtil.offset(-(pair.v())));
+                    } else if (y != 0) {
+                        component.append(FontUtil.offset(-1));
+                    }
+                    component.append(pair.k());
                 }
                 if (r == -7) {
                     r = 2;
                     component.append(Component.newline(), Component.newline(), Component.newline());
-                } else if (!(image.getHeight() -x < 3)) {
+                } else if (!(realHeight -x < 3)) {
                     r--;
-                    component.append(FontUtil.offset(-(image.getWidth() - (image.getWidth() % 3))));
+                    component.append(FontUtil.offset(-(image.getWidth())));
+                } else {
+                    r--;
+                    component.append(FontUtil.offset((image.getWidth())));
                 }
             }
             Component finished = component.build();
-            return Frame.wrap(finished, image.getWidth(), image.getHeight());});
+            return Frame.wrap(finished, image.getWidth(), image.getHeight(), r);});
         }
     }
 
@@ -85,7 +146,7 @@ public interface CanvasRenderer {
         public Frame render(Canvas canvas) {
             BufferedImage image = ((Canvas.InternalCanvas) canvas).image();
             if (cache.asMap().containsKey(canvas.hashCode())) {
-                return Frame.wrap(cache.getIfPresent(canvas.hashCode()), image.getWidth(), image.getHeight());
+                return Frame.wrap(cache.getIfPresent(canvas.hashCode()), image.getWidth(), image.getHeight(), -1);
             }
             Frame frame = super.render(canvas);
             cache.put(frame.component.hashCode(), frame.component);
@@ -112,12 +173,11 @@ public interface CanvasRenderer {
             String find = MiniMessage.miniMessage().serialize(super.render(Canvas.image(changed)).component());
             Canvas remove = Canvas.image(canvas.size());
             for (Box box : difference.changes()) {
-                remove = remove.place(possibility.first().sub(Vec2d.of(box.size().x(), box.size().y()), Vec2d.of(box.pos().x(), box.pos().y())), Vec2d.of(box.pos().x(), box.pos().y()));
+                remove = remove.place(possibility.first().sub(Vec2i.of(box.size().x(), box.size().y()), Vec2i.of(box.pos().x(), box.pos().y())), Vec2i.of(box.pos().x(), box.pos().y()));
             }
             String replace = MiniMessage.miniMessage().serialize(super.render(remove).component());
             String result = find.replaceAll(replace, find);
-            System.out.println(replace);
-            return Frame.wrap(MiniMessage.miniMessage().deserialize(result), image.getWidth(), image.getHeight());
+            return Frame.wrap(MiniMessage.miniMessage().deserialize(result), image.getWidth(), image.getHeight(), -1);
         }
 
         //TODO Use boundingboxes to find the differences and only rerender the changed parts and replace them in the cached component

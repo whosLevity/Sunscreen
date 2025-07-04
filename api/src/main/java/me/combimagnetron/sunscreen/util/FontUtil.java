@@ -1,8 +1,10 @@
 package me.combimagnetron.sunscreen.util;
 
+import com.github.retrooper.packetevents.protocol.component.ComponentType;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 
 import java.util.HashMap;
@@ -33,7 +35,7 @@ public class FontUtil {
     }
 
     public static TextComponent offset(int pixels) {
-        return (TextComponent) Component.text(getOffsetText(pixels)).font(Key.key(OFFSET_FONT_NAME));
+        return (TextComponent) Component.text(textOffset(pixels)).font(Key.key(OFFSET_FONT_NAME));
     }
 
     public static Component multiOffset(Component text, Vec2d addedPos) {
@@ -58,7 +60,7 @@ public class FontUtil {
         return text.color(TextColor.color(250, x, y));
     }
 
-    public static String getOffsetText(int pixels) {
+    public static String textOffset(int pixels) {
         final StringBuilder builder = new StringBuilder();
         if (pixels == 0)
             return builder.toString();

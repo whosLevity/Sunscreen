@@ -1,13 +1,13 @@
 package me.combimagnetron.sunscreen.menu.draft;
 
 import me.combimagnetron.sunscreen.menu.Editable;
-import me.combimagnetron.sunscreen.menu.element.div.Edit;
-import me.combimagnetron.sunscreen.menu.element.div.ScrollableDiv;
+import me.combimagnetron.sunscreen.element.div.Edit;
+import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.menu.element.Element;
-import me.combimagnetron.sunscreen.menu.element.Position;
-import me.combimagnetron.sunscreen.menu.element.div.Div;
+import me.combimagnetron.sunscreen.element.Element;
+import me.combimagnetron.sunscreen.menu.Position;
+import me.combimagnetron.sunscreen.element.div.Div;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -32,6 +32,11 @@ public interface Draft {
 
         public ElementSubSection position(Position pos) {
             element.add(d -> d.position(pos));
+            return this;
+        }
+
+        public <T> ElementSubSection edit(Class<T> type, Function<T, Element> edit) {
+            element.add((Function<Element, Element>) edit);
             return this;
         }
 

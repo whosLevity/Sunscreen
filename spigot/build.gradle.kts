@@ -17,15 +17,17 @@ configurations {
 
 repositories {
     mavenCentral()
+    maven("https://mvn.lumine.io/repository/maven-public/")
     maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/")
     maven("https://jitpack.io")
-    maven("http://repo.combimagnetron.xyz/releases/") {
-        isAllowInsecureProtocol = true
-    }
+    maven("https://repo.tikite.ch/releases")
     maven("https://repo.papermc.io/repository/maven-public/")
-    maven { url = uri("https://repo.codemc.io/repository/maven-releases/") }
-
-    maven { url = uri("https://repo.codemc.io/repository/maven-snapshots/") }
+    maven("https://repo.codemc.io/repository/maven-releases/")
+    maven("https://repo.codemc.io/repository/maven-snapshots/")
+    maven("https://repo.extendedclip.com/releases/")
+    maven("https://repo.aikar.co/content/groups/aikar/")
+    maven("https://jitpack.io")
+    maven("https://repo.nexomc.com/releases")
 }
 
 private val configuration : String = "reobf"
@@ -43,9 +45,10 @@ java {
 tasks {
     runServer {
         minecraftVersion("1.21.4")
-        jvmArgs("-Dcom.mojang.eula.agree=true")
+        jvmArgs("-Dcom.mojang.eula.agree=true", "-Dfile.encoding=UTF-8", "--nogui")
         downloadPlugins {
             github("retrooper", "packetevents", "v2.7.0", "packetevents-spigot-2.7.0.jar")
+            hangar("PlaceholderAPI", "2.11.6")
         }
     }
 
@@ -76,13 +79,31 @@ tasks.withType(xyz.jpenilla.runtask.task.AbstractRun::class) {
     jvmArgs("-XX:+AllowEnhancedClassRedefinition")
 }
 
+tasks.withType<JavaCompile> {
+    options.compilerArgs.add("-parameters")
+}
+
+val betterHudVersion = "1.12.2"
+val adventureVersion = "4.20.0"
+
 dependencies {
     implementation(project(":api"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
-    compileOnly("net.kyori:adventure-api:4.14.0")
-    compileOnly("net.kyori:adventure-text-serializer-gson:4.14.0")
-    compileOnly("io.papermc.paper:paper-api:1.21.3-R0.1-SNAPSHOT")
+    implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
+    compileOnly("commons-io:commons-io:2.18.0")
+    compileOnly("me.clip:placeholderapi:2.11.6")
+    compileOnly("net.kyori:adventure-api:${adventureVersion}")
+    compileOnly("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
+    compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
     compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
+    compileOnly("io.lumine.mythichud:api:1.2.3-20250425.220049-1")
+    compileOnly("io.github.toxicity188:BetterHud-standard-api:${betterHudVersion}")
+    compileOnly("io.github.toxicity188:BetterHud-bukkit-api:${betterHudVersion}")
+    compileOnly("io.github.toxicity188:BetterCommand:1.4.3")
+    compileOnly("com.github.NEZNAMY:TAB-API:5.2.0")
+    compileOnly("com.nexomc:nexo:1.5.0")
+    compileOnly("team.unnamed:creative-api:1.7.3")
+    compileOnly("team.unnamed:creative-serializer-minecraft:1.7.3")
 }
 
 bukkit {
@@ -98,11 +119,11 @@ bukkit {
         "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.22",
         "commons-io:commons-io:2.18.0",
         "com.github.ben-manes.caffeine:caffeine:3.2.0",
-        "org.apache.commons:commons-lang3:3.17.0"
         )
     website = "https://combimagnetron.me"
 
     dependencies {
         depend = listOf("packetevents")
+        softDepend = listOf("MythicHUD", "BetterHud", "TAB")
     }
 }

@@ -1,5 +1,6 @@
 package me.combimagnetron.sunscreen.image;
 
+import me.combimagnetron.sunscreen.util.Pair;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -1581,10 +1582,10 @@ public interface PixelPattern {
 
     }
 
-    static Component optimize(BufferedImage section, int font) {
+    static Pair<Component, Integer> optimize(BufferedImage section, int font) {
         LinkedHashMap<java.awt.Color, ColorGroup> colorGroups = new LinkedHashMap<>();
-        for (int y = 0; y < section.getWidth(); y++) {
-            for (int x = 0; x < section.getHeight(); x++) {
+        for (int y = 0; y < section.getHeight(); y++) {
+            for (int x = 0; x < section.getWidth(); x++) {
                 int rgb = section.getRGB(x, y);
                 java.awt.Color color = new java.awt.Color(rgb);
                 colorGroups.computeIfAbsent(color, c -> new ColorGroup());
@@ -1593,15 +1594,20 @@ public interface PixelPattern {
         }
         boolean first = true;
         Component component = Component.empty();
+        int width = 0;
         for (Map.Entry<java.awt.Color, ColorGroup> group : colorGroups.entrySet()) {
             PixelPattern pixelPattern = find(group.getValue());
+            if (pixelPattern == null) {
+                continue;
+            }
+            width = Math.max(width, pixelPattern.width());
             if (!first) {
                 component = component.append(Component.text("4").font(Key.key(NAMESPACE, "patterns_" + font)));
             }
             first = false;
             component = component.append(Component.text(pixelPattern.symbol()).color(TextColor.color(group.getKey().getRGB()))).font(Key.key(NAMESPACE, "patterns_" + font));
         }
-        return component;
+        return Pair.of(component, width);
     }
 
     static PixelPattern find(ColorGroup group) {

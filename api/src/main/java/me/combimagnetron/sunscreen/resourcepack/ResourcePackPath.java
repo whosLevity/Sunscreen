@@ -7,12 +7,12 @@ import org.jetbrains.annotations.NotNull;
 import java.nio.file.Path;
 
 public class ResourcePackPath implements Comparable<ResourcePackPath> {
-    private final ResourcePackFeature<?> feature;
-    private Path path;
+    private final Path path;
 
-    protected ResourcePackPath(ResourcePackFeature<?> feature) {
-        this.feature = feature;
+    protected ResourcePackPath(Path path) {
+        this.path = path;
     }
+
 
     @Override
     public int compareTo(@NotNull ResourcePackPath o) {
@@ -23,10 +23,8 @@ public class ResourcePackPath implements Comparable<ResourcePackPath> {
         return path;
     }
 
-    public JsonElement json() {
-        JsonObject object = new JsonObject();
-        object.addProperty("path", path.toString());
-        return object;
+    public Path resolve(ResourcePackFeature<?, ?> feature) {
+        return path;
     }
 
 }

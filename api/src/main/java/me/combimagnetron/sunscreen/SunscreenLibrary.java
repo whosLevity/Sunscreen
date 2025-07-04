@@ -1,9 +1,10 @@
 package me.combimagnetron.sunscreen;
 
 import me.combimagnetron.passport.Passport;
-import me.combimagnetron.passport.event.EventBus;
 import me.combimagnetron.passport.user.UserHandler;
 import me.combimagnetron.sunscreen.config.Config;
+import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
+import me.combimagnetron.sunscreen.registry.MenuRegistry;
 import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.session.SessionHandler;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
@@ -35,6 +36,10 @@ public interface SunscreenLibrary<T, P extends Audience> {
     Config config();
 
     Logger logger();
+
+    MenuRegistry menuRegistry();
+
+    MenuConfigTransformer menuConfigTransformer();
 
     final class Holder {
         public static SunscreenLibrary<?, ? extends Audience> INSTANCE = null;

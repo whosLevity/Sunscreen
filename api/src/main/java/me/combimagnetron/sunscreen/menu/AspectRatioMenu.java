@@ -8,6 +8,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientEntityAction;
+import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerInput;
 import com.github.retrooper.packetevents.wrapper.play.client.WrapperPlayClientPlayerRotation;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import me.combimagnetron.passport.config.Config;
@@ -170,6 +171,12 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
                         leave();
                     }
 
+                } else if (event.getPacketType() == PacketType.Play.Client.PLAYER_INPUT) {
+                    WrapperPlayClientPlayerInput packet = new WrapperPlayClientPlayerInput(event);
+                    if (!packet.isShift()) {
+                        return;
+                    }
+                    leave();
                 }
             }
         }, PacketListenerPriority.LOWEST);

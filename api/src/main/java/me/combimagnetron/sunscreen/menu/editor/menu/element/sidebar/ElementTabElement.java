@@ -1,16 +1,16 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar;
+package me.combimagnetron.sunscreen.menu.editor.menu.element.sidebar;
 
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.menu.Size;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
+import me.combimagnetron.sunscreen.menu.editor.menu.element.SectionElement;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 public class ElementTabElement extends SimpleBufferedElement {
     private Position position = Position.pixel(0, 0);
@@ -24,7 +24,7 @@ public class ElementTabElement extends SimpleBufferedElement {
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return render();
     }
 

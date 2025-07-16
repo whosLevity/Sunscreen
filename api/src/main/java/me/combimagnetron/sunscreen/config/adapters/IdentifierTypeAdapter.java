@@ -5,10 +5,12 @@ import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
 import me.combimagnetron.sunscreen.config.ConfigTypeAdapter;
 import me.combimagnetron.sunscreen.util.Identifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 public class IdentifierTypeAdapter implements ConfigTypeAdapter<Identifier> {
     @Override
-    public Identifier direct(ConfigElement element) {
+    public @Nullable Identifier direct(@NotNull ConfigElement element) {
         if (!ConfigTypeAdapter.isNode(element)) {
             return null;
         }
@@ -20,7 +22,7 @@ public class IdentifierTypeAdapter implements ConfigTypeAdapter<Identifier> {
     }
 
     @Override
-    public Identifier find(Section section) {
+    public @Nullable Identifier find(@NotNull Section section) {
         Node<String> node = ConfigTypeAdapter.find(section, "identifier", String.class);
         if (node == null) {
             return null;

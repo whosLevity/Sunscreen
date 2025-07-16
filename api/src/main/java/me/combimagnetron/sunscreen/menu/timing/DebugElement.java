@@ -4,7 +4,7 @@ import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.Size;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
@@ -12,8 +12,8 @@ import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 public class DebugElement extends SimpleBufferedElement implements Tickable {
     private final SunscreenUser<?> user;
@@ -25,7 +25,7 @@ public class DebugElement extends SimpleBufferedElement implements Tickable {
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         OpenedMenu openedMenu = user.session().menu();
         if (openedMenu == null) {
             return Canvas.image(size());

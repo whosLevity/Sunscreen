@@ -6,14 +6,6 @@ public interface ItemModel {
 
     ResourcePackPath path();
 
-
-
-    interface Legacy extends ItemModel {
-
-        int customModelData();
-
-    }
-
     interface Modern extends ItemModel {
 
         String model();

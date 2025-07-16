@@ -2,7 +2,7 @@ package me.combimagnetron.sunscreen.element.div;
 
 import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.menu.Editable;
+import me.combimagnetron.sunscreen.menu.editor.Editable;
 import me.combimagnetron.sunscreen.element.Element;
 
 import java.util.List;

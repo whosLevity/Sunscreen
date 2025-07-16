@@ -1,8 +1,8 @@
 plugins {
     id("java")
-    id("net.minecrell.plugin-yml.bukkit") version "0.6.0"
     id("com.github.johnrengelman.shadow") version "8.1.1"
     id("xyz.jpenilla.run-paper") version "2.3.1"
+    id("de.eldoria.plugin-yml.bukkit") version "0.7.1"
     //id("org.gradle.toolchains.foojay-resolver-convention") version "0.9.0"
 }
 
@@ -30,9 +30,7 @@ repositories {
     maven("https://repo.nexomc.com/releases")
 }
 
-private val configuration : String = "reobf"
-
-configurations.all() {
+configurations.all {
     resolutionStrategy {
         cacheChangingModulesFor(0, "seconds")
     }
@@ -44,10 +42,10 @@ java {
 
 tasks {
     runServer {
-        minecraftVersion("1.21.4")
+        minecraftVersion("1.21.7")
         jvmArgs("-Dcom.mojang.eula.agree=true", "-Dfile.encoding=UTF-8", "--nogui")
         downloadPlugins {
-            github("retrooper", "packetevents", "v2.7.0", "packetevents-spigot-2.7.0.jar")
+            github("retrooper", "packetevents", "v2.9.1", "packetevents-spigot-2.9.1.jar")
             hangar("PlaceholderAPI", "2.11.6")
         }
     }
@@ -90,13 +88,19 @@ dependencies {
     implementation(project(":api"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
     implementation("co.aikar:acf-paper:0.5.1-SNAPSHOT")
-    compileOnly("commons-io:commons-io:2.18.0")
+    library("commons-io:commons-io:2.18.0")
+    library("com.google.guava:guava:31.1-jre")
+    library("org.apache.commons:commons-lang3:3.17.0")
+    library("org.jetbrains.kotlin:kotlin-reflect:1.7.22")
+    library("org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.22")
+    library("commons-io:commons-io:2.18.0")
+    library("com.github.ben-manes.caffeine:caffeine:3.2.0")
     compileOnly("me.clip:placeholderapi:2.11.6")
     compileOnly("net.kyori:adventure-api:${adventureVersion}")
     compileOnly("net.kyori:adventure-text-serializer-gson:${adventureVersion}")
     compileOnly("io.papermc.paper:paper-api:1.21.4-R0.1-SNAPSHOT")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
-    compileOnly("io.lumine.mythichud:api:1.2.3-20250425.220049-1")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.9.1")
+    //compileOnly("io.lumine.mythichud:api:1.2.4-SNAPSHOT")
     compileOnly("io.github.toxicity188:BetterHud-standard-api:${betterHudVersion}")
     compileOnly("io.github.toxicity188:BetterHud-bukkit-api:${betterHudVersion}")
     compileOnly("io.github.toxicity188:BetterCommand:1.4.3")
@@ -113,15 +117,7 @@ bukkit {
     version = project.version.toString()
     authors = listOf("Combimagnetron")
     description = "Create UIs like never seen before, all from within the game!"
-    libraries = listOf("com.google.guava:guava:31.1-jre",
-        "org.apache.commons:commons-lang3:3.17.0",
-        "org.jetbrains.kotlin:kotlin-reflect:1.7.22",
-        "org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.7.22",
-        "commons-io:commons-io:2.18.0",
-        "com.github.ben-manes.caffeine:caffeine:3.2.0",
-        )
     website = "https://combimagnetron.me"
-
     dependencies {
         depend = listOf("packetevents")
         softDepend = listOf("MythicHUD", "BetterHud", "TAB")

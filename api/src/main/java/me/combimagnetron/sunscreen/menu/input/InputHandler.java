@@ -1,5 +1,6 @@
 package me.combimagnetron.sunscreen.menu.input;
 
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 
 public interface InputHandler {
@@ -16,12 +17,14 @@ public interface InputHandler {
 
     class Impl implements InputHandler {
         private final SunscreenUser<?> user;
+        private final OpenedMenu menu;
         private boolean active = false;
         private int encoded = 0;
         private TextInput textInput = null;
 
-        public Impl(SunscreenUser<?> user) {
+        public Impl(SunscreenUser<?> user, OpenedMenu menu) {
             this.user = user;
+            this.menu = menu;
         }
 
         public void active(boolean active) {
@@ -50,7 +53,7 @@ public interface InputHandler {
 
         @Override
         public TextInput open() {
-            this.textInput = new TextInput.Impl(user);
+            this.textInput = new TextInput.Impl(user, menu);
             this.active = true;
             return textInput;
         }

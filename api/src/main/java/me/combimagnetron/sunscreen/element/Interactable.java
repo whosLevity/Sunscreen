@@ -3,6 +3,7 @@ package me.combimagnetron.sunscreen.element;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
@@ -34,7 +35,7 @@ public interface Interactable {
      */
     boolean click(Vec2i pos);
 
-    Map<ActionType, ActionWrapper> actions();
+    @NotNull Map<ActionType, ActionWrapper> actions();
 
     default void action(ActionType type, ActionWrapper action) {
         actions().put(type, action);

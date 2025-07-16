@@ -48,6 +48,10 @@ import java.util.*;
 import java.util.function.Function;
 
 public final class AspectRatioMenu implements OpenedMenu, Tickable {
+    private final static Map<Identifier, String> CHAR_MAP = Map.of(Identifier.of("upper_left"), "1a",
+            Identifier.of("upper_right"), "2b",
+            Identifier.of("lower_left"), "1c",
+            Identifier.of("lower_right"), "2d");
     private final static double PixelFactor = /*((40.75/16)*1/24)/100;*/0.0010;//0.04/24;
     private final Canvas spriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/spritesheet.png")));
     private final Canvas animationSpriteSheet = Canvas.image(Canvas.ImageProvider.file(Path.of("assets/sunscreen/setup/animation.png")));
@@ -56,7 +60,6 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
     private final HashMap<Identifier, TextDisplay> divEntityIdHashMap = new HashMap<>();
     private final TextDisplay cursorDisplay;
     private final TextDisplay instructionDisplay;
-    private final TextDisplay selectedAreaDisplay;
     private final TextDisplay cameraDisplay;
     private final TextDisplay temp;
     private boolean cursorLocked = false;
@@ -71,7 +74,6 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
         this.gameMode = viewer.gameMode();
         cursorDisplay = TextDisplay.textDisplay(viewer.position());
         instructionDisplay = TextDisplay.textDisplay(viewer.position());
-        selectedAreaDisplay = TextDisplay.textDisplay(viewer.position());
         cameraDisplay = TextDisplay.textDisplay(viewer.position().add(Vector3d.vec3(0, 1.7, 0)));
         temp = TextDisplay.textDisplay(viewer.position());
         build();
@@ -95,7 +97,11 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
         div(lowerRight);
         List<Keyframe> keyframes = new ArrayList<>();
         for (int i = 0; i < 13; i++) {
-            keyframes.add(Keyframe.of(animationSpriteSheet.sub(Vec2i.of(40, 40), Vec2i.of(i * 40, 0)), 1));
+            int holdTime = 1;
+            if (i == 12) {
+                holdTime = 4;
+            }
+            keyframes.add(Keyframe.of(animationSpriteSheet.sub(Vec2i.of(40, 40), Vec2i.of(i * 40, 0)), holdTime));
         }
         AnimatedElement element = AnimatedElement.of(keyframes, Position.pixel(29, 70), Size.pixel(keyframes.getFirst().canvas().size()), Identifier.of("center", "animation"));
         element.loopMode(AnimatedElement.LoopMode.LOOP);
@@ -112,7 +118,7 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
 
     private void hideCursor() {
         cursorDisplay.text(Component.empty());
-        List<EntityData> entityData = cursorDisplay.type().metadata().entityData();
+        List<EntityData<?>> entityData = cursorDisplay.type().metadata().entityData();
         WrapperPlayServerEntityMetadata clientEntityMetadata = new WrapperPlayServerEntityMetadata(cursorDisplay.id().intValue(), entityData);
         viewer.connection().send(clientEntityMetadata);
     }
@@ -130,7 +136,7 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
         viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, gameMode));
         viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
         viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
-        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), selectedAreaDisplay.id().intValue(), cameraDisplay.id().intValue()));
+        viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), temp.id().intValue(), cameraDisplay.id().intValue()));
         divEntityIdHashMap.forEach((div, display) -> viewer.connection().send(new WrapperPlayServerDestroyEntities(display.id().intValue())));
         PacketEvents.getAPI().getEventManager().unregisterListener(listener);
         SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).forEach(hook -> hook.onMenuLeave(viewer, this));
@@ -156,7 +162,7 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
                         final double add = (8.5)*PixelFactor;
                         begin = begin.add(Vector3d.vec3(-add, add, 0));
                         end = end.add(Vector3d.vec3(add, -add, 0));
-                        Vec2i screenSize = Vec2i.of((int)((end.x() - begin.x())*40.75*24 - 17*((double) 960 /978)), (int)((end.y() - begin.y())*40.75*24 - 17*((double) 960 /978)));
+                        Vec2i screenSize = Vec2i.of((int)((end.x() - begin.x())*40.75*24 - 17*((double) 960 /978)), (int)((end.y() - begin.y())*40.75*24 + 17*2*((double) 960 /978)));
                         ScreenSize actual = ScreenSize.of(screenSize, Pair.of(Vec2d.of(begin.x(), begin.y()), Vec2d.of(end.x(), end.y())));
                         viewer.screenSize(actual);
                         final Path data = SunscreenLibrary.library().path().resolve("data.dt");
@@ -170,7 +176,7 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
     }
 
     private static void send(User<?> viewer, TextDisplay textDisplay) {
-        List<EntityData> entityData = textDisplay.type().metadata().entityData();
+        List<EntityData<?>> entityData = textDisplay.type().metadata().entityData();
         WrapperPlayServerEntityMetadata clientEntityMetadata = new WrapperPlayServerEntityMetadata(textDisplay.id().intValue(), entityData);
         viewer.connection().send(clientEntityMetadata);
     }
@@ -191,16 +197,11 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
             send(viewer, cursorDisplay);
         }
         Display.Transformation previewTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.24998)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
-
         divEntityIdHashMap.forEach((identifier, display) -> {
-            Map<Identifier, String> charMap = Map.of(Identifier.of("upper_left"), "1a",
-                    Identifier.of("upper_right"), "2b",
-                    Identifier.of("lower_left"), "1c",
-                    Identifier.of("lower_right"), "2d");
-            if (!charMap.containsKey(identifier)) return;
+            if (!CHAR_MAP.containsKey(identifier)) return;
             display.brightness(15, 15);
             display.onFire(true);
-            display.text(Component.text(charMap.get(identifier)).font(Key.key("comet:arrow")));
+            display.text(Component.text(CHAR_MAP.get(identifier)).font(Key.key("comet:arrow")));
             double xMov = translation.x();
             double yMov = translation.y();
             if (identifier.string().contains("right")) {
@@ -216,14 +217,6 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
         });
         double xMov = translation.x();
         double yMov = -translation.y();
-        Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(xMov, yMov, -0.24999).add(Vector3d.vec3(-20.5 * PixelFactor, -20.5 * PixelFactor, 0)))
-                .scale(/*Vector3d.vec3((Math.abs(xMov) * 2) *10/*24*/Vector3d.vec3((double) (20) /24, /*(Math.abs(yMov)) *10/*24*/(double) (10) /24, (double) 1/24));
-        selectedAreaDisplay.transformation(transformation);
-        selectedAreaDisplay.backgroundColor(Color.green_().rgba());
-        selectedAreaDisplay.billboard(Display.Billboard.CENTER);
-        selectedAreaDisplay.brightness(15, 15);
-        selectedAreaDisplay.text(Component.text(" "));
-        send(viewer, selectedAreaDisplay);
     }
 
     public void open(SunscreenUser<?> user) {
@@ -247,19 +240,11 @@ public final class AspectRatioMenu implements OpenedMenu, Tickable {
         temp.billboard(Display.Billboard.CENTER);
         Display.Transformation tempTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, -60, -0.27)).scale(Vector3d.vec3(500, 500, (double) 1/24));
         temp.transformation(tempTransformation);
-        selectedAreaDisplay.backgroundColor(Color.green_().rgba());
-        selectedAreaDisplay.billboard(Display.Billboard.CENTER);
-        selectedAreaDisplay.brightness(15, 15);
-        selectedAreaDisplay.text(Component.text(" "));
-        Display.Transformation selectedAreaTransformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, 0, -0.24999)).scale(Vector3d.vec3((double)20*((double)1/24), (double)10*((double)1/24), (double) 1/24));
-        selectedAreaDisplay.transformation(selectedAreaTransformation);
-        viewer.show(selectedAreaDisplay);
         viewer.show(temp);
         List<Integer> entityIds = new ArrayList<>();
         entityIds.add(user.entityId());
         entityIds.add(temp.id().intValue());
         entityIds.add(cursorDisplay.id().intValue());
-        entityIds.add(selectedAreaDisplay.id().intValue());
         Scheduler.async(() -> {
             entityIds.addAll(divEntityIdHashMap.values().stream().map(entity -> entity.id().intValue()).toList());
             user.connection().send(new WrapperPlayServerSetPassengers(cameraDisplay.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));

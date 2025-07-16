@@ -1,17 +1,18 @@
 package me.combimagnetron.sunscreen.user;
 
 import me.combimagnetron.passport.internal.network.ByteBuffer;
-import me.combimagnetron.passport.user.User;
 import me.combimagnetron.passport.user.UserHandler;
+import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.SunscreenPlugin;
 import me.combimagnetron.sunscreen.session.Session;
+import me.combimagnetron.sunscreen.ModDetector;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.util.EulerAngle;
+import org.bukkit.plugin.Plugin;
 
 import java.io.File;
 import java.io.IOException;
@@ -42,7 +43,9 @@ public class UserManager implements Listener, UserHandler<Player, SunscreenUser<
     @EventHandler
     public void onJoin(PlayerJoinEvent event) {
         final Player player = event.getPlayer();
-        userMap.put(player.getUniqueId(), UserImpl.of(player));
+        SunscreenUser<Player> user = UserImpl.of(player);
+        userMap.put(player.getUniqueId(), user);
+        ModDetector.AnvilInputDetector modDetector = (ModDetector.AnvilInputDetector) ModDetector.anvil(user);
     }
 
     @EventHandler

@@ -1,20 +1,36 @@
 package me.combimagnetron.sunscreen.hook.mythichud;
 
-import io.lumine.mythichud.api.HudHolder;
-import io.lumine.mythichud.api.MythicHUD;
-import io.lumine.mythichud.api.element.layout.HudLayout;
-import io.lumine.mythichud.api.hud.active.element.ActiveLayout;
 import me.combimagnetron.sunscreen.hook.SunscreenHook;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
-import me.combimagnetron.sunscreen.util.Reflect;
-import org.bukkit.Bukkit;
-import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
 
-import java.util.*;
+public class MythicHudSunscreenHook implements SunscreenHook, Listener {
+    @Override
+    public boolean canRun() {
+        return false;
+    }
 
-public class MythicHudSunscreenHook implements SunscreenHook {
-    private final Map<UUID, List<String>> previouslyActive = new HashMap<>();
+    @Override
+    public void enable() {
+
+    }
+
+    @Override
+    public void disable() {
+
+    }
+
+    @Override
+    public void onMenuEnter(SunscreenUser<?> user, OpenedMenu menu) {
+
+    }
+
+    @Override
+    public void onMenuLeave(SunscreenUser<?> user, OpenedMenu menu) {
+
+    }
+    /*private final Map<UUID, List<String>> previouslyActive = new HashMap<>();
 
     @Override
     public boolean canRun() {
@@ -29,6 +45,19 @@ public class MythicHudSunscreenHook implements SunscreenHook {
     @Override
     public void disable() {
 
+    }
+
+    public MythicHudSunscreenHook() {
+        Bukkit.getPluginManager().registerEvents(this, (Plugin) SunscreenLibrary.library().plugin());
+    }
+
+    public void onLayoutApply(HUDLayoutAddEvent event) {
+        Player player = event.getPlayer();
+        SunscreenUser<?> user = SunscreenLibrary.library().users().user(player);
+        if (SunscreenLibrary.library().sessionHandler().session(user).menu() == null) {
+            return;
+        }
+        event.setCancelled(true);
     }
 
     @Override
@@ -63,5 +92,5 @@ public class MythicHudSunscreenHook implements SunscreenHook {
             layouts.stream().filter(hudLayout -> hudLayout.getKey().equals(layout)).findFirst().ifPresent(holder::addLayout);
         }
         previouslyActive.remove(user.uniqueIdentifier());
-    }
+    }*/
 }

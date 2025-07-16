@@ -3,7 +3,6 @@ package me.combimagnetron.sunscreen.element.impl;
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
-import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
@@ -11,11 +10,11 @@ import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Scheduler;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -69,12 +68,12 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
     }
 
     @Override
-    public Map<ActionType, ActionWrapper> actions() {
+    public @NotNull Map<ActionType, ActionWrapper> actions() {
         return actions;
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return selected != null ? selected : icons.get(State.DEFAULT);
     }
 
@@ -111,7 +110,7 @@ public class ButtonElement extends SimpleBufferedElement implements Interactable
     @Override
     public boolean click(Vec2i pos) {
         if (click != null) {
-            click.accept(ClickElementEvent.create(this, pos, new Input.Type.MouseClick(false)));
+            click.accept(ClickElementEvent.create(this, null, pos, new Input.Type.MouseClick(false)));
         }
         if (selected == icons.get(State.CLICK)) {
             return false;

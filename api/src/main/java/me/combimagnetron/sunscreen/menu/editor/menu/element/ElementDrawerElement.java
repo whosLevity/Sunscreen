@@ -1,4 +1,4 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element;
+package me.combimagnetron.sunscreen.menu.editor.menu.element;
 
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
@@ -9,8 +9,8 @@ import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Map;
 
@@ -29,7 +29,7 @@ public class ElementDrawerElement extends SimpleBufferedElement implements Inter
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return null;
     }
 
@@ -64,7 +64,7 @@ public class ElementDrawerElement extends SimpleBufferedElement implements Inter
     }
 
     @Override
-    public Map<ActionType, ActionWrapper> actions() {
+    public @NotNull Map<ActionType, ActionWrapper> actions() {
         return Map.of();
     }
 }

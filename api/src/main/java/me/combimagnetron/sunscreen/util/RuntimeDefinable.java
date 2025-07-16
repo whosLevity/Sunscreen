@@ -7,6 +7,7 @@ import me.combimagnetron.sunscreen.menu.Size;
 import java.util.Collection;
 import java.util.function.Function;
 
+@SuppressWarnings("rawtypes")
 public interface RuntimeDefinable<T, B extends RuntimeDefinable.Type, V> {
     Values<Class<? extends RuntimeDefinableGeometry>> Types = Values.of(Position.class, Size.class);
 

@@ -1,10 +1,9 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element;
+package me.combimagnetron.sunscreen.menu.editor.menu.element;
 
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.Size;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.menu.Position;
@@ -13,9 +12,11 @@ import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.element.impl.ButtonElement;
 import me.combimagnetron.sunscreen.element.impl.ImageElement;
 import me.combimagnetron.sunscreen.element.impl.ShapeElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.*;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -39,7 +40,7 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return render();
     }
 
@@ -148,7 +149,7 @@ public class CheckerBoardEditorElement extends SimpleBufferedElement implements 
     }
 
     @Override
-    public Map<ActionType, ActionWrapper> actions() {
+    public @NotNull Map<ActionType, ActionWrapper> actions() {
         return Map.of();
     }
 }

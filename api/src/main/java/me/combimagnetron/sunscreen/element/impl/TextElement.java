@@ -12,6 +12,7 @@ import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.style.Text;
+import org.jetbrains.annotations.NotNull;
 
 import java.awt.*;
 import java.awt.font.FontRenderContext;
@@ -95,7 +96,7 @@ public class TextElement extends SimpleBufferedElement {
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return canvas;
     }
 

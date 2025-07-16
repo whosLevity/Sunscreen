@@ -8,6 +8,7 @@ import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 public class ImageElement extends SimpleBufferedElement {
     private Canvas canvas;
@@ -39,7 +40,7 @@ public class ImageElement extends SimpleBufferedElement {
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return canvas;
     }
 }

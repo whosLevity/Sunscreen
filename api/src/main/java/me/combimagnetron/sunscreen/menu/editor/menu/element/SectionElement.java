@@ -1,16 +1,16 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element;
+package me.combimagnetron.sunscreen.menu.editor.menu.element;
 
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 public class SectionElement extends SimpleBufferedElement {
     public SectionElement(Size size, Identifier identifier, Position position) {
@@ -28,7 +28,7 @@ public class SectionElement extends SimpleBufferedElement {
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         canvas = canvas.fill(Vec2i.of(0,0), size().vec2i(), EditorMenu.Colors.Background);
         canvas = canvas.fill(Vec2i.of(1,1), Vec2i.of(size().x().pixel() - 2, size().y().pixel() - 2), EditorMenu.Colors.Secondary);
         canvas = canvas.fill(Vec2i.of(2,2), Vec2i.of(size().x().pixel() - 4, size().y().pixel() - 4), EditorMenu.Colors.Background);

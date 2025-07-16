@@ -1,35 +1,27 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor;
+package me.combimagnetron.sunscreen.menu.editor.menu;
 
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
-import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
-import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.impl.*;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.menu.*;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.CheckerBoardEditorElement;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar.ElementTabElement;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar.LayerTabElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.element.CheckerBoardEditorElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.element.SectionElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.element.sidebar.ElementTabElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.element.sidebar.LayerTabElement;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.div.Div;
-import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
 import me.combimagnetron.sunscreen.menu.timing.Tick;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Scheduler;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
-import org.checkerframework.checker.units.qual.C;
 import org.jetbrains.annotations.NotNull;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.nio.file.Path;
 import java.util.*;
 
 @SuppressWarnings("unchecked")

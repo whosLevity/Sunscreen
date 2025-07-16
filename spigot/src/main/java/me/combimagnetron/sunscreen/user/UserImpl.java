@@ -1,5 +1,7 @@
 package me.combimagnetron.sunscreen.user;
 
+import com.github.retrooper.packetevents.PacketEvents;
+import com.github.retrooper.packetevents.PacketEventsAPI;
 import com.github.retrooper.packetevents.protocol.entity.data.EntityData;
 import com.github.retrooper.packetevents.protocol.entity.type.EntityTypes;
 import com.github.retrooper.packetevents.protocol.player.ClientVersion;
@@ -10,6 +12,7 @@ import me.combimagnetron.passport.PacketEventsConnectionImpl;
 import me.combimagnetron.passport.config.Config;
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.internal.entity.Entity;
+import me.combimagnetron.passport.internal.entity.impl.passive.horse.Horse;
 import me.combimagnetron.passport.internal.entity.metadata.type.Vector3d;
 import me.combimagnetron.passport.internal.network.Connection;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
@@ -17,7 +20,6 @@ import me.combimagnetron.sunscreen.menu.AspectRatioMenu;
 import me.combimagnetron.sunscreen.menu.MenuTemplate;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.ScreenSize;
-import me.combimagnetron.sunscreen.menu.builtin.setup.UserSetupMenu;
 import me.combimagnetron.sunscreen.menu.timing.MenuTicker;
 import me.combimagnetron.sunscreen.session.Session;
 import me.combimagnetron.sunscreen.util.Pair;
@@ -34,6 +36,7 @@ import java.util.UUID;
 public class UserImpl implements SunscreenUser<Player> {
     private final Player player;
     private final Connection connection;
+    private final ClientVersion version;
     private ScreenSize screenSize = ScreenSize.of(Vec2i.of(200, 200), Pair.of(Vec2d.of(-0.11083211535, -0.11083211535), Vec2d.of(0.11083211535, 0.11083211535)));
     private float fov = 70;
 
@@ -45,6 +48,7 @@ public class UserImpl implements SunscreenUser<Player> {
         this.player = player;
         this.connection = new PacketEventsConnectionImpl<>(player);
         Node<String> node = Config.file(SunscreenLibrary.library().path().resolve("data.dt")).reader().node(uniqueIdentifier().toString());
+        this.version = PacketEvents.getAPI().getPlayerManager().getUser(player).getClientVersion();
         if (node == null) {
             AspectRatioMenu menu = new AspectRatioMenu(this);
             SunscreenLibrary.library().menuTicker().start(menu);
@@ -52,7 +56,7 @@ public class UserImpl implements SunscreenUser<Player> {
             return;
         }
         if (node.value() == null) {
-            SunscreenLibrary.library().menuTicker().start(new UserSetupMenu(this));
+            //SunscreenLibrary.library().menuTicker().start(new UserSetupMenu(this));
             return;
         }
         this.screenSize = ScreenSize.fromString(node.value());
@@ -85,8 +89,8 @@ public class UserImpl implements SunscreenUser<Player> {
 
     @Override
     public void show(Entity entity) {
-        WrapperPlayServerSpawnEntity clientSpawnEntity = new WrapperPlayServerSpawnEntity(entity.id().intValue(), Optional.of(entity.uuid()), EntityTypes.getById(ClientVersion.V_1_21_4, entity.type().id()), new com.github.retrooper.packetevents.util.Vector3d(entity.position().x(), entity.position().y(), entity.position().z()), (float) entity.rotation().x(), (float) entity.rotation().y(), (float) entity.rotation().z(), entity.data().i(), Optional.empty());
-        List<EntityData> entityData = entity.type().metadata().entityData();
+        WrapperPlayServerSpawnEntity clientSpawnEntity = new WrapperPlayServerSpawnEntity(entity.id().intValue(), Optional.of(entity.uuid()), EntityTypes.getById(version, entity.type().id()), new com.github.retrooper.packetevents.util.Vector3d(entity.position().x(), entity.position().y(), entity.position().z()), (float) entity.rotation().x(), (float) entity.rotation().y(), (float) entity.rotation().z(), entity.data().i(), Optional.empty());
+        List<EntityData<?>> entityData = entity.type().metadata().entityData();
         WrapperPlayServerEntityMetadata clientEntityMetadata = new WrapperPlayServerEntityMetadata(entity.id().intValue(), entityData);
         connection().send(clientSpawnEntity);
         connection().send(clientEntityMetadata);
@@ -159,6 +163,11 @@ public class UserImpl implements SunscreenUser<Player> {
     @Override
     public void resendInv() {
         player.updateInventory();
+    }
+
+    @Override
+    public ClientVersion clientVersion() {
+        return version;
     }
 
 }

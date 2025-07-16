@@ -1,11 +1,11 @@
 package me.combimagnetron.sunscreen.element;
 
 import me.combimagnetron.sunscreen.menu.*;
+import me.combimagnetron.sunscreen.menu.editor.Editable;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.util.RuntimeDefinable;
-import me.combimagnetron.sunscreen.util.Vec2d;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
@@ -15,25 +15,25 @@ public interface Element<T> extends Editable, RuntimeDefinable.Holder {
      * The identifier of this element.
      * @return the identifier
      */
-    Identifier identifier();
+    @NotNull Identifier identifier();
 
     /**
      * The canvas of this element.
      * @return the canvas
      */
-    T canvas();
+    @NotNull T canvas();
 
     /**
      * The position of this element.
      * @return the position
      */
-    Position position();
+    @NotNull Position position();
 
-    Collection<RuntimeDefinable.Type<?, ?>> definables();
+    @NotNull Collection<RuntimeDefinable.Type<?, ?>> definables();
 
-    Element<T> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry);
+    @NotNull Element<T> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry);
 
-    Element<T> geometry(Geometry geometry);
+    @NotNull Element<T> geometry(Geometry geometry);
 
     /**
      * The size of this element.
@@ -42,10 +42,11 @@ public interface Element<T> extends Editable, RuntimeDefinable.Holder {
 
     /**
      * Sets the position of this element.
+     *
      * @param pos the position to set
      * @return this element
      */
-    Element<T> position(Position pos);
+    @NotNull Element<T> position(Position pos);
 
     /**
      * Applies a style to this element.
@@ -64,13 +65,13 @@ public interface Element<T> extends Editable, RuntimeDefinable.Holder {
      */
     <S> Element<T> style(Style<S> style, S s);
 
-    Size size();
+    @NotNull Size size();
 
     /**
      * Sets the size of this element.
      * @param size the size to set
      * @return this element
      */
-    Element<T> size(Size size);
+    @NotNull Element<T> size(Size size);
 
 }

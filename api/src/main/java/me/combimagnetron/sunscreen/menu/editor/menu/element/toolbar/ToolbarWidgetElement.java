@@ -1,4 +1,4 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element.toolbar;
+package me.combimagnetron.sunscreen.menu.editor.menu.element.toolbar;
 
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;

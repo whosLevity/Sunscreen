@@ -1,6 +1,11 @@
 package me.combimagnetron.sunscreen.util;
 
 public record Vec2i(int x, int y) {
+    private static final Vec2i ZERO = Vec2i.of(0, 0);
+
+    public static Vec2i zero() {
+        return ZERO;
+    }
 
     public static Vec2i of(int x, int y) {
         return new Vec2i(x, y);

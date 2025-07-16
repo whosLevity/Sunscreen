@@ -1,11 +1,10 @@
 package me.combimagnetron.sunscreen.element.impl;
 
 import me.combimagnetron.sunscreen.image.Canvas;
-import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.menu.Position;
@@ -14,8 +13,8 @@ import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.HoverHelper;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -54,12 +53,12 @@ public class DropdownElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public Map<ActionType, ActionWrapper> actions() {
+    public @NotNull Map<ActionType, ActionWrapper> actions() {
         return actions;
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         Vec2i size = !folded ? this.size().vec2i() : Vec2i.of(size().x().pixel(), 11);
         Canvas canvas = Canvas.image(size);
         canvas.fill(Vec2i.of(0, 0), size, EditorMenu.Colors.Background);

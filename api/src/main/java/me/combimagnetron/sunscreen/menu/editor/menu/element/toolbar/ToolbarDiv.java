@@ -1,4 +1,4 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element.toolbar;
+package me.combimagnetron.sunscreen.menu.editor.menu.element.toolbar;
 
 import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.util.Identifier;

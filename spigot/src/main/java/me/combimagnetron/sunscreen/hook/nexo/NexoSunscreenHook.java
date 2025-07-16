@@ -1,21 +1,35 @@
 package me.combimagnetron.sunscreen.hook.nexo;
 
+import com.nexomc.nexo.NexoPlugin;
 import com.nexomc.nexo.api.NexoPack;
+import com.nexomc.nexo.fonts.FontManager;
+import com.nexomc.nexo.fonts.Glyph;
+import me.combimagnetron.sunscreen.hook.ResourcePackProviderHook;
 import me.combimagnetron.sunscreen.hook.SunscreenHook;
+import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
+import net.kyori.adventure.key.Key;
 import org.bukkit.Bukkit;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
+import team.unnamed.creative.BuiltResourcePack;
 import team.unnamed.creative.ResourcePack;
 import team.unnamed.creative.base.Writable;
+import team.unnamed.creative.font.BitMapFontProvider;
+import team.unnamed.creative.font.Font;
 import team.unnamed.creative.metadata.overlays.OverlayEntry;
 import team.unnamed.creative.metadata.overlays.OverlaysMeta;
 import team.unnamed.creative.overlay.Overlay;
+import team.unnamed.creative.texture.Texture;
 
+import javax.imageio.ImageIO;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-public class NexoSunscreenHook implements SunscreenHook {
+public class NexoSunscreenHook implements ResourcePackProviderHook {
     @Override
     public boolean canRun() {
         return Bukkit.getPluginManager().isPluginEnabled("Nexo");
@@ -26,17 +40,38 @@ public class NexoSunscreenHook implements SunscreenHook {
 
     }
 
-    @Override
-    public void disable() {
-
+    public @Nullable Canvas font(char ch) {
+        String character = String.valueOf(ch);
+        FontManager manager = NexoPlugin.instance().fontManager();
+        Glyph glyph = manager.glyphs().stream().filter(g -> g.getUnicodes().contains(character)).findAny().orElseThrow();
+        ResourcePack pack = NexoPlugin.instance().packGenerator().resourcePack();
+        Font font = pack.font(glyph.getFont());
+        if (font == null) {
+            return null;
+        }
+        List<BitMapFontProvider> providers = font.providers().stream().filter(fontProvider -> fontProvider instanceof BitMapFontProvider).map(fontProvider -> (BitMapFontProvider) fontProvider).toList();
+        for (BitMapFontProvider provider : providers) {
+            if (!provider.characters().contains(character)) {
+                continue;
+            }
+            Key file = provider.file();
+            Texture texture = pack.texture(file);
+            Canvas canvas;
+            try {
+                 canvas = Canvas.image(ImageIO.read(new ByteArrayInputStream(texture.data().toByteArray())));
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+            return canvas;
+        }
+        return null;
     }
 
-    @Override
-    public void onMenuEnter(SunscreenUser<?> user, OpenedMenu menu) {
+    public boolean merge(me.combimagnetron.sunscreen.resourcepack.ResourcePack resourcePack) {
         ResourcePack pack = NexoPack.resourcePack();
         OverlaysMeta overlaysMeta = pack.overlaysMeta();
         if (overlaysMeta == null) {
-            return;
+            return false;
         }
         for (OverlayEntry entry : overlaysMeta.entries()) {
             Overlay overlay = pack.overlay(entry.directory());
@@ -51,16 +86,24 @@ public class NexoSunscreenHook implements SunscreenHook {
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
-                if (shader == null) {
-                    return;
-                }
 
             });
         }
+        return false;
     }
 
     @Override
-    public void onMenuLeave(SunscreenUser<?> user, OpenedMenu menu) {
+    public void disable() {
+
+    }
+
+    @Override
+    public void onMenuEnter(@NotNull SunscreenUser<?> user, @Nullable OpenedMenu menu) {
+
+    }
+
+    @Override
+    public void onMenuLeave(@NotNull SunscreenUser<?> user, @Nullable OpenedMenu menu) {
 
     }
 }

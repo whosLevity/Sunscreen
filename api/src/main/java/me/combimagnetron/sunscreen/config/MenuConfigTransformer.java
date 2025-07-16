@@ -4,27 +4,20 @@ import me.combimagnetron.passport.config.Config;
 import me.combimagnetron.passport.config.element.ConfigElement;
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
-import me.combimagnetron.passport.util.Pair;
 import me.combimagnetron.passport.util.condition.Condition;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.element.impl.*;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
-import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
-import me.combimagnetron.sunscreen.logic.action.Argument;
-import me.combimagnetron.sunscreen.logic.action.ArgumentType;
-import me.combimagnetron.sunscreen.logic.action.adapter.TypeAdapter;
 import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
-import me.combimagnetron.sunscreen.element.div.Div;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
-import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.*;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 import java.io.File;
@@ -35,7 +28,7 @@ import java.util.stream.Collectors;
 @SuppressWarnings("unchecked")
 public interface MenuConfigTransformer {
 
-    Collection<MenuTemplate> read(Path folder);
+    @NotNull Collection<MenuTemplate> read(@NotNull Path folder);
 
     @Nullable MenuTemplate handle(Config config, String fileName);
 
@@ -43,7 +36,7 @@ public interface MenuConfigTransformer {
         public final static String ErrorMessage = "\nPlease revisit the menu config or contact plugin developers.\nWhen contacting the developers please provide the fault code in the square brackets and your config file.";
 
         @Override
-        public Collection<MenuTemplate> read(Path folder) {
+        public @NotNull Collection<MenuTemplate> read(@NotNull Path folder) {
             List<MenuTemplate> menuTemplates = new ArrayList<>();
             for (File file : Objects.requireNonNull(folder.toFile().listFiles())) {
                 if (!file.getName().endsWith(".menu")) {
@@ -210,6 +203,7 @@ public interface MenuConfigTransformer {
                 if (shouldSplit) {
                     int split = ((Node<Integer>) canvasSection.find("split")).value();
                     String image = ((Node<String>) canvasSection.find("image")).value();
+                    System.out.println(image);
                     Canvas canvas = file(image.substring(5, image.length() - 1));
                     ArrayList<String> types = ((Node<ArrayList<String>>)canvasSection.find("order")).value();
                     int y = (int) (canvas.size().y() / split);

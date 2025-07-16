@@ -1,12 +1,12 @@
-package me.combimagnetron.sunscreen.menu.builtin.editor.element.sidebar;
+package me.combimagnetron.sunscreen.menu.editor.menu.element.sidebar;
 
 import me.combimagnetron.sunscreen.event.ClickElementEvent;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.image.Color;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.menu.Size;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
-import me.combimagnetron.sunscreen.menu.builtin.editor.element.SectionElement;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
+import me.combimagnetron.sunscreen.menu.editor.menu.element.SectionElement;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.menu.Position;
@@ -16,8 +16,8 @@ import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.style.Text;
 import me.combimagnetron.sunscreen.util.HoverHelper;
 import me.combimagnetron.sunscreen.util.Identifier;
-import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -39,7 +39,7 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return render();
     }
 
@@ -110,14 +110,14 @@ public class LayerTabElement extends SimpleBufferedElement implements Interactab
             return false;
         }
         if (HoverHelper.isHovered(pos, Vec2i.of(3, size().y().pixel() - 13), Vec2i.of(size().x().pixel() - 6, 10))) {
-            elementEventConsumer.accept(new ClickElementEvent<Element>(this, pos, new Input.Type.MouseClick(false)));
+            elementEventConsumer.accept(new ClickElementEvent<>(this, null, pos, new Input.Type.MouseClick(false)));
             return true;
         }
         return false;
     }
 
     @Override
-    public Map<ActionType, ActionWrapper> actions() {
+    public @NotNull Map<ActionType, ActionWrapper> actions() {
         return Map.of();
     }
 }

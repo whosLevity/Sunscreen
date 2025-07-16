@@ -6,7 +6,7 @@ import co.aikar.commands.annotation.*;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.config.MenuConfigTransformer;
 import me.combimagnetron.sunscreen.menu.*;
-import me.combimagnetron.sunscreen.menu.builtin.editor.EditorMenu;
+import me.combimagnetron.sunscreen.menu.editor.menu.EditorMenu;
 import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.registry.MenuRegistry;
 import me.combimagnetron.sunscreen.menu.timing.DebugElement;
@@ -72,7 +72,7 @@ public class SunscreenCommand extends BaseCommand {
             return;
         }
         DebugElement element = new DebugElement(Size.pixel(100, 100), Identifier.of("debug"), Position.pixel(0,0), sunscreenUser);
-        Div debugDiv = Div.div(Identifier.of("internal", "debug")).position(Position.position().x().percentage(50).back().y().percentage(50).back());
+        Div debugDiv = Div.div(Identifier.of("internal", "debug")).size(Size.pixel(100, 100)).position(Position.position().x().percentage(50).back().y().percentage(50).back());
         debugDiv.add(element);
         //impl.div(debugDiv);
         impl.render(debugDiv);

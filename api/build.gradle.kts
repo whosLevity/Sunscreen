@@ -26,12 +26,13 @@ dependencies {
     implementation("net.kyori:adventure-text-serializer-plain:4.20.0")
     implementation("com.typesafe:config:1.4.2")
     implementation("co.aikar:acf-core:0.5.1-SNAPSHOT")
+    //implementation("net.bytebuddy:byte-buddy:1.17.5")
     compileOnly("me.combimagnetron:Passport:1.0-SNAPSHOT")
     compileOnly("com.google.guava:guava:31.1-jre")
     compileOnly("org.apache.commons:commons-lang3:3.17.0")
     compileOnly("commons-io:commons-io:2.18.0")
     compileOnly("com.github.ben-manes.caffeine:caffeine:3.2.0")
-    compileOnly("com.github.retrooper:packetevents-spigot:2.7.0")
+    compileOnly("com.github.retrooper:packetevents-spigot:2.9.1")
 }
 
 publishing {

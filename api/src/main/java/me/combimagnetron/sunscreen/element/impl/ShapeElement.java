@@ -11,6 +11,7 @@ import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
+import org.jetbrains.annotations.NotNull;
 
 public abstract class ShapeElement extends SimpleBufferedElement {
 
@@ -19,7 +20,7 @@ public abstract class ShapeElement extends SimpleBufferedElement {
     }
 
     @Override
-    public abstract Canvas canvas();
+    public abstract @NotNull Canvas canvas();
 
     @Override
     public <T> Element<Canvas> style(Style<T> style, Position pos2D, T t) {
@@ -53,7 +54,7 @@ public abstract class ShapeElement extends SimpleBufferedElement {
         }
 
         @Override
-        public Canvas canvas() {
+        public @NotNull Canvas canvas() {
             double r = 0.5*size().x().pixel();
 
             return canvas;
@@ -68,7 +69,7 @@ public abstract class ShapeElement extends SimpleBufferedElement {
         }
 
         @Override
-        public Canvas canvas() {
+        public @NotNull Canvas canvas() {
             canvas = canvas.fill(Vec2i.of(0, 0), size().vec2i(), color);
             return canvas;
         }

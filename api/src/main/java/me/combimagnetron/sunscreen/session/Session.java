@@ -4,7 +4,7 @@ import me.combimagnetron.sunscreen.SunscreenLibrary;
 import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 
-public interface Session {
+public sealed interface Session permits Session.Impl {
 
     OpenedMenu menu();
 

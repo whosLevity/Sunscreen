@@ -33,13 +33,13 @@ public final class FontDivRenderer implements DivRenderer<TextDisplay> {
         textDisplay.billboard(Display.Billboard.CENTER);
         textDisplay.brightness(15, 15);
         textDisplay.lineWidth(200000);
-        textDisplay.backgroundColor(0);
+        //textDisplay.backgroundColor(0);
         Display.Transformation transformation = Display.Transformation.transformation();
         ScreenSize screenSize = user.screenSize();
         transformation = transformation.translation(
                 ViewportHelper.toTranslation(
                         ViewportHelper.fromPosition(div.position()), user.screenSize())
-                        .add(Vector3d.vec3(((screenSize.coordinates().v().x() - screenSize.coordinates().k().x() - 0.0072)/screenSize.pixel().x()) * div.size().x() * 0.5, -((screenSize.coordinates().v().y() - screenSize.coordinates().k().y() - 0.02214)/screenSize.pixel().y()) * (div.size().y() - (-frame.r() + 3) * 3) /*- 0.00005 * frame.r() * div.size().y()*/, -0.25 + ((double) 1 /1_000_000) * div.order())).mul(div.scale()));
+                        .add(Vector3d.vec3(((screenSize.coordinates().v().x() - screenSize.coordinates().k().x() - 0.0072)/screenSize.pixel().x()) * div.size().x() * 0.5, -((screenSize.coordinates().v().y() - screenSize.coordinates().k().y() + 0.01314)/screenSize.pixel().y()) * (div.size().y())/* - 0.00005 * frame.r() * div.size().y() */, -0.25 + ((double) 1 /1_000_000) * div.order())).mul(div.scale()));
         transformation = transformation.scale(Vector3d.vec3((double) 1 /24).mul(div.scale()));
         textDisplay.transformation(transformation);
         user.show(textDisplay);

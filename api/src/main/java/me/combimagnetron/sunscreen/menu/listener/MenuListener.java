@@ -5,6 +5,7 @@ import com.github.retrooper.packetevents.event.PacketReceiveEvent;
 import com.github.retrooper.packetevents.event.PacketSendEvent;
 import com.github.retrooper.packetevents.protocol.packettype.PacketType;
 import com.github.retrooper.packetevents.protocol.packettype.PacketTypeCommon;
+import com.github.retrooper.packetevents.protocol.player.InteractionHand;
 import com.github.retrooper.packetevents.wrapper.play.client.*;
 import com.github.retrooper.packetevents.wrapper.play.server.*;
 import me.combimagnetron.sunscreen.SunscreenLibrary;
@@ -43,6 +44,8 @@ public class MenuListener implements PacketListener {
             case PacketType.Play.Client.CHAT_MESSAGE:
                 handleChatMessage(new WrapperPlayClientChatMessage(event), user);
                 break;
+            case PacketType.Play.Client.PLAYER_INPUT:
+                handlePlayerInput(new WrapperPlayClientPlayerInput(event), user);
             case PacketType.Play.Client.NAME_ITEM:
                 handleItemName(new WrapperPlayClientNameItem(event), user);
                 break;
@@ -97,6 +100,20 @@ public class MenuListener implements PacketListener {
         }
     }
 
+    private void handlePlayerInput(WrapperPlayClientPlayerInput wrapperPlayClientPlayerInput, SunscreenUser<?> user) {
+        OpenedMenu openedMenu = menu(user);
+        if (openedMenu == null) {
+            return;
+        }
+        if (!(openedMenu instanceof OpenedMenu.Base base)) {
+            return;
+        }
+        if (!wrapperPlayClientPlayerInput.isShift()) {
+            return;
+        }
+        base.handleSneak();
+    }
+
     private void handleClickWindow(WrapperPlayClientClickWindow packet, SunscreenUser<?> user) {
         OpenedMenu openedMenu = menu(user);
         if (openedMenu == null) {
@@ -115,7 +132,8 @@ public class MenuListener implements PacketListener {
         }
         if (openedMenu instanceof OpenedMenu.Base base && base.inputHandler().active()) {
             InputHandler inputHandler = base.inputHandler();
-            inputHandler.textInput().handle(packet.getItemName());
+            //inputHandler.textInput().handle(packet.getItemName());
+            base.handleText(packet.getItemName());
         }
     }
 
@@ -138,21 +156,23 @@ public class MenuListener implements PacketListener {
     }
 
     private void handleEntityAction(WrapperPlayClientEntityAction packet, SunscreenUser<?> user) {
-        if (packet.getAction() != WrapperPlayClientEntityAction.Action.STOP_SNEAKING) {
-            return;
-        }
-        OpenedMenu openedMenu = menu(user);
-        if (openedMenu == null) {
-            return;
-        }
-        if (openedMenu instanceof OpenedMenu.Base base) {
-            base.handleSneak();
+        if (packet.getAction() == WrapperPlayClientEntityAction.Action.STOP_SNEAKING || packet.getAction() == WrapperPlayClientEntityAction.Action.OPEN_HORSE_INVENTORY) {
+            OpenedMenu openedMenu = menu(user);
+            if (openedMenu == null) {
+                return;
+            }
+            if (openedMenu instanceof OpenedMenu.Base base) {
+                base.handleSneak();
+            }
         }
     }
 
     private void handleAnimation(WrapperPlayClientAnimation packet, SunscreenUser<?> user) {
         OpenedMenu openedMenu = menu(user);
         if (openedMenu == null) {
+            return;
+        }
+        if (packet.getHand() != InteractionHand.MAIN_HAND) {
             return;
         }
         if (openedMenu instanceof OpenedMenu.Base base) {

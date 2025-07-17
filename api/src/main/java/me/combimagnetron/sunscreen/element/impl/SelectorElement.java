@@ -2,17 +2,15 @@ package me.combimagnetron.sunscreen.element.impl;
 
 import me.combimagnetron.sunscreen.element.Interactable;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
-import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
-import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
 import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.*;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
+import org.jetbrains.annotations.NotNull;
 
-import java.awt.image.BufferedImage;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -96,7 +94,7 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public Map<ActionType, ActionWrapper> actions() {
+    public @NotNull Map<ActionType, ActionWrapper> actions() {
         return actions;
     }
 
@@ -139,7 +137,7 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
     }
 
     @Override
-    public Canvas canvas() {
+    public @NotNull Canvas canvas() {
         return canvas;
     }
 
@@ -207,7 +205,7 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
         if (pos == null) {
             return outOfBounds();
         }
-        pos = pos.sub(0, 8);
+        //pos = pos.sub(0, 8);
         reset();
         for (Map.Entry<ButtonElement, Pair<Vec2i, Vec2i>> entry : bounds.entrySet()) {
             if (buttons.get(entry.getKey()).equals(ButtonElement.State.CLICK)) continue;
@@ -224,7 +222,7 @@ public class SelectorElement extends SimpleBufferedElement implements Interactab
         if (pos == null) {
             return false;
         }
-        pos = pos.sub(0, 8);
+        //pos = pos.sub(0, 8);
         for (Map.Entry<ButtonElement, ButtonElement.State> button : buttons.entrySet()) {
             if ((button.getValue() == null || button.getKey() == null) && !unselectable) {
                 continue;

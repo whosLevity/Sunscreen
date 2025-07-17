@@ -94,48 +94,59 @@ public interface CanvasRenderer {
     class OptimizedCanvasRenderer implements CanvasRenderer {
         @Override
         public Frame render(Canvas canvas) {
+            return old(canvas);
+        }
+
+        private static Frame updated(Canvas canvas) {
+            return Scheduler.async(() -> {
+                Canvas.InternalCanvas internalCanvas = (Canvas.InternalCanvas) canvas;
+                BufferedImage image = internalCanvas.image();
+                int fontLine = 3;
+
+                return null;
+            });
+        }
+
+        private static Frame old(Canvas canvas) {
             return Scheduler.async(() -> {Canvas.InternalCanvas internalCanvas = (Canvas.InternalCanvas) canvas;
-            BufferedImage image = internalCanvas.image();
-            int r = 3;
-            TextComponent.Builder component = Component.text();
-            int realHeight = image.getHeight() - 1;
-            int realWidth = image.getWidth() - 1;
-            boolean isPerfect = image.getWidth() % 3 == 0;
-            for (int x = 0; x <= realHeight; x += 3) {
-                int heightAdd = 3;
-                if (x + 3 > realHeight) {
-                    heightAdd = realHeight - x;
-                }
-                for (int y = 0; y <= realWidth; y += 3) {
-                    int widthAdd = 3;
-                    if (y + 3 > realWidth) {
-                        widthAdd = realWidth - y;
+                BufferedImage image = internalCanvas.image();
+                int r = 3;
+                TextComponent.Builder component = Component.text();
+                int realHeight = image.getHeight() - 1;
+                int realWidth = image.getWidth() - 1;
+                boolean isPerfect = image.getWidth() % 3 == 0;
+                for (int x = 0; x <= realHeight; x += 3) {
+                    int heightAdd = 3;
+                    if (x + 3 > realHeight) {
+                        heightAdd = realHeight - x;
                     }
-                    if (widthAdd <= 0 || heightAdd <= 0) {
-                        continue;
+                    for (int y = 0; y <= realWidth; y += 3) {
+                        int widthAdd = 3;
+                        if (y + 3 > realWidth) {
+                            widthAdd = realWidth - y;
+                        }
+                        if (widthAdd <= 0 || heightAdd <= 0) {
+                            continue;
+                        }
+                        BufferedImage section = image.getSubimage(y, x, widthAdd, heightAdd);
+                        me.combimagnetron.sunscreen.util.Pair<Component, Integer> pair = PixelPattern.optimize(section, r);
+                        /*if (widthAdd != 3) {
+                            component.append(FontUtil.offset(-1 + (pair.v() - 3)));//.append(FontUtil.offset(1));
+                        } else if (y != 0 && y + widthAdd != realWidth) {*/
+                            component.append(FontUtil.offset(-1));
+                        //}
+                        component.append(pair.k());
                     }
-                    BufferedImage section = image.getSubimage(y, x, widthAdd, heightAdd);
-                    me.combimagnetron.sunscreen.util.Pair<Component, Integer> pair = PixelPattern.optimize(section, r);
-                    if (widthAdd != 3) {
-                        component.append(FontUtil.offset(-(pair.v())));
-                    } else if (y != 0) {
-                        component.append(FontUtil.offset(-1));
+                    if (r == -7) {
+                        r = 2;
+                        component.append(Component.newline(), Component.newline(), Component.newline());
+                    } else if (!(realHeight - x <= 3)) {
+                        r--;
+                        component.append(FontUtil.offset(-(image.getWidth())));
                     }
-                    component.append(pair.k());
                 }
-                if (r == -7) {
-                    r = 2;
-                    component.append(Component.newline(), Component.newline(), Component.newline());
-                } else if (!(realHeight -x < 3)) {
-                    r--;
-                    component.append(FontUtil.offset(-(image.getWidth())));
-                } else {
-                    r--;
-                    component.append(FontUtil.offset((image.getWidth())));
-                }
-            }
-            Component finished = component.build();
-            return Frame.wrap(finished, image.getWidth(), image.getHeight(), r);});
+                Component finished = component.build();
+                return Frame.wrap(finished, image.getWidth(), image.getHeight(), r);});
         }
     }
 

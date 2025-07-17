@@ -9,6 +9,7 @@ import net.minestom.server.network.packet.server.LazyPacket;
 import net.minestom.server.network.packet.server.ServerPacket;
 import org.jetbrains.annotations.NotNull;
 
+@SuppressWarnings("all")
 public class MinestomConnectionImpl implements Connection {
     private final Player player;
 

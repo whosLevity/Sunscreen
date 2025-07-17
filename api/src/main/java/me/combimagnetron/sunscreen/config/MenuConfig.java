@@ -3,14 +3,15 @@ package me.combimagnetron.sunscreen.config;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.util.Identifier;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.Collection;
 
 public interface MenuConfig {
 
-    Identifier identifier();
+    @NotNull Identifier identifier();
 
-    Collection<DivConfig> divs();
+    @NotNull Collection<DivConfig> divs();
 
     interface DivConfig {
 

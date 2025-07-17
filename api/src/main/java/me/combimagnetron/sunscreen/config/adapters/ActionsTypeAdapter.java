@@ -11,23 +11,25 @@ import me.combimagnetron.sunscreen.logic.action.Argument;
 import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.logic.action.adapter.TypeAdapter;
 import me.combimagnetron.sunscreen.util.Identifier;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
 public class ActionsTypeAdapter implements ConfigTypeAdapter<Map<Interactable.ActionType, ActionWrapper>> {
     @Override
-    public Map<Interactable.ActionType, ActionWrapper> direct(ConfigElement element) {
+    public @Nullable Map<Interactable.ActionType, ActionWrapper> direct(@NotNull ConfigElement element) {
         Section section = Section.required("temp");
         section.section((Section) element);
         return action(section);
     }
 
     @Override
-    public Map<Interactable.ActionType, ActionWrapper> find(Section section) {
+    public @Nullable Map<Interactable.ActionType, ActionWrapper> find(@NotNull Section section) {
         return action(section);
     }
 
-    protected static Map<Interactable.ActionType, ActionWrapper> action(Section elementConfigElement) {
+    protected static Map<Interactable.ActionType, ActionWrapper> action(@NotNull Section elementConfigElement) {
         Section actionsSection = elementConfigElement.find("actions");
         Map<Interactable.ActionType, ActionWrapper> actionWrappers = new HashMap<>();
         for (ConfigElement element : actionsSection.elements()) {

@@ -2,11 +2,14 @@ package me.combimagnetron.sunscreen.menu.input;
 
 import com.github.retrooper.packetevents.protocol.component.ComponentTypes;
 import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemCustomModelData;
+import com.github.retrooper.packetevents.protocol.component.builtin.item.ItemModel;
 import com.github.retrooper.packetevents.protocol.item.ItemStack;
 import com.github.retrooper.packetevents.protocol.item.type.ItemTypes;
+import com.github.retrooper.packetevents.resources.ResourceLocation;
 import com.github.retrooper.packetevents.wrapper.play.server.WrapperPlayServerWindowItems;
 import me.combimagnetron.passport.internal.menu.AnvilMenu;
 import me.combimagnetron.passport.internal.menu.Title;
+import me.combimagnetron.sunscreen.menu.OpenedMenu;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.ShaderHelper;
@@ -35,14 +38,16 @@ public interface TextInput {
 
     class Impl implements TextInput {
         private final SunscreenUser<?> viewer;
+        private final OpenedMenu openedMenu;
         public final AnvilMenu menu;
         private Position position = Position.pixel(0, 0);
         private String lastInput = "";
         private String input = "";
 
-        protected Impl(SunscreenUser<?> viewer) {
+        protected Impl(SunscreenUser<?> viewer, OpenedMenu menu) {
             this.viewer = viewer;
             this.menu = AnvilMenu.of(viewer);
+            this.openedMenu = menu;
             open();
         }
 
@@ -52,7 +57,7 @@ public interface TextInput {
             ArrayList<ItemStack> items = new ArrayList<>();
             for (int i = 0; i < 39; i++) {
                 if (i == 0) {
-                    items.add(ItemStack.builder().type(ItemTypes.PAPER).component(ComponentTypes.CUSTOM_MODEL_DATA_LISTS, new ItemCustomModelData(List.of(2000f), List.of(), List.of(), List.of())).component(ComponentTypes.ITEM_NAME, Component.empty()).amount(1).build());
+                    items.add(ItemStack.builder().type(ItemTypes.PAPER).component(ComponentTypes.ITEM_MODEL, new ItemModel(ResourceLocation.minecraft("air"))).component(ComponentTypes.ITEM_NAME, Component.empty()).amount(1).build());
                     continue;
                 }
                 items.add(ItemStack.EMPTY);
@@ -80,6 +85,10 @@ public interface TextInput {
         public void handle(String input) {
             this.lastInput = this.input;
             this.input = input;
+            if (!(openedMenu instanceof OpenedMenu.FloatImpl floatImpl)) {
+                return;
+            }
+            floatImpl.handleText(input);
         }
 
         @Override

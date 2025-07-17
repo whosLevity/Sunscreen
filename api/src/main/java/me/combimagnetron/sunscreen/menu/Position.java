@@ -2,6 +2,7 @@ package me.combimagnetron.sunscreen.menu;
 
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
+import me.combimagnetron.sunscreen.menu.editor.EditableType;
 import me.combimagnetron.sunscreen.util.Pair;
 import me.combimagnetron.sunscreen.util.Vec2d;
 import me.combimagnetron.sunscreen.util.Vec2i;
@@ -27,7 +28,7 @@ public non-sealed interface Position extends RuntimeDefinableGeometry, Geometry 
         return builder;
     }
 
-    final class PositionBuilder extends RuntimeDefinableGeometry.GeometryBuilder<Position> {
+    final class PositionBuilder extends RuntimeDefinableGeometry.GeometryBuilder<Position> implements EditableType {
 
         protected PositionBuilder(Section<Position> x, Section<Position> y) {
             super(x, y);

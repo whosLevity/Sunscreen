@@ -8,11 +8,10 @@ import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.logic.action.Action;
 import me.combimagnetron.sunscreen.logic.action.ActionWrapper;
 import me.combimagnetron.sunscreen.logic.action.Argument;
-import me.combimagnetron.sunscreen.logic.action.ArgumentType;
 import me.combimagnetron.sunscreen.menu.*;
 import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.Interactable;
-import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
+import me.combimagnetron.sunscreen.menu.editor.Editable;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.*;
@@ -21,7 +20,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.*;
 
-public interface Div<T> extends Editable {
+public sealed interface Div<T> extends Editable permits Div.Impl, ScrollableDiv {
 
     /**
      * The identifier of the div.
@@ -220,7 +219,7 @@ public interface Div<T> extends Editable {
         return new NonRenderDiv(identifier);
     }
 
-    class Impl implements Div<Canvas> {
+    non-sealed class Impl implements Div<Canvas> {
         private final UUID uniqueIdentifier = UUID.randomUUID();
         private final LinkedHashMap<Identifier, Element<Canvas>> elements = new LinkedHashMap<>();
         private final HashSet<Element<Canvas>> hidden = new HashSet<>();
@@ -273,7 +272,7 @@ public interface Div<T> extends Editable {
                         }
                         continue;
                     }
-                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos.sub(Vec2i.of(element.position().x().pixel(), element.position().y().pixel())), click));
+                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, user, pos.sub(Vec2i.of(element.position().x().pixel(), element.position().y().pixel())), click));
                     boolean keep = update;
                     List<ActionWrapper> actions = interactable.actions().entrySet().stream().filter(actionTypeActionEntry -> actionTypeActionEntry.getKey() == Interactable.ActionType.CLICK).map(Map.Entry::getValue).toList();
                     for (ActionWrapper actionWrapper : actions) {
@@ -300,7 +299,7 @@ public interface Div<T> extends Editable {
                         }
                         continue;
                     }
-                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, pos, new Input.Type.MouseClick(false)));
+                    Dispatcher.dispatcher().post(ClickElementEvent.create(element, user, pos, new Input.Type.MouseClick(false)));
                     List<ActionWrapper> actions = interactable.actions().entrySet().stream().filter(actionTypeActionEntry -> actionTypeActionEntry.getKey() == Interactable.ActionType.HOVER).map(Map.Entry::getValue).toList();
                     for (ActionWrapper actionWrapper : actions) {
                         Action action = actionWrapper.action();

@@ -4,10 +4,11 @@ import me.combimagnetron.sunscreen.menu.Geometry;
 import me.combimagnetron.sunscreen.menu.Position;
 import me.combimagnetron.sunscreen.menu.RuntimeDefinableGeometry;
 import me.combimagnetron.sunscreen.menu.Size;
+import me.combimagnetron.sunscreen.menu.editor.EditableField;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.image.Canvas;
 import me.combimagnetron.sunscreen.util.RuntimeDefinable;
-import me.combimagnetron.sunscreen.util.Vec2d;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -28,7 +29,7 @@ public abstract class SimpleBufferedElement implements Element<Canvas> {
     }
 
     @Override
-    public SimpleBufferedElement position(Position pos) {
+    public @NotNull Element<Canvas> position(Position pos) {
         this.position = pos;
         return this;
     }
@@ -39,31 +40,31 @@ public abstract class SimpleBufferedElement implements Element<Canvas> {
     }
 
     @Override
-    public Identifier identifier() {
+    public @NotNull Identifier identifier() {
         return identifier;
     }
 
     @Override
-    public Collection<RuntimeDefinable.Type<?, ?>> definables() {
+    public @NotNull Collection<RuntimeDefinable.Type<?, ?>> definables() {
         return geometryBuilders;
     }
 
     @Override
-    public Element<Canvas> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
+    public @NotNull Element<Canvas> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
         geometryBuilders.add(geometry);
         return this;
     }
 
     @Override
-    public abstract Canvas canvas();
+    public abstract @NotNull Canvas canvas();
 
     @Override
-    public Position position() {
+    public @NotNull Position position() {
         return position;
     }
 
     @Override
-    public Element<Canvas> geometry(Geometry geometry) {
+    public @NotNull Element<Canvas> geometry(Geometry geometry) {
         if (geometry instanceof Position) {
             this.position = (Position) geometry;
         } else if (geometry instanceof Size) {
@@ -74,12 +75,12 @@ public abstract class SimpleBufferedElement implements Element<Canvas> {
     }
 
     @Override
-    public Size size() {
+    public @NotNull Size size() {
         return size;
     }
 
     @Override
-    public Element<Canvas> size(Size size) {
+    public @NotNull Element<Canvas> size(Size size) {
         this.size = size;
         return this;
     }

@@ -13,7 +13,7 @@ import me.combimagnetron.sunscreen.style.Style;
 import me.combimagnetron.sunscreen.util.Identifier;
 import me.combimagnetron.sunscreen.util.RuntimeDefinable;
 import me.combimagnetron.sunscreen.util.Vec2i;
-import org.checkerframework.checker.units.qual.A;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -149,12 +149,12 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
         }
 
         @Override
-        public Identifier identifier() {
+        public @NotNull Identifier identifier() {
             return identifier;
         }
 
         @Override
-        public Canvas canvas() {
+        public @NotNull Canvas canvas() {
             return render();
         }
 
@@ -164,12 +164,12 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
         }
 
         @Override
-        public Position position() {
+        public @NotNull Position position() {
             return position;
         }
 
         @Override
-        public Collection<RuntimeDefinable.Type<?, ?>> definables() {
+        public @NotNull Collection<RuntimeDefinable.Type<?, ?>> definables() {
             return List.of();
         }
 
@@ -179,17 +179,17 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
         }
 
         @Override
-        public Element<Canvas> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
+        public @NotNull Element<Canvas> geometry(RuntimeDefinableGeometry.GeometryBuilder<?> geometry) {
             return this;
         }
 
         @Override
-        public Element<Canvas> geometry(Geometry geometry) {
+        public @NotNull Element<Canvas> geometry(Geometry geometry) {
             return this;
         }
 
         @Override
-        public Element<Canvas> position(Position pos) {
+        public @NotNull Element<Canvas> position(Position pos) {
             return this;
         }
 
@@ -204,12 +204,12 @@ public interface AnimatedElement extends Element<Canvas>, Tickable {
         }
 
         @Override
-        public Size size() {
+        public @NotNull Size size() {
             return size;
         }
 
         @Override
-        public Element<Canvas> size(Size size) {
+        public @NotNull Element<Canvas> size(Size size) {
             return this;
         }
 

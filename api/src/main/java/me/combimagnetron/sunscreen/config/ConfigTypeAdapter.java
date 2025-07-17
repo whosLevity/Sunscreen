@@ -3,13 +3,14 @@ package me.combimagnetron.sunscreen.config;
 import me.combimagnetron.passport.config.element.ConfigElement;
 import me.combimagnetron.passport.config.element.Node;
 import me.combimagnetron.passport.config.element.Section;
+import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
 public interface ConfigTypeAdapter<T> {
 
-    T direct(ConfigElement element);
+    @Nullable T direct(@NotNull ConfigElement element);
 
-    T find(Section section);
+    @Nullable T find(@NotNull Section section);
 
     static boolean isSection(ConfigElement element) {
         return element instanceof Section;

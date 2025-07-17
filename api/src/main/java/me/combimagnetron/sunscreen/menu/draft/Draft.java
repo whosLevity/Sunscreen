@@ -1,6 +1,6 @@
 package me.combimagnetron.sunscreen.menu.draft;
 
-import me.combimagnetron.sunscreen.menu.Editable;
+import me.combimagnetron.sunscreen.menu.editor.Editable;
 import me.combimagnetron.sunscreen.element.div.Edit;
 import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
 import me.combimagnetron.sunscreen.style.Style;

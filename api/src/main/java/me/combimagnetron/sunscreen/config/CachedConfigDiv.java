@@ -8,7 +8,6 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.Collection;
 
-public record CachedConfigDiv(Collection<Section> elements, Identifier identifier, Collection<RuntimeDefinableGeometry.GeometryBuilder<?>> geometry, @Nullable
-                              Condition condition, double order) {
+public record CachedConfigDiv(Collection<Section> elements, Identifier identifier, Collection<RuntimeDefinableGeometry.GeometryBuilder<?>> geometry, @Nullable Condition condition, double order) {
 
 }

@@ -100,7 +100,7 @@ public class UserImpl implements SunscreenUser<Player> {
     @Override
     public void show(Entity entity) {
         WrapperPlayServerSpawnEntity clientSpawnEntity = new WrapperPlayServerSpawnEntity(entity.id().intValue(), Optional.of(entity.uuid()), EntityTypes.getById(ClientVersion.V_1_21_4, entity.type().id()), new com.github.retrooper.packetevents.util.Vector3d(entity.position().x(), entity.position().y(), entity.position().z()), (float) entity.rotation().x(), (float) entity.rotation().y(), (float) entity.rotation().z(), entity.data().i(), Optional.empty());
-        List<EntityData> entityData = entity.type().metadata().entityData();
+        List<EntityData<?>> entityData = entity.type().metadata().entityData();
         WrapperPlayServerEntityMetadata clientEntityMetadata = new WrapperPlayServerEntityMetadata(entity.id().intValue(), entityData);
         connection().send(clientSpawnEntity);
         connection().send(clientEntityMetadata);
@@ -129,5 +129,10 @@ public class UserImpl implements SunscreenUser<Player> {
     @Override
     public void resendInv() {
         player.getInventory().update();
+    }
+
+    @Override
+    public ClientVersion clientVersion() {
+        return null;
     }
 }

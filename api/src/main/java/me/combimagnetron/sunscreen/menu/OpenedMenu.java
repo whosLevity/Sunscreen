@@ -21,6 +21,9 @@ import me.combimagnetron.sunscreen.element.Element;
 import me.combimagnetron.sunscreen.element.SimpleBufferedElement;
 import me.combimagnetron.sunscreen.element.div.Div;
 import me.combimagnetron.sunscreen.element.div.ScrollableDiv;
+import me.combimagnetron.sunscreen.menu.cursor.ClientsideCursor;
+import me.combimagnetron.sunscreen.menu.cursor.Cursor;
+import me.combimagnetron.sunscreen.menu.cursor.EntityCursor;
 import me.combimagnetron.sunscreen.menu.draft.Draft;
 import me.combimagnetron.sunscreen.menu.input.Input;
 import me.combimagnetron.sunscreen.menu.input.InputHandler;
@@ -66,6 +69,8 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
 
         public abstract void handlePing(long ping);
 
+        public abstract void handleText(String text);
+
         protected void forceDivGeometry(SunscreenUser<?> viewer) {
             for (Map.Entry<Identifier, Div<?>> entry : divHashMap.entrySet()) {
                 Div<?> div = entry.getValue();
@@ -101,6 +106,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         private final InputHandler inputHandler;
         private final HashMap<Identifier, Boolean> lastPasses = new HashMap<>();
         private final List<Integer> riding = new ArrayList<>();
+        private final Cursor cursor;
         private final TextDisplay cursorDisplay;
         private final TextDisplay background;
         private final Vector3d rotation;
@@ -114,12 +120,13 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public FloatImpl(SunscreenUser<?> viewer, MenuTemplate template) {
             this.rotation = viewer.rotation();
             this.viewer = viewer;
-            this.inputHandler = new InputHandler.Impl(viewer);
+            this.inputHandler = new InputHandler.Impl(viewer, this);
             MenuTemplate.Simple menuTemplate = (MenuTemplate.Simple) template;
             divHashMap.putAll(menuTemplate.create());
             forceDivGeometry(viewer);
-            this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
+            this.cursor = Cursor.client(viewer);
             this.background = TextDisplay.textDisplay(viewer.position());
+            this.cursorDisplay = TextDisplay.textDisplay(viewer.position());
             Collection<SunscreenHook> hooks = SunscreenHook.HOOKS.stream().filter(SunscreenHook::canRun).toList();
             for (SunscreenHook hook : hooks) {
                 hook.onMenuEnter(viewer, this);
@@ -182,29 +189,30 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             return true;
         }
 
-        protected void hideCursor() {
-            cursorDisplay.text(Component.empty());
-            List<EntityData> entityData = cursorDisplay.type().metadata().entityData();
-            WrapperPlayServerEntityMetadata clientEntityMetadata = new WrapperPlayServerEntityMetadata(cursorDisplay.id().intValue(), entityData);
-            viewer.connection().send(clientEntityMetadata);
-        }
-
-        protected void showCursor() {
-            cursorDisplay.text(Component.text("e").font(Key.key("comet:arrow")));
-            cursorDisplay.backgroundColor(0);
-            cursorDisplay.transformationDuration(1);
-            cursorDisplay.teleportationDuration(1);
-            cursorDisplay.billboard(Display.Billboard.CENTER);
-            cursorDisplay.brightness(15, 15);
-            Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, 0, -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
-            cursorDisplay.transformation(transformation);
-            viewer.show(cursorDisplay);
+        @Override
+        public void handleRot(float yaw, float pitch) {
+            lastInput = Vec2d.of(yaw, -pitch).sub(lastInput).div(400, 500);
+            move();
         }
 
         @Override
-        public void handleRot(float yaw, float pitch) {
-            lastInput = Vec2d.of(yaw, -pitch).sub(lastInput).div(350);
-            move();
+        public void handleText(String text) {
+            for (Reference<TextDisplay> reference : referenceHolder.references()) {
+                Div<Canvas> div = reference.div();
+                boolean update = false;
+                for (Element<Canvas> element : div.elements()) {
+                    if (!(element instanceof TextInputElement textInputElement)) {
+                        continue;
+                    }
+                    update = true;
+                    textInputElement.handle(text);
+                    textInputElement.canvas();
+                }
+                if (!update) {
+                    continue;
+                }
+                update(div);
+            }
         }
 
         @Override
@@ -215,9 +223,9 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         @Override
         public void handlePing(long ping) {
             int offset = Math.clamp((int) Math.ceil((double) ping /50), 1, 10);
-            cursorDisplay.transformationDuration(offset);
-            cursorDisplay.teleportationDuration(offset);
-            MenuHelper.send(viewer, cursorDisplay);
+            //cursorDisplay.transformationDuration(offset);
+            //cursorDisplay.teleportationDuration(offset);
+            //MenuHelper.send(viewer, cursorDisplay);
         }
 
         @Override
@@ -229,8 +237,8 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 }
                 if (div instanceof Div.NonRenderDiv) continue;
                 if (div.hidden()) continue;
-                Vec2i divPos = Vec2i.of((int) div.position().x().pixel(), (int) div.position().y().pixel());
-                Vector3d cursorTranslation = cursorDisplay.transformation().translation();
+                Vec2i divPos = Vec2i.of(div.position().x().pixel(), div.position().y().pixel());
+                Vector3d cursorTranslation = Vector3d.vec3(lastInput.x(), lastInput.y(), 0);
                 Vec2i cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, Y_OFFSET);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos, div.size())) {
@@ -253,11 +261,12 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         public void handleScroll(int slot) {
             for (Reference<TextDisplay> entry : referenceHolder.references()) {
                 Div div = entry.div();
-                if (div instanceof ScrollableDiv scrollableDiv) {
-                    scrollableDiv.scroll(slot);
-                    entry.t().text(CanvasRenderer.optimized().render(div.render(viewer)).component());
-                    MenuHelper.send(viewer, entry.t());
+                if (!(div instanceof ScrollableDiv scrollableDiv)) {
+                    return;
                 }
+                scrollableDiv.scroll(slot);
+                entry.t().text(CanvasRenderer.optimized().render(div.render(viewer)).component());
+                MenuHelper.send(viewer, entry.t());
             }
         }
 
@@ -353,9 +362,7 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             Vec2d translation = lastInput.mul(1);
             translation = translation.add(0.003, -0.010);
             viewer.message(Component.text("a"));
-            Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(translation.x(), translation.y(), -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
-            cursorDisplay.transformation(transformation);
-            MenuHelper.send(viewer, cursorDisplay);
+            cursor.move(Vec2i.of(translation.xi(), translation.yi()));
             for (Reference<TextDisplay> reference: referenceHolder.references()) {
                 Div div = reference.div();
                 if (focused != null && !div.identifier().equals(focused)) {
@@ -364,7 +371,9 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
                 if (div.hidden()) continue;
                 if (div instanceof Div.NonRenderDiv) continue;
                 Vec2i divPos = Vec2i.of((int) div.position().x().pixel(), (int) div.position().y().pixel());
-                Vector3d cursorTranslation = cursorDisplay.transformation().translation();
+                Vector3d cursorTranslation = Vector3d.vec3(translation.x(), translation.y(), -0.2499);
+                cursorDisplay.transformation(Display.Transformation.transformation().scale(Vector3d.vec3((double)1/24)).translation(cursorTranslation));
+                MenuHelper.send(viewer, cursorDisplay);
                 Vec2i cursorPos = ViewportHelper.toScreen(cursorTranslation, viewer.screenSize());
                 cursorPos = cursorPos.add(0, Y_OFFSET);
                 if (HoverHelper.isHovered(cursorTranslation, viewer, divPos.mul(ViewportHelper.fromVector3d(div.scale())), div.size().mul(ViewportHelper.fromVector3d(div.scale())))) {
@@ -396,11 +405,11 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
         }
 
         private void leave() {
+            cursor.remove();
             viewer.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, viewer.gameMode()));
-            viewer.connection().send(new WrapperPlayServerSetPassengers(cursorDisplay.id().intValue(), new int[]{}));
             viewer.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(viewer.uniqueIdentifier(), viewer.name()), true, 0, GameMode.getById(viewer.gameMode()), Component.empty(), null)));
             viewer.connection().send(new WrapperPlayServerCamera(viewer.entityId()));
-            viewer.connection().send(new WrapperPlayServerDestroyEntities(cursorDisplay.id().intValue(), background.id().intValue(), camera.id().intValue()));
+            viewer.connection().send(new WrapperPlayServerDestroyEntities(background.id().intValue(), camera.id().intValue(), cursorDisplay.id().intValue()));
             viewer.connection().send(new WrapperPlayServerPlayerRotation((float) rotation.x(), (float) rotation.y()));
             viewer.connection().send(new WrapperPlayServerPlayerPositionAndLook(viewer.position().x(), viewer.position().y(), viewer.position().z(), (float) rotation.x(), (float) rotation.y(), (byte)0, 0, false));
             referenceHolder.references().forEach(reference -> viewer.connection().send(new WrapperPlayServerDestroyEntities(reference.t().id().intValue())));
@@ -438,13 +447,26 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             return (Div<Canvas>) divHashMap.get(identifier);
         }
 
+        protected void showCursor(Vec2d start) {
+            start = start.add(0.003, 0.010);
+            cursorDisplay.text(Component.text("e").font(Key.key("comet:arrow")));
+            cursorDisplay.backgroundColor(0);
+            cursorDisplay.transformationDuration(1);
+            cursorDisplay.teleportationDuration(1);
+            cursorDisplay.billboard(Display.Billboard.CENTER);
+            cursorDisplay.brightness(15, 15);
+            Display.Transformation transformation = Display.Transformation.transformation().translation(Vector3d.vec3(0, start.y(), -0.24999)).scale(Vector3d.vec3((double) 1/24, (double) 1/24, (double) 1/24));
+            cursorDisplay.transformation(transformation);
+            viewer.show(cursorDisplay);
+        }
+
         /**
          * Opens the openedMenu and sends the necessary packets to the viewer.
          * @param user User to open the openedMenu for.
          */
         public void open(SunscreenUser<?> user) {
             user.connection().send(new WrapperPlayServerPlayerRotation(0, -180));
-            camera = TextDisplay.textDisplay(user.position().add(Vector3d.vec3(0, 1.6, 0)));
+            camera = TextDisplay.textDisplay(user.position().add(Vector3d.vec3(0, 1.62, 0)));
             Vector3d rotation = Vector3d.vec3(user.rotation().y(), user.rotation().x(), user.rotation().z());
             camera.rotation(rotation);
             user.show(camera);
@@ -453,22 +475,27 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
             }
             user.connection().send(new WrapperPlayServerCamera(camera.id().intValue()));
             user.connection().send(new WrapperPlayServerChangeGameState(WrapperPlayServerChangeGameState.Reason.CHANGE_GAME_MODE, 3));
-            user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.CREATIVE, Component.empty(), null)));
+            user.connection().send(new WrapperPlayServerPlayerInfoUpdate(WrapperPlayServerPlayerInfoUpdate.Action.UPDATE_GAME_MODE, new WrapperPlayServerPlayerInfoUpdate.PlayerInfo(new UserProfile(user.uniqueIdentifier(), user.name()), true, 0, GameMode.SPECTATOR, Component.empty(), null)));
             List<Integer> entityIds = new ArrayList<>();
-            entityIds.add(user.entityId());
-            showCursor();
-            entityIds.add(cursorDisplay.id().intValue());
+            if (cursor instanceof EntityCursor entityCursor) {
+                entityIds.add(entityCursor.entity().id().intValue());
+                entityIds.add(user.entityId());
+            } else if (cursor instanceof ClientsideCursor clientsideCursor) {
+                entityIds.add(clientsideCursor.horse().id().intValue());
+            }
             initBackground();
+            lastInput = cursor.startPos(viewer);
+            //showCursor(Vec2d.of(0, lastInput.y()));
+            entityIds.add(cursorDisplay.id().intValue());
             entityIds.add(background.id().intValue());
-            user.show(cursorDisplay);
             Scheduler.async(() -> {
                 divHashMap.values().forEach(d -> renderer.render((Div<TextDisplay>) d, user));
                 entityIds.addAll(referenceHolder.references().stream().map(Reference::t).map(TextDisplay::id).map(Entity.EntityId::intValue).toList());
                 riding.addAll(entityIds);
                 user.connection().send(new WrapperPlayServerSetPassengers(camera.id().intValue(), ArrayUtils.toPrimitive(entityIds.toArray(new Integer[0]))));
+                cursor.show(viewer);
                 return null;
             });
-            user.connection().send(new WrapperPlayServerSystemChatMessage(true, Component.text(" ")));
         }
 
         private void initBackground() {
@@ -507,8 +534,8 @@ public sealed interface OpenedMenu permits OpenedMenu.Base, AspectRatioMenu {
     }
 
     class MenuHelper {
-        public static void send(SunscreenUser<?> viewer, TextDisplay textDisplay) {
-            List<EntityData> entityData = textDisplay.type().metadata().entityData();
+        public static void send(SunscreenUser<?> viewer, Entity textDisplay) {
+            List<EntityData<?>> entityData = textDisplay.type().metadata().entityData();
             WrapperPlayServerEntityMetadata clientEntityMetadata = new WrapperPlayServerEntityMetadata(textDisplay.id().intValue(), entityData);
             viewer.connection().send(clientEntityMetadata);
         }

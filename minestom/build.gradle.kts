@@ -16,7 +16,7 @@ repositories {
 dependencies {
     implementation(project(":api"))
     implementation("me.combimagnetron:Passport:1.0-SNAPSHOT")
-    implementation("com.github.retrooper:packetevents-api:2.7.0")
+    implementation("com.github.retrooper:packetevents-api:2.8.0")
     compileOnly("net.minestom:minestom-snapshots:7320437640")
     compileOnly("commons-io:commons-io:2.18.0")
 }

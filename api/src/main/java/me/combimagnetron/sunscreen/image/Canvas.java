@@ -147,6 +147,74 @@ public interface Canvas {
         }
     }
 
+    class IntArrayImpl implements InternalCanvas {
+        private final int[][] pixels;
+
+        protected IntArrayImpl(Vec2i size) {
+            pixels = new int[size.x()][size.y()];
+        }
+
+        @Override
+        public BufferedImage image() {
+            return null;
+        }
+
+        @Override
+        public Canvas sub(Vec2i size, Vec2i coords) {
+            return null;
+        }
+
+        @Override
+        public Canvas pixel(Pixel pixel) {
+            return null;
+        }
+
+        @Override
+        public Canvas place(Canvas canvas, Vec2i coords) {
+            return null;
+        }
+
+        @Override
+        public Canvas fill(Vec2i coords, Vec2i size, Color color) {
+            return null;
+        }
+
+        @Override
+        public Canvas trim() {
+            return null;
+        }
+
+        @Override
+        public Canvas scale(Vec2d scale) {
+            return null;
+        }
+
+        @Override
+        public Canvas text(Text text, Vec2i coords, Color color) {
+            return null;
+        }
+
+        @Override
+        public Canvas text(Text text, Vec2i coords) {
+            return null;
+        }
+
+        @Override
+        public Vec2i size() {
+            return null;
+        }
+
+        @Override
+        public Pixel pixel(Vec2i coords) {
+            return null;
+        }
+
+        @Override
+        public boolean animated() {
+            return false;
+        }
+    }
+
     interface ImageProvider {
 
         BufferedImage image();

@@ -8,7 +8,7 @@ import me.combimagnetron.sunscreen.menu.input.InputHandler;
 import me.combimagnetron.sunscreen.user.SunscreenUser;
 import me.combimagnetron.sunscreen.util.*;
 
-public interface ScrollableDiv extends Div<Canvas> {
+public non-sealed interface ScrollableDiv extends Div<Canvas> {
 
     ScrollableDiv scroll(double percentage);
 

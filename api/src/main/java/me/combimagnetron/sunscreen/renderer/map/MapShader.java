@@ -34,7 +34,7 @@ public class MapShader implements Shader {
 
     @Override
     public String author() {
-        return "Combimagnetron, OmeJan";
+        return "Combimagnetron";
     }
 
     @Override

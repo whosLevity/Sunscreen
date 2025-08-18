@@ -10,7 +10,7 @@ Sunscreen is a (very) WIP GUI library, built with ultimate platform compatabilit
 ![Showcase of the library](./assets/image/showcase-gif.gif)
 
 > [!WARNING]  
-> This library/plugin won't run without the default assets, which are kept out from source on purpose. Contact ``@combimagnetron`` on Discord for a possible test run with assets.
+> This library/plugin won't run without the default assets, which are kept out from source on purpose. ~~Contact ``@combimagnetron`` on Discord for a possible test run with assets.~~ Currently not handing out assets.
 
 ## Features
 - Native support for text input
